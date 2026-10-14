@@ -6,7 +6,8 @@ test.beforeEach(resetEmulators);
 test('registro manual simple: 10.00 entre 3 desde el inicio del viaje', async ({ browser }) => {
   const { page } = await setupActiveTrip(browser, ANA, [PEDRO, JUAN]);
 
-  await expect(page.getByRole('button', { name: /Escanear factura/ })).toBeDisabled();
+  // Feature 004 (FR-007): scanning is enabled and shows today's allowance.
+  await expect(page.getByRole('link', { name: /Escanear factura/ })).toContainText('20 disponibles hoy');
   const started = Date.now();
   await page.getByRole('link', { name: 'Registro manual' }).click();
   await expect(page.getByRole('heading', { name: 'Nuevo gasto' })).toBeVisible();

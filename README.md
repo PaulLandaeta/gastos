@@ -10,6 +10,8 @@ Gastos de viaje colaborativos: registro, reparto exacto al centavo y liquidació
     gastos personales, dashboard con filtros, anulación con historial y aviso de duplicados.
   - `003-settlements-edits-refunds`: pagos con confirmación del receptor, edición con control de conflictos,
     previsualización de impacto en saldos, restauración de gastos y devoluciones por ítem.
+  - `004-receipts-ai-attachments`: comprobantes privados (fotos y PDF) en gastos y pagos, escaneo de facturas con IA
+    (consentimiento, borrador revisable), cuotas atómicas de IA y retención de 6 meses.
 
 ## Stack (sin tarjeta de crédito)
 
@@ -18,6 +20,8 @@ Gastos de viaje colaborativos: registro, reparto exacto al centavo y liquidació
 | Web | React 19 + Vite PWA (`apps/web`) |
 | API | Cloudflare Workers Free + Hono (`apps/api`) |
 | Datos / Auth | Firebase Spark: Firestore + Google Auth + Hosting |
+| Comprobantes | Backblaze B2 (URLs firmadas), R2 de Miniflare en local |
+| IA | Gemini (nivel gratuito) tras `ReceiptAIProvider`; proveedor falso en local |
 | Motor financiero | TypeScript puro, enteros en unidad menor (`packages/finance-engine`) |
 
 ## Desarrollo

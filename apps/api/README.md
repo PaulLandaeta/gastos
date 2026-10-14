@@ -41,7 +41,29 @@ El modo emulador (tokens sin firma, Firestore local) solo se activa con `ENVIRON
    ```
 4. `pnpm deploy` → anotar la URL `https://gastos-viaje-api.<subdominio>.workers.dev`.
 
-### 3. Web (Firebase Hosting)
+### 3. Comprobantes e IA (feature 004)
+
+**Backblaze B2** (10 GB gratis, sin tarjeta; si la pidiera, usar el adaptador de Supabase Storage):
+
+1. Crear un bucket **privado** y una *application key* limitada a ese bucket (lectura y escritura).
+2. CORS del bucket (S3 API): origen = dominio de Hosting, métodos `PUT, GET`, cabecera `content-type`.
+3. `wrangler secret put B2_KEY_ID` y `wrangler secret put B2_APPLICATION_KEY`; vars `STORAGE=b2`, `B2_BUCKET`,
+   `B2_ENDPOINT` (p. ej. `https://s3.us-west-004.backblazeb2.com`) y `B2_REGION` (`us-west-004`).
+
+**Gemini** (Google AI Studio, nivel gratuito): `wrangler secret put GEMINI_API_KEY`; vars `AI_PROVIDER=gemini` y
+`GEMINI_MODEL` con un modelo Flash disponible en el nivel gratuito.
+
+**Cuotas** (RF-51): vars `AI_QUOTA_TRIP_DAY=20`, `AI_QUOTA_GLOBAL_DAY=100`, `AI_QUOTA_GLOBAL_MONTH=1500`. Sin redesplegar
+se pueden cambiar con el documento Firestore `config/ai` (`tripDay`, `globalDay`, `globalMonth`, `retriesPerFile`).
+`ADMIN_UIDS` (uids separados por comas) habilita `GET /v1/admin/ai-usage?from=YYYY-MM-DD&to=YYYY-MM-DD`.
+
+**Cron** (ya declarado en `wrangler.jsonc`, `17 * * * *`): borra comprobantes vencidos (6 meses), purga los quitados y
+limpia subidas pendientes de más de 24 h, en lotes de 25. En local: `POST http://localhost:8787/local-admin/run-retention?now=<ISO>`.
+
+En local no hace falta nada de lo anterior: `--env emulator` usa el R2 de Miniflare (`STORAGE=local`) y el proveedor
+de IA falso (`AI_PROVIDER=fake`; un archivo que empiece por «FAIL» simula una caída).
+
+### 4. Web (Firebase Hosting)
 
 ```bash
 # apps/web/.env.production: VITE_FIREBASE_* del proyecto, VITE_API_URL=<url del worker>/v1, VITE_USE_EMULATORS=false

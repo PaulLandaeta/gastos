@@ -3,12 +3,45 @@
   "name": "gastos-viaje-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
-  "compatibility_flags": [],
+  // nodejs_compat: native Buffer (base64 for AI inline images without JS CPU cost).
+  "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
+  // Hourly: attachment retention (6 months) and orphan upload cleanup (feature 004).
+  "triggers": { "crons": ["17 * * * *"] },
   "vars": {
     "ENVIRONMENT": "production",
     "FIREBASE_PROJECT_ID": "REPLACE_WITH_PROJECT_ID",
-    "ALLOWED_ORIGINS": "https://REPLACE_WITH_PROJECT_ID.web.app"
+    "ALLOWED_ORIGINS": "https://REPLACE_WITH_PROJECT_ID.web.app",
+    "AI_PROVIDER": "gemini",
+    "GEMINI_MODEL": "REPLACE_WITH_FREE_TIER_FLASH_MODEL",
+    "STORAGE": "b2",
+    "B2_BUCKET": "REPLACE_WITH_BUCKET",
+    "B2_ENDPOINT": "https://s3.REPLACE_WITH_REGION.backblazeb2.com",
+    "B2_REGION": "REPLACE_WITH_REGION",
+    "AI_QUOTA_TRIP_DAY": "20",
+    "AI_QUOTA_GLOBAL_DAY": "100",
+    "AI_QUOTA_GLOBAL_MONTH": "1500",
+    "ADMIN_UIDS": ""
+  },
+  // Secrets (wrangler secret put): FIREBASE_SERVICE_ACCOUNT, GEMINI_API_KEY, B2_KEY_ID, B2_APPLICATION_KEY
+  "env": {
+    // Local development only: Miniflare's local R2 stands in for B2 (never used in production).
+    "emulator": {
+      "vars": {
+        "ENVIRONMENT": "emulator",
+        "FIREBASE_PROJECT_ID": "demo-gastos",
+        "FIRESTORE_EMULATOR_HOST": "127.0.0.1:8080",
+        "ALLOWED_ORIGINS": "http://localhost:5180",
+        "AI_PROVIDER": "fake",
+        "STORAGE": "local",
+        "LOCAL_BLOB_SECRET": "local-dev-only-secret",
+        "PUBLIC_API_URL": "http://localhost:8787",
+        "AI_QUOTA_TRIP_DAY": "20",
+        "AI_QUOTA_GLOBAL_DAY": "100",
+        "AI_QUOTA_GLOBAL_MONTH": "1500",
+        "ADMIN_UIDS": ""
+      },
+      "r2_buckets": [{ "binding": "LOCAL_BLOBS", "bucket_name": "local-blobs" }]
+    }
   }
-  // Secrets (wrangler secret put): FIREBASE_SERVICE_ACCOUNT (JSON key of the service account)
 }

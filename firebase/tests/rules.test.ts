@@ -240,3 +240,62 @@ describe('settlements and refunds (003)', () => {
     await assertFails(as(env, pedro).firestore().doc('trips/t1/expenses/e1/refunds/r2').set({ amountMinor: 1 }));
   });
 });
+
+describe('attachments, uploads, scans and aiUsage (004)', () => {
+  const juan = { uid: 'juan', email: 'juan@example.com' };
+  const eve = { uid: 'eve', email: 'eve@example.com' };
+  const adm = { uid: 'adm', email: 'adm@example.com' };
+
+  beforeEach(async () => {
+    await seed(env, {
+      'trips/t1': { name: 'Uyuni' },
+      'trips/t1/members/ana': { uid: 'ana', role: 'creator', invitationStatus: 'accepted' },
+      'trips/t1/members/pedro': { uid: 'pedro', role: 'member', invitationStatus: 'accepted' },
+      'trips/t1/members/juan': { uid: 'juan', role: 'member', invitationStatus: 'accepted' },
+      'trips/t1/members/adm': { uid: 'adm', role: 'admin', invitationStatus: 'accepted' },
+      'trips/t1/expenses/e1': { viewerUids: ['pedro'], totalMinor: 1000 },
+      'trips/t1/expenses/e1/attachments/a1': { fileName: 'ticket.jpg', status: 'active' },
+      'trips/t1/settlements/s1': { fromUid: 'pedro', toUid: 'juan', amountMinor: 500, status: 'pending' },
+      'trips/t1/settlements/s1/attachments/a2': { fileName: 'proof.pdf', status: 'active' },
+      'trips/t1/uploads/u1': { uploadedBy: 'pedro', status: 'pending' },
+      'trips/t1/scans/sc1': { requestedBy: 'pedro', status: 'succeeded' },
+      'trips/t1/aiUsage/2026-11-02': { requests: 1 },
+      'aiUsage/2026-11-02': { requests: 1 },
+    });
+  });
+
+  it('expense attachments follow the parent expense (PRD: comprobante privado)', async () => {
+    await assertSucceeds(as(env, pedro).firestore().doc('trips/t1/expenses/e1/attachments/a1').get());
+    await assertSucceeds(as(env, ana).firestore().collection('trips/t1/expenses/e1/attachments').get());
+    await assertSucceeds(as(env, adm).firestore().doc('trips/t1/expenses/e1/attachments/a1').get());
+    await assertFails(as(env, juan).firestore().doc('trips/t1/expenses/e1/attachments/a1').get());
+    await assertFails(as(env, eve).firestore().doc('trips/t1/expenses/e1/attachments/a1').get());
+  });
+
+  it('settlement attachments: payer, receiver and managers only', async () => {
+    await assertSucceeds(as(env, pedro).firestore().doc('trips/t1/settlements/s1/attachments/a2').get());
+    await assertSucceeds(as(env, juan).firestore().doc('trips/t1/settlements/s1/attachments/a2').get());
+    await assertSucceeds(as(env, ana).firestore().doc('trips/t1/settlements/s1/attachments/a2').get());
+    await seed(env, { 'trips/t1/settlements/s1': { fromUid: 'ana', toUid: 'adm', amountMinor: 1, status: 'pending' } });
+    await assertFails(as(env, pedro).firestore().doc('trips/t1/settlements/s1/attachments/a2').get());
+    await assertFails(as(env, eve).firestore().doc('trips/t1/settlements/s1/attachments/a2').get());
+  });
+
+  it('uploads and scans are readable only by their owner (not even managers)', async () => {
+    await assertSucceeds(as(env, pedro).firestore().doc('trips/t1/uploads/u1').get());
+    await assertSucceeds(as(env, pedro).firestore().doc('trips/t1/scans/sc1').get());
+    for (const who of [ana, adm, juan, eve]) {
+      await assertFails(as(env, who).firestore().doc('trips/t1/uploads/u1').get());
+      await assertFails(as(env, who).firestore().doc('trips/t1/scans/sc1').get());
+    }
+  });
+
+  it('aiUsage is never readable and nothing is writable', async () => {
+    for (const who of [ana, adm, pedro]) {
+      await assertFails(as(env, who).firestore().doc('trips/t1/aiUsage/2026-11-02').get());
+      await assertFails(as(env, who).firestore().doc('aiUsage/2026-11-02').get());
+    }
+    await assertFails(as(env, pedro).firestore().doc('trips/t1/uploads/u2').set({ uploadedBy: 'pedro' }));
+    await assertFails(as(env, pedro).firestore().doc('trips/t1/expenses/e1/attachments/a3').set({ fileName: 'x' }));
+  });
+});

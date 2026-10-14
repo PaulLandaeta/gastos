@@ -23,6 +23,9 @@ export interface Category {
 
 export interface ExpenseView {
   id: string;
+  /** Feature 004: origin and active receipts. */
+  source?: 'manual' | 'ai';
+  attachmentCount?: number;
   seq: number;
   description: string;
   transactionDate: string;

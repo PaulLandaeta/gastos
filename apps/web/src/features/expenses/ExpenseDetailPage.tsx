@@ -9,6 +9,7 @@ import { ApiError, api } from '../../lib/apiClient';
 import { formatDate, formatDateRange, formatMoney } from '../../lib/format';
 import { useDoc } from '../../lib/useFirestore';
 import { useCurrentUser } from '../auth/AuthProvider';
+import { AttachmentList } from '../attachments/AttachmentList';
 import { useTrip } from '../trips/useTrip';
 import { FIELD_LABEL } from './expenseEditModel';
 import { ImpactPreview } from './ImpactPreview';
@@ -22,6 +23,8 @@ const ACTION_LABEL: Record<string, string> = {
   'expense.void': 'Anulado',
   'expense.restore': 'Restaurado',
   'refund.create': 'Devolución registrada',
+  'attachment.add': 'Comprobante añadido',
+  'attachment.remove': 'Comprobante quitado',
 };
 const KIND_LABEL = { discount: 'Descuento general', tax: 'Impuesto', tip: 'Propina' } as const;
 
@@ -109,6 +112,7 @@ export function ExpenseDetailPage() {
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-2xl font-semibold">{e.description}</h1>
           {e.status === 'voided' && <span className="rounded bg-slate-200 px-2 py-0.5 text-xs font-semibold">Anulado</span>}
+          {e.source === 'ai' && <span className="rounded bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-900">Escaneado</span>}
         </div>
         <p className={`text-2xl font-bold ${e.status === 'voided' ? 'line-through text-slate-500' : ''}`}>{money(e.totalMinor)}</p>
         <p className="text-sm text-slate-600">
@@ -299,6 +303,13 @@ export function ExpenseDetailPage() {
           {!restoreDuplicate && <ErrorMessage error={restoreMutation.error} />}
         </div>
       )}
+
+      <AttachmentList
+        tripId={tripId}
+        target={{ expenseId }}
+        canAdd={e.status === 'active' && trip.status === 'active'}
+        canRemove={e.status === 'active' && trip.status === 'active' && (e.createdBy === user.uid || me?.role === 'creator' || me?.role === 'admin')}
+      />
 
       <section aria-label="Historial" className="space-y-1">
         <h2 className="text-lg font-semibold">Historial</h2>

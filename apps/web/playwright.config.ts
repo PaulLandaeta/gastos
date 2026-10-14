@@ -20,7 +20,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'pnpm --filter api exec wrangler dev --port 8787 --var ENVIRONMENT:emulator --var FIREBASE_PROJECT_ID:demo-gastos --var FIRESTORE_EMULATOR_HOST:127.0.0.1:8080 --var ALLOWED_ORIGINS:http://localhost:5180',
+      command: 'pnpm --filter api exec wrangler dev --env emulator --port 8787',
       url: 'http://localhost:8787/v1/health',
       reuseExistingServer: true,
       timeout: 120_000,

@@ -22,6 +22,8 @@ export interface QuerySpec {
   where?: [field: string, op: Op, value: unknown][];
   orderBy?: [field: string, direction: 'asc' | 'desc'][];
   limit?: number;
+  /** Collection-group query: `collectionPath` is then just the collection id. */
+  allDescendants?: boolean;
 }
 
 const OPS: Record<Op, string> = {
@@ -153,13 +155,13 @@ export class Firestore {
   }
 
   async query(collectionPath: string, spec: QuerySpec = {}, transaction?: string): Promise<Doc[]> {
-    const slash = collectionPath.lastIndexOf('/');
+    const slash = spec.allDescendants ? -1 : collectionPath.lastIndexOf('/');
     const parent = slash === -1 ? this.root : this.name(collectionPath.slice(0, slash));
     const collectionId = collectionPath.slice(slash + 1);
     const filters = (spec.where ?? []).map(([field, op, value]) => ({
       fieldFilter: { field: { fieldPath: field }, op: OPS[op], value: encodeValue(value) },
     }));
-    const structuredQuery: Record<string, unknown> = { from: [{ collectionId }] };
+    const structuredQuery: Record<string, unknown> = { from: [{ collectionId, ...(spec.allDescendants ? { allDescendants: true } : {}) }] };
     if (filters.length === 1) structuredQuery['where'] = filters[0];
     if (filters.length > 1) structuredQuery['where'] = { compositeFilter: { op: 'AND', filters } };
     if (spec.orderBy) {

@@ -26,3 +26,30 @@ describe('security hardening', () => {
     expect(line).toContain('a***@example.com');
   });
 });
+
+describe('feature 004 hardening', () => {
+  it('local blob store and the retention trigger do not exist outside the emulator', async () => {
+    const { env } = await import('cloudflare:workers');
+    const { app } = await import('../src/index.js');
+    const prod = { ...env, ENVIRONMENT: 'production' };
+    expect((await app.request('/local-blobs/abc.def', { method: 'GET' }, prod)).status).toBe(404);
+    expect((await app.request('/local-admin/run-retention', { method: 'POST' }, prod)).status).toBe(404);
+  });
+
+  it('emulator-only providers refuse to start in production', async () => {
+    const { createAiProvider } = await import('../src/providers/ai.js');
+    const { createStorageProvider } = await import('../src/providers/storage.js');
+    const prod = { ENVIRONMENT: 'production', FIREBASE_PROJECT_ID: 'p' };
+    expect(() => createAiProvider({ ...prod, AI_PROVIDER: 'fake' })).toThrow();
+    expect(() => createStorageProvider({ ...prod, STORAGE: 'local' })).toThrow();
+    expect(() => createAiProvider({ ...prod, AI_PROVIDER: 'gemini' })).toThrow(/not configured/);
+  });
+
+  it('scan failures log the error class only, never receipt content', async () => {
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    log('warn', 'scan_failed', { tripId: 't', scanId: 's', provider: 'fake', code: 'AI_UNAVAILABLE' });
+    const line = String(spy.mock.calls[0]?.[0]);
+    spy.mockRestore();
+    expect(Object.keys(JSON.parse(line)).sort()).toEqual(['code', 'event', 'level', 'provider', 'scanId', 'tripId']);
+  });
+});

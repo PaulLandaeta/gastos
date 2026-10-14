@@ -11,6 +11,7 @@ import { DashboardPanel } from '../dashboard/DashboardPanel';
 import { SettlementsPanel } from '../settlements/SettlementsPanel';
 import { MembersPanel } from '../members/MembersPanel';
 import { EditTripForm } from './EditTripForm';
+import { ExpiringNotice } from '../attachments/ExpiringNotice';
 import { QuickActions } from './QuickActions';
 import { StatusBadge } from './status';
 import { ReadOnlyBanner, TripStatusActions } from './TripStatusActions';
@@ -66,6 +67,7 @@ export function TripDetailPage() {
         </div>
       )}
       <QuickActions trip={trip} />
+      <ExpiringNotice tripId={trip.id} />
       {trip.status !== 'pending' && (
         <nav aria-label="Secciones del viaje" className="flex gap-4 text-sm font-medium">
           <Link to={`/trips/${trip.id}/expenses`} className="text-brand-800 underline">

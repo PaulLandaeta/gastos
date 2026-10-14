@@ -8,6 +8,8 @@ import { NotFound } from '../../components/NotFound';
 import { Spinner } from '../../components/Spinner';
 import { ApiError, api } from '../../lib/apiClient';
 import { useCurrentUser } from '../auth/AuthProvider';
+import { localProblem } from '../attachments/AttachmentPicker';
+import { ACCEPT, attachFiles } from '../attachments/upload';
 import { useTrip } from '../trips/useTrip';
 
 /** FR-001/FR-005: register a payment (optionally prefilled from the simplified proposal). */
@@ -23,6 +25,7 @@ export function PaySettlementPage() {
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<unknown>(null);
+  const [proof, setProof] = useState<File[]>([]);
   const key = useRef(crypto.randomUUID());
 
   if (loading || trip === undefined) return <Spinner />;
@@ -39,12 +42,22 @@ export function PaySettlementPage() {
         body: { toUid: receiver, amountMinor: amount, ...(note.trim() ? { note } : {}) },
         idempotencyKey: key.current,
       });
+      let proofFailed = false;
+      if (proof.length > 0) {
+        try {
+          await attachFiles(tripId, proof, { settlementId: res.settlement.id });
+        } catch {
+          proofFailed = true;
+        }
+      }
       navigate(`/trips/${tripId}`, {
         state: {
           flash: {
-            message: res.exceedsDebt
-              ? 'Pago registrado: pendiente de confirmación (supera la deuda actual).'
-              : 'Pago registrado: pendiente de confirmación.',
+            message:
+              (res.exceedsDebt
+                ? 'Pago registrado: pendiente de confirmación (supera la deuda actual).'
+                : 'Pago registrado: pendiente de confirmación.') +
+              (proofFailed ? ' No se pudo subir el comprobante; puedes adjuntarlo desde la lista de pagos.' : ''),
           },
         },
       });
@@ -73,8 +86,23 @@ export function PaySettlementPage() {
       <Field id="pay-note" label="Nota (opcional)">
         <input id="pay-note" maxLength={200} className={inputClass} value={note} onChange={(e) => setNote(e.target.value)} />
       </Field>
+      <Field id="pay-proof" label="Comprobante (opcional)">
+        <input
+          id="pay-proof"
+          type="file"
+          multiple
+          accept={ACCEPT}
+          className="block w-full text-sm"
+          onChange={(e) => setProof([...(e.target.files ?? [])])}
+        />
+      </Field>
+      {localProblem(proof) && (
+        <p role="alert" className="rounded-lg bg-red-50 p-2 text-sm text-red-800">
+          {localProblem(proof)}
+        </p>
+      )}
       <ErrorMessage error={error} />
-      <button type="submit" disabled={saving || !amount || !receiver} className="w-full rounded-xl bg-brand-700 px-4 py-3 font-semibold text-white disabled:opacity-60">
+      <button type="submit" disabled={saving || !amount || !receiver || !!localProblem(proof)} className="w-full rounded-xl bg-brand-700 px-4 py-3 font-semibold text-white disabled:opacity-60">
         {saving ? 'Registrando…' : 'Registrar pago'}
       </button>
     </form>

@@ -56,11 +56,41 @@ service cloud.firestore {
                 || isManager(tripId));
           allow write: if false;
         }
+
+        // Receipts (004) inherit the parent expense visibility; files only via signed API URLs.
+        match /attachments/{attachmentId} {
+          allow read: if isMember(tripId)
+            && (request.auth.uid
+                  in get(/databases/$(database)/documents/trips/$(tripId)/expenses/$(expenseId)).data.viewerUids
+                || isManager(tripId));
+          allow write: if false;
+        }
       }
 
       // Payments are part of the public debt graph (RF-39).
       match /settlements/{settlementId} {
         allow read: if isMember(tripId);
+        allow write: if false;
+
+        // Payment proofs (004): payer, receiver or managers.
+        match /attachments/{attachmentId} {
+          allow read: if isMember(tripId)
+            && (request.auth.uid in [
+                  get(/databases/$(database)/documents/trips/$(tripId)/settlements/$(settlementId)).data.fromUid,
+                  get(/databases/$(database)/documents/trips/$(tripId)/settlements/$(settlementId)).data.toUid]
+                || isManager(tripId));
+          allow write: if false;
+        }
+      }
+
+      // Pending uploads and scan drafts (004): owner only.
+      match /uploads/{uploadId} {
+        allow read: if isMember(tripId) && resource.data.uploadedBy == request.auth.uid;
+        allow write: if false;
+      }
+
+      match /scans/{scanId} {
+        allow read: if isMember(tripId) && resource.data.requestedBy == request.auth.uid;
         allow write: if false;
       }
 
