@@ -122,11 +122,9 @@ describe('trips, members and invitations (US3)', () => {
     );
   });
 
-  it('expenses, projections, audit and idempotency keys are never readable by clients', async () => {
+  it('projections, audit and idempotency keys are never readable by clients (expenses: see 002 suite)', async () => {
     for (const who of [ana, pedro]) {
       const db = as(env, who).firestore();
-      await assertFails(db.doc('trips/t1/expenses/e1').get());
-      await assertFails(db.collection('trips/t1/expenses').get());
       await assertFails(db.doc('trips/t1/projections/ledger').get());
       await assertFails(db.doc('trips/t1/auditEvents/a1').get());
       await assertFails(db.doc('idempotencyKeys/t1_ana_k').get());
@@ -138,5 +136,71 @@ describe('trips, members and invitations (US3)', () => {
     await assertFails(db.doc('trips/t1').update({ name: 'x' }));
     await assertFails(db.doc('trips/t1/members/pedro').update({ role: 'admin' }));
     await assertFails(as(env, juan).firestore().doc('invitations/juan@example.com/trips/t1').update({ status: 'accepted' }));
+  });
+});
+
+describe('expenses privacy (002)', () => {
+  const juan = { uid: 'juan', email: 'juan@example.com' };
+  const eve = { uid: 'eve', email: 'eve@example.com' };
+  const adm = { uid: 'adm', email: 'adm@example.com' };
+
+  beforeEach(async () => {
+    await seed(env, {
+      'trips/t1': { name: 'Uyuni', status: 'active' },
+      'trips/t1/members/ana': { uid: 'ana', role: 'creator', invitationStatus: 'accepted' },
+      'trips/t1/members/pedro': { uid: 'pedro', role: 'member', invitationStatus: 'accepted' },
+      'trips/t1/members/juan': { uid: 'juan', role: 'member', invitationStatus: 'accepted' },
+      'trips/t1/members/adm': { uid: 'adm', role: 'admin', invitationStatus: 'accepted' },
+      'trips/t1/expenses/e1': { viewerUids: ['ana', 'pedro'], totalMinor: 1000, transactionDate: '2026-11-01', createdAt: new Date() },
+      'trips/t1/expenses/e2': { viewerUids: ['juan'], totalMinor: 500, transactionDate: '2026-11-02', createdAt: new Date() },
+      'trips/t1/categories/default-food': { name: 'Comida', active: true },
+      'trips/t1/projections/public': { sharedTotalMinor: 1500 },
+      'trips/t1/projections/categories': { byCategory: {} },
+      'trips/t1/memberStats/juan': { contributedMinor: 500 },
+    });
+  });
+
+  it('viewers read their expenses; non-involved members cannot (PRD: comprobante privado)', async () => {
+    await assertSucceeds(as(env, pedro).firestore().doc('trips/t1/expenses/e1').get());
+    await assertFails(as(env, juan).firestore().doc('trips/t1/expenses/e1').get());
+    await assertSucceeds(as(env, juan).firestore().doc('trips/t1/expenses/e2').get());
+  });
+
+  it('creator and admins read every expense; strangers none', async () => {
+    await assertSucceeds(as(env, ana).firestore().doc('trips/t1/expenses/e2').get());
+    await assertSucceeds(as(env, adm).firestore().doc('trips/t1/expenses/e1').get());
+    await assertSucceeds(as(env, adm).firestore().collection('trips/t1/expenses').get());
+    await assertFails(as(env, eve).firestore().doc('trips/t1/expenses/e1').get());
+  });
+
+  it('a demoted admin loses access immediately', async () => {
+    await seed(env, { 'trips/t1/members/adm': { uid: 'adm', role: 'member', invitationStatus: 'accepted' } });
+    await assertFails(as(env, adm).firestore().doc('trips/t1/expenses/e1').get());
+  });
+
+  it('members must constrain list queries with viewerUids array-contains', async () => {
+    const db = as(env, juan).firestore();
+    await assertFails(db.collection('trips/t1/expenses').get());
+    await assertSucceeds(db.collection('trips/t1/expenses').where('viewerUids', 'array-contains', 'juan').get());
+    await assertFails(db.collection('trips/t1/expenses').where('viewerUids', 'array-contains', 'ana').get());
+  });
+
+  it('categories are readable by members only', async () => {
+    await assertSucceeds(as(env, juan).firestore().doc('trips/t1/categories/default-food').get());
+    await assertFails(as(env, eve).firestore().doc('trips/t1/categories/default-food').get());
+  });
+
+  it('projections and memberStats are never readable by clients (dashboard via API)', async () => {
+    for (const who of [ana, adm, juan]) {
+      const db = as(env, who).firestore();
+      await assertFails(db.doc('trips/t1/projections/public').get());
+      await assertFails(db.doc('trips/t1/projections/categories').get());
+      await assertFails(db.doc('trips/t1/memberStats/juan').get());
+    }
+  });
+
+  it('clients cannot write expenses or categories', async () => {
+    await assertFails(as(env, ana).firestore().doc('trips/t1/expenses/e3').set({ viewerUids: ['ana'] }));
+    await assertFails(as(env, adm).firestore().doc('trips/t1/categories/x').set({ name: 'X' }));
   });
 });

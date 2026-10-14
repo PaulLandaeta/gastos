@@ -35,7 +35,7 @@ Cada sección resuelve una incógnita del Technical Context de `plan.md`.
   → intercambio en `https://oauth2.googleapis.com/token` (scope `datastore`). En emulador:
   `FIRESTORE_EMULATOR_HOST` + header `Authorization: Bearer owner` (omite Rules, como un admin).
 - **Transacciones**: `beginTransaction` → lecturas con `transaction` → `commit`. Firestore usa
-  bloqueo optimista en el servidor; si el commit falla por `ABORTED` se hace rollback y se reintenta hasta 4 veces con backoff exponencial con jitter.
+  bloqueo optimista en el servidor; si el commit falla por `ABORTED` se hace rollback y se reintenta hasta 6 veces con backoff exponencial con jitter; también ante `FAILED_PRECONDITION`/`ALREADY_EXISTS`, porque toda precondición enviada proviene de una lectura de la misma transacción (creación concurrente de proyecciones).
 - **Alternatives considered**: `firefighter` (npm); escritura desde cliente con Rules
   (rechazado por Principio III).
 

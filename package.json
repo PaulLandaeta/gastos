@@ -9,7 +9,7 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "pnpm -r --parallel typecheck",
-    "test": "pnpm -r --filter finance-engine --filter contracts --filter api test",
+    "test": "pnpm -r --filter finance-engine --filter contracts --filter web --filter api test",
     "test:rules": "vitest run --config firebase/vitest.config.ts",
     "emulators": "JAVA_HOME=${JAVA21_HOME:-/opt/homebrew/opt/openjdk@21} PATH=${JAVA21_HOME:-/opt/homebrew/opt/openjdk@21}/bin:$PATH firebase emulators:start --project demo-gastos --only auth,firestore",
     "emulators:exec": "JAVA_HOME=${JAVA21_HOME:-/opt/homebrew/opt/openjdk@21} PATH=${JAVA21_HOME:-/opt/homebrew/opt/openjdk@21}/bin:$PATH firebase emulators:exec --project demo-gastos --only auth,firestore",

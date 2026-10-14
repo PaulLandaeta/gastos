@@ -5,7 +5,9 @@ import { AppError } from '../http/errors.js';
 import { assertSafeId } from '../http/ids.js';
 import { mutationContext } from '../http/mutation.js';
 import { parseWith, readJson } from '../http/validate.js';
+import { checkDuplicates } from '../services/duplicates.js';
 import { createExpense, voidExpense } from '../services/expenses.js';
+import { getExpenseHistory } from '../services/history.js';
 
 export function expenseRoutes(app: Hono<AppEnv>): void {
   app.post('/v1/trips/:tripId/expenses', async (c) => {
@@ -16,7 +18,7 @@ export function expenseRoutes(app: Hono<AppEnv>): void {
       });
     }
     const body = parseWith(CreateExpenseBody, await readJson(c.req.raw));
-    const result = await createExpense(c.get('db'), c.req.param('tripId'), body, key.data, mutationContext(c));
+    const result = await createExpense(c.get('db'), c.req.param('tripId'), body, key.data, mutationContext(c), checkDuplicates);
     return c.json(result, 201);
   });
 
@@ -30,6 +32,12 @@ export function expenseRoutes(app: Hono<AppEnv>): void {
         expectedVersion,
         mutationContext(c),
       ),
+    );
+  });
+
+  app.get('/v1/trips/:tripId/expenses/:expenseId/history', async (c) => {
+    return c.json(
+      await getExpenseHistory(c.get('db'), c.req.param('tripId'), assertSafeId(c.req.param('expenseId')), c.get('user').uid),
     );
   });
 }

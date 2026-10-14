@@ -58,3 +58,34 @@ describe('CPU budget per request (Workers Free: 10 ms)', () => {
     expect(totalMs).toBeLessThan(5); // 50 % headroom against the 10 ms limit
   });
 });
+
+describe('CPU budget — expense v2 with projections (feature 002)', () => {
+  it('engine + visibility + projections for 4 viewers stays well below 10 ms', async () => {
+    const { applyExpense, rebuildProjections } = await import('../src/services/projections.js');
+    const { viewerUidsOf } = await import('../src/services/visibility.js');
+    const members: Member[] = ['a', 'b', 'c', 'd'].map((uid, joinOrder) => ({ uid, joinOrder }));
+    const items = Array.from({ length: 40 }, (_, index) => ({
+      id: `i${index}`, index, grossMinor: 1_000 + index, discountMinor: 0,
+      classification: (index % 5 === 0 ? 'personal' : 'shared') as 'personal' | 'shared',
+      beneficiaries: index % 5 === 0 ? ['a'] : ['a', 'b', 'c', 'd'], allocation: { mode: 'equal' as const },
+    }));
+    const total = items.reduce((s, i) => s + i.grossMinor, 0);
+    const input = { seq: 12, totalMinor: total, payers: [{ uid: 'b', amountMinor: total }], splitMode: 'items' as const, items, adjustments: [], members };
+    const ms = await median(() => {
+      const r = computeExpense(input);
+      const charges = Object.values(r.chargesByMember);
+      const exp = {
+        categoryId: 'default-food',
+        payers: input.payers,
+        chargesByMember: r.chargesByMember,
+        viewerUids: viewerUidsOf({ createdBy: 'c', payers: input.payers, items }),
+        sharedTotalMinor: charges.reduce((s, c) => s + c.sharedMinor, 0),
+      };
+      const p = rebuildProjections([]);
+      applyExpense(p, exp, 1);
+      return encodeFields({ ...exp, items, ledgerEffect: r.ledgerEffect, p: p.memberStats });
+    });
+    console.log(JSON.stringify({ expenseV2Ms: ms.toFixed(3) }));
+    expect(ms).toBeLessThan(5);
+  });
+});

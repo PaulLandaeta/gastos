@@ -4,7 +4,7 @@ export interface AuditInput {
   tripId: string;
   actorUid: string;
   action: string;
-  entityType: 'trip' | 'member' | 'invitation' | 'expense';
+  entityType: 'trip' | 'member' | 'invitation' | 'expense' | 'category';
   entityId: string;
   beforeVersion: number | null;
   afterVersion: number | null;

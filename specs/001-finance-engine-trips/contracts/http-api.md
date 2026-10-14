@@ -1,5 +1,8 @@
 # Contrato HTTP API v1 (Cloudflare Worker)
 
+> Ampliado por la feature 002: [`specs/002-manual-expenses-privacy/contracts/http-api.md`](../../002-manual-expenses-privacy/contracts/http-api.md)
+> (gasto v2, categorías, historial, stats, duplicados).
+
 Base: `https://api.<dominio>/v1` · JSON UTF-8 · Esquemas Zod en `packages/contracts/src/api/`.
 
 ## Convenciones

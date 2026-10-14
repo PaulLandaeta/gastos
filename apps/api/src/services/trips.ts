@@ -5,6 +5,7 @@ import type { AuthUser } from '../auth/verifyIdToken.js';
 import type { Firestore } from '../firestore/client.js';
 import { AppError, forbidden } from '../http/errors.js';
 import { writeAudit } from './audit.js';
+import { seedDefaultCategories } from './categories.js';
 import {
   assertMutable,
   assertVersion,
@@ -86,6 +87,7 @@ export async function createTrip(db: Firestore, user: AuthUser, body: CreateInpu
       tx.set(`invitations/${row.data.email}/trips/${tripId}`, invitationIndex(tripId, trip, 'invited', creatorDisplayName, now));
     }
     tx.set(`users/${user.uid}/trips/${tripId}`, userTripIndex(tripId, trip, 'creator', now));
+    seedDefaultCategories(tx, tripId, now);
     writeAudit(
       tx,
       {

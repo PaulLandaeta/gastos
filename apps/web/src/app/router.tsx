@@ -1,8 +1,12 @@
 import { createBrowserRouter } from 'react-router';
 import { NotFound } from '../components/NotFound';
 import { AccountMenu } from '../features/auth/AccountMenu';
+import { CategoriesPage } from '../features/categories/CategoriesPage';
 import { LoginPage } from '../features/auth/LoginPage';
 import { RequireAuth } from '../features/auth/RequireAuth';
+import { ExpenseDetailPage } from '../features/expenses/ExpenseDetailPage';
+import { ExpenseListPage } from '../features/expenses/ExpenseListPage';
+import { NewExpensePage } from '../features/expenses/NewExpensePage';
 import { CreateTripPage } from '../features/trips/CreateTripPage';
 import { TripDetailPage } from '../features/trips/TripDetailPage';
 import { TripsListPage } from '../features/trips/TripsListPage';
@@ -19,6 +23,10 @@ export const router = createBrowserRouter([
           { path: '/', element: <TripsListPage /> },
           { path: '/trips/new', element: <CreateTripPage /> },
           { path: '/trips/:tripId', element: <TripDetailPage /> },
+          { path: '/trips/:tripId/expenses', element: <ExpenseListPage /> },
+          { path: '/trips/:tripId/categories', element: <CategoriesPage /> },
+          { path: '/trips/:tripId/expenses/new', element: <NewExpensePage /> },
+          { path: '/trips/:tripId/expenses/:expenseId', element: <ExpenseDetailPage /> },
           { path: '*', element: <NotFound /> },
         ],
       },

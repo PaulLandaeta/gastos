@@ -30,10 +30,18 @@ export const AdjustmentBody = z.object({
   manualShares: z.array(z.object({ uid: Uid, amountMinor: Minor })).max(50).optional(),
 });
 
-/** Body of POST /trips/{id}/expenses (service-level only in feature 001). */
+export const ServicePeriod = z
+  .object({ startDate: IsoDate, endDate: IsoDate })
+  .refine((p) => p.endDate >= p.startDate, { path: ['endDate'], message: 'End before start' });
+
+/** Body of POST /trips/{id}/expenses (v2, feature 002). */
 export const CreateExpenseBody = z.object({
   description: z.string().trim().min(1).max(120),
   transactionDate: IsoDate,
+  categoryId: z.string().min(1).max(64),
+  notes: z.string().trim().max(500).nullish(),
+  servicePeriod: ServicePeriod.nullish(),
+  confirmDuplicate: z.boolean().optional(),
   totalMinor: Minor,
   payers: z.array(z.object({ uid: Uid, amountMinor: Minor })).min(1).max(50),
   splitMode: z.enum(['total', 'items']),
@@ -52,6 +60,9 @@ export const ExpenseSummary = z.object({
   totalMinor: z.number().int(),
   status: z.enum(['active', 'voided']),
   version: z.number().int(),
+  chargesByMember: z
+    .record(z.string(), z.object({ sharedMinor: z.number().int(), personalMinor: z.number().int(), netMinor: z.number().int() }))
+    .optional(),
 });
 export type ExpenseSummary = z.infer<typeof ExpenseSummary>;
 

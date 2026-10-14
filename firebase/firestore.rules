@@ -18,6 +18,13 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/trips/$(tripId)/members/$(request.auth.uid));
     }
 
+    // Live role check: a demoted admin loses access immediately (spec 002 edge case).
+    function isManager(tripId) {
+      return isMember(tripId)
+        && get(/databases/$(database)/documents/trips/$(tripId)/members/$(request.auth.uid)).data.role
+          in ['creator', 'admin'];
+    }
+
     function ownsVerifiedEmail(email) {
       return signedIn()
         && request.auth.token.email_verified == true
@@ -33,7 +40,21 @@ service cloud.firestore {
         allow write: if false;
       }
 
-      // expenses, projections, auditEvents and any other subcollection: API only.
+      // RF-38: detail only for payers, beneficiaries and author (viewerUids) or managers.
+      // Members' list queries must use `where('viewerUids', 'array-contains', uid)`.
+      // Same rule as apps/api/src/services/visibility.ts (parity test).
+      match /expenses/{expenseId} {
+        allow read: if isMember(tripId)
+          && (request.auth.uid in resource.data.viewerUids || isManager(tripId));
+        allow write: if false;
+      }
+
+      match /categories/{categoryId} {
+        allow read: if isMember(tripId);
+        allow write: if false;
+      }
+
+      // projections, memberStats, auditEvents and any other subcollection: API only.
       match /{subcollection}/{document=**} {
         allow read, write: if false;
       }

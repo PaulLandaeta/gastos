@@ -31,12 +31,23 @@ describe('expense concurrency', () => {
     }
   });
 
-  it('parallel expenses receive unique consecutive sequence numbers', async () => {
+  it('parallel expenses never share a sequence number; CONFLICT responses are safe to retry with the same key', async () => {
     const trip = await activeTrip(ana, [juan]);
-    const results = await Promise.all(
-      Array.from({ length: 5 }, () => postExpense(ana, trip.id, equalExpense(ana.uid, [ana.uid, juan.uid]))),
-    );
+    // Distinct totals: identical ones would (correctly) trigger the duplicate warning of feature 002.
+    const requests = Array.from({ length: 5 }, (_, i) => ({
+      key: crypto.randomUUID(),
+      body: equalExpense(ana.uid, [ana.uid, juan.uid], 1000 + i),
+    }));
+    let results = await Promise.all(requests.map((r) => postExpense(ana, trip.id, r.body, r.key)));
+    for (const r of results) if (r.status !== 201) expect(r.json.error.code).toBe('CONFLICT');
+    // Client-side retry of the contended ones, same idempotency key → exactly one effect each.
+    for (let round = 0; round < 3 && results.some((r) => r.status !== 201); round++) {
+      results = await Promise.all(
+        results.map((r, i) => (r.status === 201 ? r : postExpense(ana, trip.id, requests[i]!.body, requests[i]!.key))),
+      );
+    }
     expect(results.map((r) => r.status)).toEqual([201, 201, 201, 201, 201]);
     expect(results.map((r) => r.json.expense.seq).sort()).toEqual([1, 2, 3, 4, 5]);
+    expect(await db.query(`trips/${trip.id}/expenses`)).toHaveLength(5);
   });
 });

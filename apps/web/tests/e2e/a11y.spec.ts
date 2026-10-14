@@ -45,3 +45,34 @@ test('navegación por teclado: el formulario de nuevo viaje es operable sin rat�
   await page.keyboard.press('Tab');
   await expect(page.getByLabel('Fecha de inicio')).toBeFocused();
 });
+
+test('pantallas de gastos (002) sin violaciones WCAG 2.1 AA a 360 px', async ({ browser }) => {
+  const { setupActiveTrip, ANA, PEDRO } = await import('./helpers');
+  const { page } = await setupActiveTrip(browser, ANA, [PEDRO]);
+  await page.setViewportSize({ width: 360, height: 780 });
+  await expectNoViolations(page, 'inicio del viaje con dashboard');
+
+  await page.getByRole('link', { name: 'Registro manual' }).click();
+  await page.getByRole('radio', { name: 'Por ítems de la factura' }).click();
+  await page.getByRole('button', { name: 'Añadir ítem' }).click();
+  await page.getByLabel('Importe total').fill('abc');
+  await expectNoViolations(page, 'formulario por ítems con errores');
+  await page.getByLabel('Importe total').fill('20');
+  await page.getByRole('radio', { name: 'Repartir el total' }).click();
+  await page.getByLabel('Descripción').fill('Museo');
+  await page.getByRole('button', { name: 'Guardar gasto' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
+
+  await page.getByRole('link', { name: 'Ver gastos' }).click();
+  await expectNoViolations(page, 'lista de gastos');
+  await page.getByRole('link', { name: /Museo/ }).click();
+  await expect(page.getByRole('heading', { name: 'Museo' })).toBeVisible();
+  await expectNoViolations(page, 'detalle del gasto');
+
+  await page.getByRole('link', { name: 'Volver a gastos' }).click();
+  await page.getByRole('link', { name: 'Volver al viaje' }).click();
+  await page.getByRole('link', { name: 'Categorías' }).click();
+  await expectNoViolations(page, 'categorías');
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+  expect(overflow).toBe(false);
+});

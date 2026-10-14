@@ -5,6 +5,9 @@ Gastos de viaje colaborativos: registro, reparto exacto al centavo y liquidació
 - **PRD**: [`PRD_Gastos_de_Viaje_React_Firebase.md`](PRD_Gastos_de_Viaje_React_Firebase.md)
 - **Constitution (SDD con Spec Kit)**: [`.specify/memory/constitution.md`](.specify/memory/constitution.md)
 - **Features**: [`specs/`](specs/) — cada una con spec, plan, contratos y tareas.
+  - `001-finance-engine-trips`: motor financiero, login Google, viajes, invitaciones, roles, estados y saldos.
+  - `002-manual-expenses-privacy`: registro manual (total o por ítems), categorías, privacidad del detalle (RF-38),
+    gastos personales, dashboard con filtros, anulación con historial y aviso de duplicados.
 
 ## Stack (sin tarjeta de crédito)
 

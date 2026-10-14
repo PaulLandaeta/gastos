@@ -37,6 +37,7 @@ export function equalExpense(payerUid: string, beneficiaries: string[], totalMin
   return {
     description: 'Cena',
     transactionDate: '2026-11-01',
+    categoryId: 'default-food',
     totalMinor,
     payers: [{ uid: payerUid, amountMinor: totalMinor }],
     splitMode: 'total',

@@ -10,7 +10,7 @@ fila es un test obligatorio en `firebase/tests/rules.test.ts` (positivo y negati
 | `trips/{tripId}` | miembro aceptado (`exists(members/{auth.uid})`) | usuario sin vínculo; invitado aún no aceptado |
 | `trips/{tripId}/members/{key}` | miembro aceptado: todas las filas | invitado no aceptado; ajeno |
 | `invitations/{email}/trips/{tripId}` | `token.email.lower() == email && token.email_verified` (contiene el resumen del viaje que ve el invitado) | email distinto; no verificado |
-| `trips/{tripId}/expenses/**` | nadie (vía API) | miembro, admin y creador (en esta feature) |
+| `trips/{tripId}/expenses/**` | nadie en 001 — **sustituido por 002** (lectura por `viewerUids` o rol admin/creador) | ver `specs/002-manual-expenses-privacy/contracts/access-rules.md` |
 | `trips/{tripId}/projections/**` | nadie (vía API) | miembro |
 | `trips/{tripId}/auditEvents/**` | nadie | miembro, creador |
 | `idempotencyKeys/**` | nadie | cualquiera |

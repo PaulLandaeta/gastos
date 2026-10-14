@@ -13,6 +13,12 @@ const MESSAGES: Partial<Record<string, string>> = {
   NOT_FOUND: 'No encontrado o sin acceso.',
   VALIDATION_FAILED: 'Revisa los datos del formulario.',
   NETWORK: 'Sin conexión con el servidor.',
+  POSSIBLE_DUPLICATE: 'Parece un gasto ya registrado.',
+  CATEGORY_INACTIVE: 'La categoría ya no está disponible. Elige otra.',
+  DUPLICATE_CATEGORY: 'Ya existe una categoría con ese nombre.',
+  NOT_RECONCILED: 'Los importes no cuadran con el total.',
+  INVALID_PERCENT: 'Los porcentajes deben sumar exactamente 100,00 %.',
+  ITEM_WITHOUT_BENEFICIARY: 'Hay ítems sin beneficiario.',
 };
 
 export function errorText(error: unknown): string {

@@ -35,7 +35,8 @@ const OPS: Record<Op, string> = {
   'array-contains': 'ARRAY_CONTAINS',
 };
 
-const MAX_ATTEMPTS = 5; // 1 + 4 retries on ABORTED (research R2)
+const RETRYABLE = new Set(['ABORTED', 'FAILED_PRECONDITION', 'ALREADY_EXISTS']);
+const MAX_ATTEMPTS = 7; // 1 + 6 retries on ABORTED (research R2)
 
 /** Exponential backoff with full jitter between transaction retries (I/O wait, not CPU). */
 const backoff = (attempt: number) =>
@@ -206,7 +207,11 @@ export class Firestore {
         });
         return result;
       } catch (e) {
-        if (e instanceof FirestoreError && e.status === 'ABORTED' && attempt < MAX_ATTEMPTS) {
+        // ABORTED = contention. FAILED_PRECONDITION / ALREADY_EXISTS = a document read in this
+        // transaction changed or was created concurrently (every precondition we send comes from a
+        // read in the same transaction), so re-running `fn` with fresh reads is correct. Business
+        // conflicts (expectedVersion) are raised inside `fn` and are not retried.
+        if (e instanceof FirestoreError && RETRYABLE.has(e.status) && attempt < MAX_ATTEMPTS) {
           // Release any locks still held by the aborted attempt before retrying.
           await this.rollback(transaction);
           await backoff(attempt);
