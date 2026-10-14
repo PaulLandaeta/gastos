@@ -1,5 +1,8 @@
 # Contrato HTTP API v1 — cambios de la feature 002
 
+> Ampliado por la feature 003: [`specs/003-settlements-edits-refunds/contracts/http-api.md`](../../003-settlements-edits-refunds/contracts/http-api.md)
+> (pagos, edición, previsualización, restauración, devoluciones).
+
 Base y convenciones: `specs/001-finance-engine-trips/contracts/http-api.md` (auth, errores,
 versionado, idempotencia). Aquí solo lo nuevo o modificado.
 

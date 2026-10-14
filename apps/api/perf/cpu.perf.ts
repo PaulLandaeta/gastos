@@ -89,3 +89,26 @@ describe('CPU budget — expense v2 with projections (feature 002)', () => {
     expect(ms).toBeLessThan(5);
   });
 });
+
+describe('CPU budget — edit and refund (feature 003)', () => {
+  it('edit (−old +new) plus a refund effect stays well below 10 ms', async () => {
+    const { combineEffects, negateEffect, refundEffect, itemChargesByMember } = await import('finance-engine');
+    const members: Member[] = Array.from({ length: 10 }, (_, i) => ({ uid: `u${i}`, joinOrder: i }));
+    const uids = members.map((m) => m.uid);
+    const items = Array.from({ length: 80 }, (_, index) => ({
+      id: `i${index}`, index, grossMinor: 2_000 + index, discountMinor: 0, classification: 'shared' as const,
+      beneficiaries: uids, allocation: { mode: 'equal' as const },
+    }));
+    const total = items.reduce((s, i) => s + i.grossMinor, 0);
+    const base = { seq: 5, totalMinor: total, payers: [{ uid: 'u0', amountMinor: total }], splitMode: 'items' as const, items, adjustments: [], members };
+    const old = computeExpense(base).ledgerEffect;
+    const ms = await median(() => {
+      const next = computeExpense({ ...base, seq: 5 }).ledgerEffect;
+      const delta = combineEffects(negateEffect(old), next);
+      const r = refundEffect({ amountMinor: 1_000, recipientUid: 'u3', itemCharges: itemChargesByMember(base, 'i7'), rotation: 11, members });
+      return combineEffects(delta, r.ledgerEffect);
+    });
+    console.log(JSON.stringify({ editRefundMs: ms.toFixed(3) }));
+    expect(ms).toBeLessThan(5);
+  });
+});

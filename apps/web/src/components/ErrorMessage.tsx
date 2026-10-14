@@ -1,7 +1,7 @@
 import { ApiError } from '../lib/apiClient';
 
 const MESSAGES: Partial<Record<string, string>> = {
-  CONFLICT: 'Otra persona modificó el viaje. Revisa los datos actualizados e inténtalo de nuevo.',
+  CONFLICT: 'Otra persona hizo cambios mientras editabas. Revisa los datos actualizados e inténtalo de nuevo.',
   DUPLICATE_INVITATION: 'Ese correo ya está invitado o ya participa en el viaje.',
   MEMBER_ALREADY_ACCEPTED: 'No se puede retirar a un participante que ya aceptó.',
   PARTICIPANTS_LOCKED: 'Los participantes quedaron fijos al registrar el primer gasto.',
@@ -16,6 +16,9 @@ const MESSAGES: Partial<Record<string, string>> = {
   POSSIBLE_DUPLICATE: 'Parece un gasto ya registrado.',
   CATEGORY_INACTIVE: 'La categoría ya no está disponible. Elige otra.',
   DUPLICATE_CATEGORY: 'Ya existe una categoría con ese nombre.',
+  PREVIEW_REQUIRED: 'Revisa el impacto en los saldos antes de confirmar.',
+  REFUND_EXCEEDS: 'La devolución supera lo reembolsable.',
+  REFUND_CONSTRAINT: 'No puedes dejar un ítem por debajo de lo ya devuelto.',
   NOT_RECONCILED: 'Los importes no cuadran con el total.',
   INVALID_PERCENT: 'Los porcentajes deben sumar exactamente 100,00 %.',
   ITEM_WITHOUT_BENEFICIARY: 'Hay ítems sin beneficiario.',

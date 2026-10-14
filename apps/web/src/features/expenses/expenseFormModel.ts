@@ -14,6 +14,8 @@ export interface DraftItem {
   grossMinor: number | null;
   discountMinor: number | null;
   classification: 'shared' | 'personal';
+  /** Units bought (refunds by quantity, feature 003). */
+  quantity: number;
   beneficiaries: string[];
   mode: AllocationMode;
   /** uid → minor units (fixed mode). */
@@ -87,6 +89,7 @@ export function newItem(beneficiaries: string[], classification: 'shared' | 'per
     grossMinor: null,
     discountMinor: null,
     classification,
+    quantity: 1,
     beneficiaries: classification === 'personal' ? beneficiaries.slice(0, 1) : [...beneficiaries],
     mode: 'equal',
     fixed: {},
@@ -143,6 +146,7 @@ export function toBody(d: ExpenseDraft): CreateExpenseBody {
     ...(item.description.trim() ? { description: item.description.trim() } : {}),
     grossMinor: n(item.grossMinor),
     discountMinor: n(item.discountMinor),
+    quantity: Math.max(1, item.quantity || 1),
     classification: item.classification,
     beneficiaries: item.beneficiaries,
     allocation: allocationOf(item),

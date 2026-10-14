@@ -52,7 +52,8 @@ describe('expense v2', () => {
     expect(e).toMatchObject({
       categoryId: 'default-food',
       notes: 'ticket 123',
-      schemaVersion: 2,
+      schemaVersion: 3,
+      refundedByItem: {},
       createdBy: juan.uid,
       payerUids: [ana.uid, pedro.uid].sort(),
       beneficiaryUids: [ana.uid, pedro.uid].sort(),

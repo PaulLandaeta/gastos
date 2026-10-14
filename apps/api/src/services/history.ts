@@ -20,6 +20,7 @@ export async function getExpenseHistory(db: Firestore, tripId: string, expenseId
         actorUid: e.data['actorUid'] as string,
         timestamp: (e.data['timestamp'] as Date).toISOString(),
         afterVersion: (e.data['afterVersion'] as number | null) ?? null,
+        changed: ((e.data['redactedDiff'] as { changed?: string[] } | undefined)?.changed ?? []) as string[],
       })),
     };
   });

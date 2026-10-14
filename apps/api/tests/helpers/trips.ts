@@ -65,3 +65,20 @@ export const postExpense = (user: TestUser, tripId: string, body: unknown, key: 
 export async function tripVersion(user: TestUser, tripId: string): Promise<number> {
   return (await call(user, 'GET', `/v1/trips/${tripId}`)).json.trip.version as number;
 }
+
+/** Pedro pays a personal item of Ana: Ana owes Pedro `amount`. */
+export async function anaOwesPedro(tripId: string, ana: TestUser, pedro: TestUser, amount = 2000) {
+  const body = equalExpense(pedro.uid, [ana.uid], amount);
+  return postExpense(pedro, tripId, { ...body, items: [{ ...body.items[0], classification: 'personal' }] });
+}
+
+export const pay = (user: TestUser, tripId: string, toUid: string, amountMinor: number, key = crypto.randomUUID()) =>
+  call(user, 'POST', `/v1/trips/${tripId}/settlements`, { body: { toUid, amountMinor }, headers: { 'idempotency-key': key } });
+
+export const resolveSettlement = (user: TestUser, tripId: string, id: string, action: 'confirm' | 'reject' | 'cancel', body: Record<string, unknown> = {}) =>
+  call(user, 'POST', `/v1/trips/${tripId}/settlements/${id}/${action}`, { body: { expectedVersion: 1, ...body } });
+
+export async function netOf(user: TestUser, tripId: string, uid: string): Promise<number> {
+  const res = await call(user, 'GET', `/v1/trips/${tripId}/balances?view=original`);
+  return (res.json.netByMember as { uid: string; netMinor: number }[]).find((b) => b.uid === uid)!.netMinor;
+}

@@ -73,6 +73,17 @@ function ItemRow({
           onChange={(v) => onChange({ ...item, grossMinor: v })}
         />
       </div>
+      <label className="flex items-center gap-2 text-sm">
+        Cantidad
+        <input
+          type="number"
+          min={1}
+          inputMode="numeric"
+          className="w-20 rounded-lg border border-slate-300 px-2 py-1"
+          value={item.quantity}
+          onChange={(e) => onChange({ ...item, quantity: Math.max(1, Number.parseInt(e.target.value || '1', 10) || 1) })}
+        />
+      </label>
       <details className="text-sm">
         <summary className="cursor-pointer text-slate-700">Descuento del ítem</summary>
         <div className="mt-2 max-w-48">
