@@ -1,5 +1,6 @@
 import { isErrorCode, type ErrorCode } from 'contracts';
 import { auth } from './firebase';
+import { reportNetworkFailure, reportNetworkSuccess } from './useOnline';
 
 export class ApiError extends Error {
   constructor(
@@ -23,7 +24,14 @@ interface RequestOptions {
 export async function api<T>(method: string, path: string, opts: RequestOptions = {}): Promise<T> {
   const user = auth.currentUser;
   if (!user) throw new ApiError('UNAUTHENTICATED', 401, 'Sesión no iniciada');
-  const token = await user.getIdToken();
+  let token: string;
+  try {
+    token = await user.getIdToken();
+  } catch {
+    // Refreshing an expired token needs the network (auth/network-request-failed).
+    reportNetworkFailure();
+    throw new ApiError('NETWORK', 0, 'No se pudo conectar con el servidor');
+  }
   const url = new URL(`${import.meta.env.VITE_API_URL}${path}`);
   for (const [k, v] of Object.entries(opts.query ?? {})) url.searchParams.set(k, String(v));
 
@@ -39,8 +47,10 @@ export async function api<T>(method: string, path: string, opts: RequestOptions 
       ...(opts.body !== undefined ? { body: JSON.stringify(opts.body) } : {}),
     });
   } catch {
+    reportNetworkFailure();
     throw new ApiError('NETWORK', 0, 'No se pudo conectar con el servidor');
   }
+  reportNetworkSuccess();
 
   const text = await res.text();
   const json = text ? (JSON.parse(text) as unknown) : undefined;

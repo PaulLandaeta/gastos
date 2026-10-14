@@ -2,12 +2,14 @@ import type { Role, TripStatus, TripStatusAction } from 'contracts';
 import type { Firestore } from '../firestore/client.js';
 import { AppError, forbidden } from '../http/errors.js';
 import { writeAudit } from './audit.js';
+import { actorName, notificationsFor, writeNotifications } from './notifications.js';
 import {
   assertVersion,
   creatorName,
   loadTripForMember,
   syncIndexes,
   toTripDto,
+  tripRefOf,
   writeTrip,
   type MutationContext,
   type TripData,
@@ -67,6 +69,17 @@ export async function changeTripStatus(
         correlationId: ctx.correlationId,
         diff: { from: trip.data.status, to: next.status },
       },
+      ctx.now,
+    );
+    writeNotifications(
+      tx,
+      notificationsFor({
+        kind: 'trip.status_changed',
+        trip: tripRefOf(trip),
+        actor: { uid: ctx.actorUid, name: actorName(members, ctx.actorUid) },
+        status: next.status,
+        memberUids: members.filter((m) => m.data.invitationStatus === 'accepted' && m.data.uid).map((m) => m.data.uid!),
+      }),
       ctx.now,
     );
     return { trip: toTripDto(tripId, next) };

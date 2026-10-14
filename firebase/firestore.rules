@@ -118,6 +118,12 @@ service cloud.firestore {
         allow read: if isSelf(uid);
         allow write: if false;
       }
+
+      // Feature 005 (RF-18): in-app notifications, only for their owner; written by the API.
+      match /notifications/{notificationId} {
+        allow read: if isSelf(uid);
+        allow write: if false;
+      }
     }
 
     match /{document=**} {

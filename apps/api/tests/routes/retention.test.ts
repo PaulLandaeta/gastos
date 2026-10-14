@@ -104,3 +104,34 @@ describe('runRetention (US4, RF-52)', () => {
     await waitOnExecutionContext(ctx);
   });
 });
+
+describe('feature 005: expiring notices and notification retention', () => {
+  it('announces a receipt entering the 14-day window once, to the people who see the expense', async () => {
+    const { trip, ids, expenseId } = await expenseWithReceipts(['aviso']);
+    const path = `trips/${trip.id}/expenses/${expenseId}/attachments/${ids[0]}`;
+    const notices = async (uid: string) =>
+      (await db.query(`users/${uid}/notifications`)).filter((d) => d.data['type'] === 'attachment.expiring');
+
+    expect((await runRetention(db, storage, new Date())).expiringNotified).toBe(0);
+    await db.runTransaction(async (tx) => {
+      tx.update(path, { expiresAt: new Date(Date.now() + 10 * 86_400_000) });
+    });
+    expect((await runRetention(db, storage, new Date())).expiringNotified).toBe(1);
+    expect((await runRetention(db, storage, new Date())).expiringNotified).toBe(0); // idempotent
+    for (const u of [ana, pedro]) {
+      const [n] = await notices(u.uid);
+      expect(n!.data).toMatchObject({ link: `/trips/${trip.id}/expenses/${expenseId}`, actorUid: 'system' });
+    }
+    expect(await notices(users.juan.uid)).toEqual([]);
+    expect((await db.get(path))!.data['expiringNotifiedAt']).toBeInstanceOf(Date);
+  });
+
+  it('deletes notifications older than 90 days', async () => {
+    const trip = await activeTrip(ana, [pedro]);
+    await postExpense(ana, trip.id, equalExpense(ana.uid, [ana.uid, pedro.uid]));
+    expect(await db.query(`users/${pedro.uid}/notifications`)).toHaveLength(1);
+    expect((await runRetention(db, storage, new Date(Date.now() + 89 * 86_400_000))).notificationsPurged).toBe(0);
+    expect((await runRetention(db, storage, new Date(Date.now() + 91 * 86_400_000))).notificationsPurged).toBe(1);
+    expect(await db.query(`users/${pedro.uid}/notifications`)).toEqual([]);
+  });
+});

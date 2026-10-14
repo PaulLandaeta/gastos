@@ -3,6 +3,7 @@ import type { Role, TripStatusAction } from 'contracts';
 import { ErrorMessage } from '../../components/ErrorMessage';
 import { api } from '../../lib/apiClient';
 import type { LiveTrip } from './useTrip';
+import { RequiresOnline } from '../offline/RequiresOnline';
 
 const LABEL: Record<TripStatusAction, string> = {
   close: 'Cerrar viaje',
@@ -47,6 +48,7 @@ export function TripStatusActions({ trip, role }: { trip: LiveTrip; role: Role }
   const actions = allowedActions(trip, role);
   if (actions.length === 0) return null;
   return (
+    <RequiresOnline label="Cambiar estado del viaje">
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
         {actions.map((a) => (
@@ -67,5 +69,6 @@ export function TripStatusActions({ trip, role }: { trip: LiveTrip; role: Role }
       </div>
       <ErrorMessage error={change.error} />
     </div>
+    </RequiresOnline>
   );
 }

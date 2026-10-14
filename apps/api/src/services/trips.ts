@@ -5,6 +5,7 @@ import type { AuthUser } from '../auth/verifyIdToken.js';
 import type { Firestore } from '../firestore/client.js';
 import { AppError, forbidden } from '../http/errors.js';
 import { writeAudit } from './audit.js';
+import { notificationsFor, registeredUidsByEmail, writeNotifications } from './notifications.js';
 import { seedDefaultCategories } from './categories.js';
 import {
   assertMutable,
@@ -104,6 +105,18 @@ export async function createTrip(db: Firestore, user: AuthUser, body: CreateInpu
       },
       now,
     );
+    if (invitees.length) {
+      writeNotifications(
+        tx,
+        notificationsFor({
+          kind: 'invitation.received',
+          trip: { id: tripId, name: trip.name, currency: trip.currency },
+          actor: { uid: user.uid, name: creatorDisplayName },
+          inviteeUids: await registeredUidsByEmail(tx, invitees),
+        }),
+        now,
+      );
+    }
   });
   return { trip: toTripDto(tripId, trip) };
 }

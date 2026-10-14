@@ -1,7 +1,9 @@
 import type { ReceiptStorageProvider } from 'contracts';
 import type { Doc, Firestore } from '../firestore/client.js';
 import { log } from '../http/log.js';
+import { EXPIRY_NOTICE_DAYS } from 'contracts';
 import { writeAudit } from './audit.js';
+import { notificationsFor, writeNotifications } from './notifications.js';
 
 /** Small batches keep each cron invocation well inside the Workers Free CPU budget. */
 export const RETENTION_BATCH = 25;
@@ -11,7 +13,15 @@ export interface RetentionResult {
   purgedRemovals: number;
   cleanedUploads: number;
   failed: number;
+  /** Feature 005: receipts that entered the 14-day window and were announced once. */
+  expiringNotified: number;
+  /** Feature 005: notifications older than 90 days removed. */
+  notificationsPurged: number;
 }
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const EXPIRING_BATCH = 50;
+const NOTIFICATION_PURGE_BATCH = 200;
 
 const parentOf = (path: string) => {
   // trips/{t}/{expenses|settlements}/{id}/attachments/{a}
@@ -45,7 +55,7 @@ async function recordFailure(db: Firestore, path: string) {
  * re-run (or two overlapping runs) is a no-op. Financial data and audit events are never touched.
  */
 export async function runRetention(db: Firestore, storage: ReceiptStorageProvider, now: Date, batch = RETENTION_BATCH): Promise<RetentionResult> {
-  const result: RetentionResult = { expired: 0, purgedRemovals: 0, cleanedUploads: 0, failed: 0 };
+  const result: RetentionResult = { expired: 0, purgedRemovals: 0, cleanedUploads: 0, failed: 0, expiringNotified: 0, notificationsPurged: 0 };
   let budget = batch;
 
   for (const [status, next] of [
@@ -115,6 +125,72 @@ export async function runRetention(db: Firestore, storage: ReceiptStorageProvide
       if (done) result.cleanedUploads++;
     }
   }
+  result.expiringNotified = await notifyExpiring(db, now);
+  result.notificationsPurged = await purgeNotifications(db, now);
   log('info', 'retention_run', { ...result });
   return result;
+}
+
+/**
+ * Feature 005 (FR-010): one in-app notice per receipt when it enters the 14-day window, to the
+ * people who can see its expense (or the two parties of a payment). `expiringNotifiedAt` makes it
+ * idempotent across runs.
+ */
+async function notifyExpiring(db: Firestore, now: Date): Promise<number> {
+  const docs = await db.query('attachments', {
+    allDescendants: true,
+    where: [
+      ['status', '==', 'active'],
+      ['expiresAt', '>', now],
+      ['expiresAt', '<=', new Date(now.getTime() + EXPIRY_NOTICE_DAYS * DAY_MS)],
+    ],
+    orderBy: [['expiresAt', 'asc']],
+    limit: EXPIRING_BATCH,
+  });
+  let count = 0;
+  for (const doc of docs.filter((d) => !d.data['expiringNotifiedAt'])) {
+    const parent = parentOf(doc.path);
+    const sent = await db.runTransaction(async (tx) => {
+      const fresh = await tx.get(doc.path);
+      if (!fresh || fresh.data['status'] !== 'active' || fresh.data['expiringNotifiedAt']) return false;
+      const [trip, target] = await Promise.all([tx.get(`trips/${parent.tripId}`), tx.get(parent.targetPath)]);
+      if (!trip || !target) return false;
+      const isExpense = parent.kind === 'expenses';
+      const recipientUids = isExpense
+        ? ((target.data['viewerUids'] as string[]) ?? [])
+        : [target.data['fromUid'] as string, target.data['toUid'] as string];
+      tx.update(doc.path, { expiringNotifiedAt: now });
+      writeNotifications(
+        tx,
+        notificationsFor({
+          kind: 'attachment.expiring',
+          trip: { id: parent.tripId, name: trip.data['name'] as string, currency: trip.data['currency'] as string },
+          attachmentId: doc.id,
+          recipientUids,
+          link: isExpense ? `/trips/${parent.tripId}/expenses/${parent.targetId}` : `/trips/${parent.tripId}`,
+          label: isExpense ? (target.data['description'] as string) : 'Pago',
+          expiresAt: fresh.data['expiresAt'] as Date,
+        }),
+        now,
+      );
+      return true;
+    });
+    if (sent) count++;
+  }
+  return count;
+}
+
+/** Feature 005 (FR-013): notifications are kept 90 days. */
+async function purgeNotifications(db: Firestore, now: Date): Promise<number> {
+  const docs = await db.query('notifications', {
+    allDescendants: true,
+    where: [['expiresAt', '<=', now]],
+    orderBy: [['expiresAt', 'asc']],
+    limit: NOTIFICATION_PURGE_BATCH,
+  });
+  if (docs.length === 0) return 0;
+  await db.runTransaction(async (tx) => {
+    for (const d of docs) tx.delete(d.path);
+  });
+  return docs.length;
 }

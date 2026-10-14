@@ -5,7 +5,8 @@ import { AppError, forbidden, notFound } from '../http/errors.js';
 import { writeAudit } from './audit.js';
 import { findIdempotent, idempotencyPath, recordIdempotent } from './idempotency.js';
 import { applyToLedger, readLedger } from './ledgerRepo.js';
-import { assertMutable, loadTripForMember, newId, toTripDto, writeTrip, type LoadedTrip, type MutationContext } from './tripRepo.js';
+import { actorName, notificationsFor, writeNotifications } from './notifications.js';
+import { assertMutable, loadTripForMember, newId, toTripDto, tripRefOf, writeTrip, type LoadedTrip, type MutationContext } from './tripRepo.js';
 
 const settlementPath = (tripId: string, id: string) => `trips/${tripId}/settlements/${id}`;
 
@@ -88,6 +89,11 @@ export async function createSettlement(
     tx.set(settlementPath(tripId, id), data, { exists: false });
     recordIdempotent(tx, idemPath, { operation: 'settlement.create', resultRef: id }, ctx.now);
     writeAudit(tx, { tripId, actorUid: ctx.actorUid, action: 'settlement.create', entityType: 'settlement', entityId: id, beforeVersion: null, afterVersion: 1, correlationId: ctx.correlationId, diff: { amountMinor: body.amountMinor } }, ctx.now);
+    writeNotifications(
+      tx,
+      notificationsFor({ kind: 'settlement.pending', trip: tripRefOf(loaded.trip), actor: { uid: ctx.actorUid, name: actorName(loaded.members, ctx.actorUid) }, settlementId: id, fromUid: ctx.actorUid, toUid: body.toUid, amountMinor: body.amountMinor }),
+      ctx.now,
+    );
     return { settlement: toDto(id, data), exceedsDebt: body.amountMinor > owed };
   });
 }
@@ -136,6 +142,21 @@ export async function resolveSettlement(
       applyToLedger(tx, tripId, ledger, paymentEffect({ fromUid: data.fromUid, toUid: data.toUid, amountMinor: data.amountMinor, status: 'confirmed' }), trip.version);
     }
     writeAudit(tx, { tripId, actorUid: ctx.actorUid, action: `settlement.${action}`, entityType: 'settlement', entityId: id, beforeVersion: data.version, afterVersion: next.version, correlationId: ctx.correlationId }, ctx.now);
+    if (action !== 'cancel') {
+      writeNotifications(
+        tx,
+        notificationsFor({
+          kind: action === 'confirm' ? 'settlement.confirmed' : 'settlement.rejected',
+          trip: tripRefOf(loaded.trip),
+          actor: { uid: ctx.actorUid, name: actorName(loaded.members, ctx.actorUid) },
+          settlementId: id,
+          fromUid: data.fromUid,
+          toUid: data.toUid,
+          amountMinor: data.amountMinor,
+        }),
+        ctx.now,
+      );
+    }
     return { settlement: toDto(id, next), trip: toTripDto(tripId, trip) };
   });
 }

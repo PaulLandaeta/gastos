@@ -11,7 +11,9 @@ import {
 } from 'firebase/auth';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { api } from '../../lib/apiClient';
+import { clearLocalData, ensureCacheOwner } from '../../lib/cacheOwner';
 import { auth, usingEmulators } from '../../lib/firebase';
+import { localStores, startOfflineSession, stopOfflineSession } from '../offline/runtime';
 
 export interface Profile {
   uid: string;
@@ -49,11 +51,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     getRedirectResult(auth).catch(() => setState({ status: 'signedOut', error: 'No se pudo iniciar sesión.' }));
-    return onAuthStateChanged(auth, (user) => {
+    return onAuthStateChanged(auth, async (user) => {
       if (!user) {
+        stopOfflineSession();
         setState((s) => (s.status === 'signedOut' ? s : { status: 'signedOut' }));
         return;
       }
+      // FR-008: another account's offline data is wiped before anything is shown.
+      if ((await ensureCacheOwner(user.uid, localStores).catch(() => 'same')) === 'cleared') {
+        window.location.reload();
+        return;
+      }
+      await startOfflineSession(user.uid, queryClient);
       setState({ status: 'signedIn', user, profile: null });
       if (synced.current.has(user.uid)) return;
       synced.current.add(user.uid);
@@ -63,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         )
         .catch(() => synced.current.delete(user.uid));
     });
-  }, []);
+  }, [queryClient]);
 
   const signIn = useCallback(async () => {
     const provider = new GoogleAuthProvider();
@@ -79,10 +88,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  /** Pending expenses of this device are discarded (the caller warns first, FR-008). */
   const signOut = useCallback(async () => {
+    const uid = auth.currentUser?.uid;
+    stopOfflineSession();
     await firebaseSignOut(auth);
     synced.current.clear();
     queryClient.clear();
+    if (uid) await clearLocalData(uid, localStores).catch(() => undefined);
+    // The Firestore instance is terminated by the wipe: start clean.
+    window.location.assign('/login');
   }, [queryClient]);
 
   // E2E hook: only exists when running against the emulators (never in production builds).

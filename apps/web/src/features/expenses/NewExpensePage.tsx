@@ -7,6 +7,9 @@ import { ErrorMessage } from '../../components/ErrorMessage';
 import { NotFound } from '../../components/NotFound';
 import { Spinner } from '../../components/Spinner';
 import { ApiError, api } from '../../lib/apiClient';
+import { isOnline, useOnline } from '../../lib/useOnline';
+import { RequiresOnline } from '../offline/RequiresOnline';
+import { outboxFor } from '../offline/runtime';
 import { useCurrentUser } from '../auth/AuthProvider';
 import { AttachmentPicker, type UploadedFile } from '../attachments/AttachmentPicker';
 import type { ScanNavigationState } from '../scan/ScanPage';
@@ -58,6 +61,7 @@ export function NewExpensePage() {
   const [duplicate, setDuplicate] = useState<{ similar?: { description: string; transactionDate: string; totalMinor: number } } | null>(null);
   const [uploaded, setUploaded] = useState<UploadedFile[]>(fromScan?.uploads ?? []);
   const [review, setReview] = useState<{ fields: string[]; itemKeys: string[] }>({ fields: [], itemKeys: [] });
+  const online = useOnline();
   const inFlight = useRef(false);
   const idempotencyKey = useRef(crypto.randomUUID());
 
@@ -88,6 +92,19 @@ export function NewExpensePage() {
   }
   if (!draft || !evaluation) return <Spinner />;
 
+  /**
+   * Feature 005 (US1): without connection a manual expense goes to the local queue with the same
+   * idempotency key, so an attempt that did reach the server is never duplicated.
+   */
+  const queueable = uploaded.length === 0 && !scan;
+  async function saveOffline(confirmDuplicate: boolean) {
+    if (!draft) return;
+    await outboxFor(user.uid).add(tripId, { ...toBody(draft), ...(confirmDuplicate ? { confirmDuplicate: true } : {}) }, idempotencyKey.current);
+    idempotencyKey.current = crypto.randomUUID();
+    const flash: SavedFlash = { message: 'Guardado sin conexión: se enviará automáticamente cuando vuelva la conexión.' };
+    navigate(`/trips/${tripId}`, { state: { flash } });
+  }
+
   async function save(confirmDuplicate = false) {
     if (!draft || inFlight.current) return;
     inFlight.current = true;
@@ -95,6 +112,10 @@ export function NewExpensePage() {
     setError(null);
     setDuplicate(null);
     try {
+      if (!isOnline() && queueable) {
+        await saveOffline(confirmDuplicate);
+        return;
+      }
       const res = await api<CreateExpenseResponse>('POST', `/trips/${tripId}/expenses`, {
         body: {
           ...toBody(draft),
@@ -113,6 +134,10 @@ export function NewExpensePage() {
       const flash: SavedFlash = { message: 'Gasto guardado', chargesByMember: res.expense.chargesByMember };
       navigate(`/trips/${tripId}`, { state: { flash } });
     } catch (e) {
+      if (e instanceof ApiError && e.code === 'NETWORK' && queueable) {
+        await saveOffline(confirmDuplicate).catch(setError);
+        return;
+      }
       if (e instanceof ApiError && e.code === 'POSSIBLE_DUPLICATE') {
         setDuplicate((e.details ?? {}) as { similar?: { description: string; transactionDate: string; totalMinor: number } });
       } else {
@@ -168,7 +193,12 @@ export function NewExpensePage() {
               ))}
             </ul>
           )}
-          <AttachmentPicker tripId={tripId} disabled={saving} onUploaded={(files) => setUploaded((xs) => [...xs, ...files])} />
+          <RequiresOnline label="Adjuntar comprobante">
+            <AttachmentPicker tripId={tripId} disabled={saving} onUploaded={(files) => setUploaded((xs) => [...xs, ...files])} />
+          </RequiresOnline>
+          {!online && queueable && (
+            <p className="text-sm text-slate-700">Sin conexión: el gasto se guardará en este dispositivo y se enviará solo al reconectar.</p>
+          )}
         </section>
         <ErrorMessage error={error} />
         {duplicate && (

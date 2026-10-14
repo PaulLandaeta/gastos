@@ -8,9 +8,19 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
-      // Offline support is out of scope for this feature: the service worker only precaches the shell.
+      // Feature 005 (research R4): the user decides when to update, so a half-filled form or the
+      // pending queue (IndexedDB, untouched by updates) is never lost to an automatic reload.
+      registerType: 'prompt',
+      workbox: {
+        // Any route opens the app shell offline instead of the browser error page.
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/v1\//, /^\/local-blobs\//],
+        // Data is cached by Firestore and TanStack Query per account, never by the service worker.
+        runtimeCaching: [],
+      },
       manifest: {
+        id: '/',
+        scope: '/',
         name: 'Gastos de Viaje',
         short_name: 'Gastos',
         description: 'Gastos de viaje colaborativos',
@@ -27,5 +37,7 @@ export default defineConfig({
       },
     }),
   ],
-  server: { port: 5180, strictPort: true },
+  // Export libraries are loaded on demand; pre-bundle them so the dev server never reloads mid-use.
+  optimizeDeps: { include: ['write-excel-file/universal', 'jspdf', 'jspdf-autotable'] },
+  server: { port: 5180, strictPort: true, watch: { ignored: ['**/dist-e2e/**'] } },
 });

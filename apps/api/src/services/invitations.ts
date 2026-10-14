@@ -3,6 +3,7 @@ import type { AuthUser } from '../auth/verifyIdToken.js';
 import type { Firestore } from '../firestore/client.js';
 import { AppError, notFound } from '../http/errors.js';
 import { writeAudit } from './audit.js';
+import { actorName, notificationsFor, registeredUidsByEmail, writeNotifications } from './notifications.js';
 import { newInvitee } from './trips.js';
 import {
   assertMutable,
@@ -15,6 +16,7 @@ import {
   syncIndexes,
   toMemberDto,
   toTripDto,
+  tripRefOf,
   writeTrip,
   type MemberData,
   type MemberRecord,
@@ -79,6 +81,16 @@ export async function inviteMembers(
         correlationId: ctx.correlationId,
         diff: { emails: body.emails },
       },
+      ctx.now,
+    );
+    writeNotifications(
+      tx,
+      notificationsFor({
+        kind: 'invitation.received',
+        trip: tripRefOf(trip),
+        actor: { uid: ctx.actorUid, name: actorName(members, ctx.actorUid) },
+        inviteeUids: await registeredUidsByEmail(tx, body.emails),
+      }),
       ctx.now,
     );
     return { trip: toTripDto(tripId, next), members: all.map(toMemberDto) };

@@ -1,5 +1,15 @@
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, onlineManager } from '@tanstack/react-query';
+import { isOnline, subscribeOnline } from '../lib/useOnline';
 import { ApiError } from '../lib/apiClient';
+
+/**
+ * Feature 005: TanStack Query follows the app's connection state (browser + API failures) and
+ * starts from the real state, so an offline start shows cached data instead of failing requests.
+ */
+onlineManager.setEventListener((setOnline) => {
+  setOnline(isOnline());
+  return subscribeOnline(() => setOnline(isOnline()));
+});
 
 export const queryClient = new QueryClient({
   defaultOptions: {
