@@ -204,3 +204,39 @@ describe('expenses privacy (002)', () => {
     await assertFails(as(env, adm).firestore().doc('trips/t1/categories/x').set({ name: 'X' }));
   });
 });
+
+describe('settlements and refunds (003)', () => {
+  const juan = { uid: 'juan', email: 'juan@example.com' };
+  const eve = { uid: 'eve', email: 'eve@example.com' };
+
+  beforeEach(async () => {
+    await seed(env, {
+      'trips/t1': { name: 'Uyuni' },
+      'trips/t1/members/ana': { uid: 'ana', role: 'creator', invitationStatus: 'accepted' },
+      'trips/t1/members/pedro': { uid: 'pedro', role: 'member', invitationStatus: 'accepted' },
+      'trips/t1/members/juan': { uid: 'juan', role: 'member', invitationStatus: 'accepted' },
+      'trips/t1/settlements/s1': { fromUid: 'pedro', toUid: 'ana', amountMinor: 500, status: 'pending' },
+      'trips/t1/expenses/e1': { viewerUids: ['pedro'], totalMinor: 1000 },
+      'trips/t1/expenses/e1/refunds/r1': { itemId: 'i', amountMinor: 100 },
+    });
+  });
+
+  it('every member reads settlements; strangers do not', async () => {
+    await assertSucceeds(as(env, juan).firestore().doc('trips/t1/settlements/s1').get());
+    await assertSucceeds(as(env, juan).firestore().collection('trips/t1/settlements').get());
+    await assertFails(as(env, eve).firestore().doc('trips/t1/settlements/s1').get());
+  });
+
+  it('refunds inherit the parent expense visibility', async () => {
+    await assertSucceeds(as(env, pedro).firestore().doc('trips/t1/expenses/e1/refunds/r1').get());
+    await assertSucceeds(as(env, ana).firestore().collection('trips/t1/expenses/e1/refunds').get());
+    await assertFails(as(env, juan).firestore().doc('trips/t1/expenses/e1/refunds/r1').get());
+    await assertFails(as(env, eve).firestore().doc('trips/t1/expenses/e1/refunds/r1').get());
+  });
+
+  it('clients cannot write settlements or refunds', async () => {
+    await assertFails(as(env, pedro).firestore().doc('trips/t1/settlements/s2').set({ amountMinor: 1 }));
+    await assertFails(as(env, ana).firestore().doc('trips/t1/settlements/s1').update({ status: 'confirmed' }));
+    await assertFails(as(env, pedro).firestore().doc('trips/t1/expenses/e1/refunds/r2').set({ amountMinor: 1 }));
+  });
+});

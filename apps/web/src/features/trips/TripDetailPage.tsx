@@ -8,6 +8,7 @@ import { formatDateRange } from '../../lib/format';
 import { useCurrentUser } from '../auth/AuthProvider';
 import { BalancesPanel } from '../balances/BalancesPanel';
 import { DashboardPanel } from '../dashboard/DashboardPanel';
+import { SettlementsPanel } from '../settlements/SettlementsPanel';
 import { MembersPanel } from '../members/MembersPanel';
 import { EditTripForm } from './EditTripForm';
 import { QuickActions } from './QuickActions';
@@ -79,6 +80,7 @@ export function TripDetailPage() {
       {editing && <EditTripForm trip={trip} myRole={me.role} onDone={() => setEditing(false)} />}
       {trip.status !== 'pending' && <DashboardPanel trip={trip} members={members} />}
       {trip.status !== 'pending' && <BalancesPanel trip={trip} members={members} />}
+      {trip.status !== 'pending' && <SettlementsPanel trip={trip} members={members} />}
       <MembersPanel trip={trip} members={members} myRole={me.role} />
     </div>
   );

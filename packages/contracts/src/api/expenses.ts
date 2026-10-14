@@ -18,6 +18,8 @@ export const ExpenseItemBody = z.object({
   description: z.string().trim().max(120).optional(),
   grossMinor: Minor,
   discountMinor: Minor.default(0),
+  /** Units bought (feature 003, refunds by quantity). The engine ignores it for allocation. */
+  quantity: z.number().int().min(1).max(100_000).default(1),
   classification: z.enum(['shared', 'personal']),
   beneficiaries: z.array(Uid).max(50),
   allocation: Allocation,
@@ -52,7 +54,23 @@ export type CreateExpenseBody = z.input<typeof CreateExpenseBody>;
 
 export const IdempotencyKey = z.uuid({ version: 'v4' });
 
-export const VoidExpenseBody = z.object({ expectedVersion: z.number().int().min(1) });
+export const VoidExpenseBody = z.object({
+  expectedVersion: z.number().int().min(1),
+  expectedLedgerRevision: z.number().int().min(0).optional(),
+});
+
+/** PUT /trips/{t}/expenses/{e} (feature 003). */
+export const UpdateExpenseBody = CreateExpenseBody.extend({
+  expectedVersion: z.number().int().min(1),
+  expectedLedgerRevision: z.number().int().min(0).optional(),
+});
+export type UpdateExpenseBody = z.input<typeof UpdateExpenseBody>;
+
+export const RestoreExpenseBody = z.object({
+  expectedVersion: z.number().int().min(1),
+  expectedLedgerRevision: z.number().int().min(0).optional(),
+  confirmDuplicate: z.boolean().optional(),
+});
 
 export const ExpenseSummary = z.object({
   id: z.string(),

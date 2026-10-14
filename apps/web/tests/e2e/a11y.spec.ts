@@ -76,3 +76,36 @@ test('pantallas de gastos (002) sin violaciones WCAG 2.1 AA a 360 px', async ({ 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(overflow).toBe(false);
 });
+
+test('pantallas de la fase 3 (pagos, edición, impacto, devolución) sin violaciones a 360 px', async ({ browser }) => {
+  const { setupActiveTrip, ANA, PEDRO } = await import('./helpers');
+  const { page: ana, pages } = await setupActiveTrip(browser, ANA, [PEDRO]);
+  const pedro = pages[PEDRO.email]!;
+  await ana.setViewportSize({ width: 360, height: 780 });
+
+  await ana.getByRole('link', { name: 'Registro manual' }).click();
+  await ana.getByLabel('Descripción').fill('Cena');
+  await ana.getByLabel('Importe total').fill('40');
+  await ana.getByRole('button', { name: 'Guardar gasto' }).click();
+  await expect(ana.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
+
+  await pedro.reload();
+  await pedro.getByRole('region', { name: 'Saldos' }).getByRole('link', { name: /Pagar/ }).click();
+  await expectNoViolations(pedro, 'registrar pago');
+  await pedro.getByRole('button', { name: 'Registrar pago' }).click();
+  await ana.reload();
+  await expectNoViolations(ana, 'inicio con pagos pendientes');
+  await ana.getByRole('region', { name: 'Pagos' }).getByRole('button', { name: 'Confirmar' }).click();
+
+  await ana.getByRole('link', { name: 'Ver gastos' }).click();
+  await ana.getByRole('link', { name: /Cena/ }).click();
+  await ana.getByRole('button', { name: 'Registrar devolución de Cena' }).click();
+  await expectNoViolations(ana, 'detalle con formulario de devolución');
+  await ana.getByRole('link', { name: 'Editar gasto' }).click();
+  await ana.getByLabel('Importe total').fill('50');
+  await ana.getByRole('button', { name: 'Guardar gasto' }).click();
+  await expect(ana.getByRole('region', { name: 'Impacto en saldos' })).toBeVisible();
+  await expectNoViolations(ana, 'edición con previsualización de impacto');
+  const overflow = await ana.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+  expect(overflow).toBe(false);
+});

@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import type { BalancesResponse } from 'contracts';
 import { useState } from 'react';
+import { Link } from 'react-router';
+import { useCurrentUser } from '../auth/AuthProvider';
 import { ErrorMessage } from '../../components/ErrorMessage';
 import { Spinner } from '../../components/Spinner';
 import { api } from '../../lib/apiClient';
@@ -11,6 +13,7 @@ type View = 'original' | 'simplified';
 
 export function BalancesPanel({ trip, members }: { trip: LiveTrip; members: LiveMember[] }) {
   const [view, setView] = useState<View>('simplified');
+  const { user } = useCurrentUser();
   const { data, error, isLoading } = useQuery({
     // trip.version changes with every expense, so balances refresh automatically.
     queryKey: ['balances', trip.id, view, trip.version],
@@ -68,8 +71,19 @@ export function BalancesPanel({ trip, members }: { trip: LiveTrip; members: Live
           ) : (
             <ul className="space-y-1">
               {data.transfers.map((t) => (
-                <li key={`${t.fromUid}>${t.toUid}`} className="text-sm">
-                  {name(t.fromUid)} → {name(t.toUid)}: <strong>{formatMoney(t.amountMinor, data.currency)}</strong>
+                <li key={`${t.fromUid}>${t.toUid}`} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <span>
+                    {name(t.fromUid)} → {name(t.toUid)}: <strong>{formatMoney(t.amountMinor, data.currency)}</strong>
+                  </span>
+                  {t.fromUid === user.uid && trip.status === 'active' && (
+                    <Link
+                      to={`/trips/${trip.id}/settlements/new?to=${t.toUid}&amount=${t.amountMinor}`}
+                      aria-label={`Pagar ${formatMoney(t.amountMinor, data.currency)} a ${name(t.toUid)}`}
+                      className="rounded-lg bg-brand-700 px-3 py-1 text-xs font-semibold text-white"
+                    >
+                      Pagar
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

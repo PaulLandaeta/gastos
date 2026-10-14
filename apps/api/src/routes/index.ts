@@ -5,7 +5,9 @@ import { categoryRoutes } from './categories.js';
 import { expenseRoutes } from './expenses.js';
 import { invitationRoutes } from './invitations.js';
 import { meRoutes } from './me.js';
+import { refundRoutes } from './refunds.js';
 import { roleRoutes } from './roles.js';
+import { settlementRoutes } from './settlements.js';
 import { statsRoutes } from './stats.js';
 import { statusRoutes } from './status.js';
 import { tripRoutes } from './trips.js';
@@ -21,4 +23,6 @@ export function registerRoutes(app: Hono<AppEnv>): void {
   balanceRoutes(app);
   categoryRoutes(app);
   statsRoutes(app);
+  settlementRoutes(app);
+  refundRoutes(app);
 }

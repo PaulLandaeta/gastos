@@ -57,6 +57,7 @@ export async function createTrip(db: Firestore, user: AuthUser, body: CreateInpu
     memberCount: 1,
     pendingInvitationCount: invitees.length,
     declinedInvitationCount: 0,
+    confirmedSettlementCount: 0,
     createdAt: now,
     updatedAt: now,
     schemaVersion: SCHEMA_VERSION,

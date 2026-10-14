@@ -353,3 +353,19 @@ function ledgerEffectOf(
   );
   return { netByMember, pairwise };
 }
+
+/**
+ * Item-level allocation (net of item discount, before general adjustments) per beneficiary,
+ * exactly as `computeExpense` does it. Used by refunds (feature 003).
+ */
+export function itemAllocations(input: ExpenseInput): Record<string, Record<Uid, number>> {
+  const rank = memberRanking(input.members);
+  const byRank = (a: Uid, b: Uid) => rank.get(a)! - rank.get(b)!;
+  const out: Record<string, Record<Uid, number>> = {};
+  for (const item of validateItems(input, rank)) {
+    const beneficiaries = [...item.beneficiaries].sort(byRank);
+    const amounts = allocateItem(item, beneficiaries, item.grossMinor - item.discountMinor, input.seq - 1 + item.index);
+    out[item.id] = Object.fromEntries(beneficiaries.map((uid, i) => [uid, amounts[i]!]));
+  }
+  return out;
+}

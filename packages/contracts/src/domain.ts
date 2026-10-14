@@ -70,6 +70,7 @@ export const Trip = z.object({
   memberCount: z.number().int(),
   pendingInvitationCount: z.number().int(),
   declinedInvitationCount: z.number().int(),
+  confirmedSettlementCount: z.number().int().optional(),
   createdAt: Timestamp,
   updatedAt: Timestamp,
   ...Versioned,

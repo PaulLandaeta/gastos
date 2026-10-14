@@ -8,6 +8,8 @@ Gastos de viaje colaborativos: registro, reparto exacto al centavo y liquidació
   - `001-finance-engine-trips`: motor financiero, login Google, viajes, invitaciones, roles, estados y saldos.
   - `002-manual-expenses-privacy`: registro manual (total o por ítems), categorías, privacidad del detalle (RF-38),
     gastos personales, dashboard con filtros, anulación con historial y aviso de duplicados.
+  - `003-settlements-edits-refunds`: pagos con confirmación del receptor, edición con control de conflictos,
+    previsualización de impacto en saldos, restauración de gastos y devoluciones por ítem.
 
 ## Stack (sin tarjeta de crédito)
 
