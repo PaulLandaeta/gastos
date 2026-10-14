@@ -24,6 +24,9 @@ export interface LoadedTrip {
   me: MemberRecord;
 }
 
+/** Trip reference for notification texts (feature 005). */
+export const tripRefOf = (trip: TripRecord) => ({ id: trip.id, name: trip.data.name, currency: trip.data.currency });
+
 export interface MutationContext {
   actorUid: string;
   correlationId: string;

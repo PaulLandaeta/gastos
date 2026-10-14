@@ -32,6 +32,8 @@ export function DashboardPanel({ trip, members }: { trip: LiveTrip; members: Liv
   const stats = useQuery({
     queryKey: ['stats', trip.id, trip.version, me?.role],
     queryFn: () => api<StatsResponse>('GET', `/trips/${trip.id}/stats`),
+    // Feature 005: kept for offline reading (≤ 30 days, per account).
+    meta: { persist: true },
   });
   const filtered = useExpenses({
     tripId: trip.id,

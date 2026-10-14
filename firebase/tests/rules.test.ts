@@ -299,3 +299,36 @@ describe('attachments, uploads, scans and aiUsage (004)', () => {
     await assertFails(as(env, pedro).firestore().doc('trips/t1/expenses/e1/attachments/a3').set({ fileName: 'x' }));
   });
 });
+
+describe('users/{uid}/notifications (feature 005, RF-18)', () => {
+  const trip = { 'trips/t1': { creatorUid: 'ana', status: 'active' }, 'trips/t1/members/ana': { uid: 'ana', role: 'creator', invitationStatus: 'accepted' } };
+  beforeEach(async () => {
+    await seed(env, {
+      ...trip,
+      'users/pedro/notifications/n1': { type: 'expense.created', tripId: 't1', title: 'x', body: 'Cena', readAt: null },
+    });
+  });
+
+  it('only the owner can read them (get and list, also the unread query)', async () => {
+    const db = as(env, pedro).firestore();
+    await assertSucceeds(db.doc('users/pedro/notifications/n1').get());
+    await assertSucceeds(db.collection('users/pedro/notifications').orderBy('createdAt', 'desc').limit(50).get());
+    await assertSucceeds(db.collection('users/pedro/notifications').where('readAt', '==', null).limit(100).get());
+  });
+
+  it('nobody else can read them, not even the trip creator, nor anonymous users', async () => {
+    for (const who of [ana, null]) {
+      const db = as(env, who).firestore();
+      await assertFails(db.doc('users/pedro/notifications/n1').get());
+      await assertFails(db.collection('users/pedro/notifications').get());
+    }
+  });
+
+  it('the client never writes them (read state goes through the API)', async () => {
+    const db = as(env, pedro).firestore();
+    await assertFails(db.doc('users/pedro/notifications/n1').update({ readAt: new Date() }));
+    await assertFails(db.doc('users/pedro/notifications/n2').set({ type: 'x' }));
+    await assertFails(db.doc('users/pedro/notifications/n1').delete());
+    await assertFails(as(env, ana).firestore().doc('users/pedro/notifications/n3').set({ type: 'x' }));
+  });
+});

@@ -16,6 +16,7 @@ import { ImpactPreview } from './ImpactPreview';
 import { RefundForm } from './RefundForm';
 import { useCollection } from '../../lib/useFirestore';
 import { useCategories, type ExpenseView } from './useExpenses';
+import { useOnline } from '../../lib/useOnline';
 
 const ACTION_LABEL: Record<string, string> = {
   'expense.create': 'Creado',
@@ -39,6 +40,7 @@ interface HistoryResponse {
 export function ExpenseDetailPage() {
   const { tripId = '', expenseId = '' } = useParams();
   const { user } = useCurrentUser();
+  const online = useOnline();
   const { trip, members, loading } = useTrip(tripId);
   const { all: categories } = useCategories(tripId);
   const expense = useDoc<Omit<ExpenseView, 'id'>>(`trips/${tripId}/expenses/${expenseId}`);
@@ -90,7 +92,8 @@ export function ExpenseDetailPage() {
   });
 
   if (loading || trip === undefined || expense.loading) return <Spinner />;
-  if (trip === null || !visible) return <NotFound />;
+  // US3-5: a notification may point to an expense the user can no longer see.
+  if (trip === null || !visible) return <NotFound message="Este elemento ya no está disponible o no tienes acceso." />;
   const e = expense.data!;
   const me = members.find((m) => m.uid === user.uid);
   const nameOf = (uid: string) => members.find((m) => m.uid === uid)?.displayName ?? 'Participante';
@@ -186,7 +189,7 @@ export function ExpenseDetailPage() {
                       ))}
                     </ul>
                   )}
-                  {e.status === 'active' && trip.status === 'active' && (
+                  {e.status === 'active' && trip.status === 'active' && online && (
                     <button
                       type="button"
                       onClick={() => setRefundingItem((k) => (k === i.id ? null : i.id))}
@@ -220,12 +223,15 @@ export function ExpenseDetailPage() {
         </section>
       )}
 
-      {canVoid && (
+      {(canVoid || canRestore) && !online && (
+        <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">Editar, anular, restaurar o registrar devoluciones necesita conexión.</p>
+      )}
+      {canVoid && online && (
         <Link to={`/trips/${tripId}/expenses/${expenseId}/edit`} className="inline-block rounded-lg border border-brand-700 px-4 py-2 font-medium text-brand-800">
           Editar gasto
         </Link>
       )}
-      {canVoid && (
+      {canVoid && online && (
         <div className="space-y-2">
           {!confirming ? (
             <button
@@ -267,7 +273,7 @@ export function ExpenseDetailPage() {
         </div>
       )}
 
-      {canRestore && (
+      {canRestore && online && (
         <div className="space-y-2">
           <button
             type="button"

@@ -31,7 +31,7 @@
         "ENVIRONMENT": "emulator",
         "FIREBASE_PROJECT_ID": "demo-gastos",
         "FIRESTORE_EMULATOR_HOST": "127.0.0.1:8080",
-        "ALLOWED_ORIGINS": "http://localhost:5180",
+        "ALLOWED_ORIGINS": "http://localhost:5180,http://localhost:5181",
         "AI_PROVIDER": "fake",
         "STORAGE": "local",
         "LOCAL_BLOB_SECRET": "local-dev-only-secret",

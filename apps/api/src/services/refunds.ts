@@ -7,7 +7,8 @@ import { expensePath, type ExpenseDoc } from './expenses.js';
 import { findIdempotent, idempotencyPath, recordIdempotent } from './idempotency.js';
 import { applyToLedger, readLedger } from './ledgerRepo.js';
 import { affectedUids, readProjections, refundAsExpense, writeProjectionsDelta } from './projections.js';
-import { assertMutable, loadTripForMember, newId, writeTrip, type LoadedTrip, type MutationContext } from './tripRepo.js';
+import { actorName, notificationsFor, writeNotifications } from './notifications.js';
+import { assertMutable, loadTripForMember, newId, tripRefOf, writeTrip, type LoadedTrip, type MutationContext } from './tripRepo.js';
 import { canViewExpense, viewerUidsOf } from './visibility.js';
 
 type StoredExpense = Omit<ExpenseDoc, 'items'> & {
@@ -155,6 +156,21 @@ export async function createRefund(
         correlationId: ctx.correlationId,
         diff: { itemId: body.itemId, quantity: body.quantity },
       },
+      ctx.now,
+    );
+    const recipient = loaded.members.find((m) => m.data.uid === body.recipientUid)!.data;
+    writeNotifications(
+      tx,
+      notificationsFor({
+        kind: 'refund.received',
+        trip: tripRefOf(loaded.trip),
+        actor: { uid: ctx.actorUid, name: actorName(loaded.members, ctx.actorUid) },
+        expenseId,
+        recipientUid: body.recipientUid,
+        amountMinor: body.amountMinor,
+        expenseDescription: expense.description,
+        recipientCanView: canViewExpense(recipient, expense),
+      }),
       ctx.now,
     );
     const { ledgerEffect: _l, ...dto } = refund;

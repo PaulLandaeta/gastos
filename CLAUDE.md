@@ -1,5 +1,5 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-specs/004-receipts-ai-attachments/plan.md
+specs/005-pwa-offline-collaboration/plan.md
 <!-- SPECKIT END -->

@@ -10,6 +10,7 @@ import { AttachmentList } from '../attachments/AttachmentList';
 import { useCurrentUser } from '../auth/AuthProvider';
 import type { LiveMember, LiveTrip } from '../trips/useTrip';
 import { useSettlements, type SettlementView } from './useSettlements';
+import { RequiresOnline } from '../offline/RequiresOnline';
 
 const STATUS_LABEL: Record<SettlementStatus, string> = {
   pending: 'Pendiente',
@@ -46,6 +47,7 @@ function Row({ s, trip, nameOf, uid, isManager }: { s: SettlementView; trip: Liv
       </div>
       {s.status === 'rejected' && s.rejectionReason && <p className="text-sm text-slate-700">Motivo: {s.rejectionReason}</p>}
       {pending && mutable && s.toUid === uid && !rejecting && (
+        <RequiresOnline label="Confirmar o rechazar">
         <div className="flex gap-2">
           <button type="button" disabled={act.isPending} onClick={() => act.mutate({ action: 'confirm' })} className="rounded-lg bg-brand-700 px-3 py-1.5 text-sm font-medium text-white">
             Confirmar
@@ -54,6 +56,7 @@ function Row({ s, trip, nameOf, uid, isManager }: { s: SettlementView; trip: Liv
             Rechazar
           </button>
         </div>
+        </RequiresOnline>
       )}
       {rejecting && (
         <div className="space-y-2">
@@ -118,9 +121,11 @@ export function SettlementsPanel({ trip, members }: { trip: LiveTrip; members: L
           Pagos
         </h2>
         {trip.status === 'active' && (
-          <Link to={`/trips/${trip.id}/settlements/new`} className="rounded-lg border border-brand-700 px-3 py-1.5 text-sm font-medium text-brand-800">
-            Registrar pago
-          </Link>
+          <RequiresOnline label="Registrar pago">
+            <Link to={`/trips/${trip.id}/settlements/new`} className="rounded-lg border border-brand-700 px-3 py-1.5 text-sm font-medium text-brand-800">
+              Registrar pago
+            </Link>
+          </RequiresOnline>
         )}
       </div>
       {toConfirm > 0 && (

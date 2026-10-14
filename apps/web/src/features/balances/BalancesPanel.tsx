@@ -8,6 +8,7 @@ import { Spinner } from '../../components/Spinner';
 import { api } from '../../lib/apiClient';
 import { formatMoney } from '../../lib/format';
 import type { LiveMember, LiveTrip } from '../trips/useTrip';
+import { RequiresOnline } from '../offline/RequiresOnline';
 
 type View = 'original' | 'simplified';
 
@@ -18,6 +19,8 @@ export function BalancesPanel({ trip, members }: { trip: LiveTrip; members: Live
     // trip.version changes with every expense, so balances refresh automatically.
     queryKey: ['balances', trip.id, view, trip.version],
     queryFn: () => api<BalancesResponse>('GET', `/trips/${trip.id}/balances`, { query: { view } }),
+    // Feature 005: kept for offline reading (≤ 30 days, per account).
+    meta: { persist: true },
   });
   const name = (uid: string) => {
     const m = members.find((x) => x.uid === uid);
@@ -76,6 +79,7 @@ export function BalancesPanel({ trip, members }: { trip: LiveTrip; members: Live
                     {name(t.fromUid)} → {name(t.toUid)}: <strong>{formatMoney(t.amountMinor, data.currency)}</strong>
                   </span>
                   {t.fromUid === user.uid && trip.status === 'active' && (
+                    <RequiresOnline label="Pagar" className="rounded-lg border border-slate-200 px-3 py-1 text-xs text-slate-600">
                     <Link
                       to={`/trips/${trip.id}/settlements/new?to=${t.toUid}&amount=${t.amountMinor}`}
                       aria-label={`Pagar ${formatMoney(t.amountMinor, data.currency)} a ${name(t.toUid)}`}
@@ -83,6 +87,7 @@ export function BalancesPanel({ trip, members }: { trip: LiveTrip; members: Live
                     >
                       Pagar
                     </Link>
+                    </RequiresOnline>
                   )}
                 </li>
               ))}

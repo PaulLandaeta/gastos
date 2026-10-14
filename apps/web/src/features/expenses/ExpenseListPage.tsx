@@ -8,6 +8,8 @@ import { NotFound } from '../../components/NotFound';
 import { Spinner } from '../../components/Spinner';
 import { formatDate, formatMoney } from '../../lib/format';
 import { useCurrentUser } from '../auth/AuthProvider';
+import { TripPendingList } from '../offline/PendingList';
+import { usePending } from '../offline/usePending';
 import { useTrip } from '../trips/useTrip';
 import { useCategories, useExpenses, type ExpenseView } from './useExpenses';
 
@@ -61,6 +63,7 @@ export function ExpenseListPage() {
   const isManager = me?.role === 'creator' || me?.role === 'admin';
   const [tab, setTab] = useState<Tab>('shared');
   const list = useExpenses({ tripId, uid: user.uid, isManager });
+  const { pending } = usePending(tripId);
   const stats = useQuery({
     queryKey: ['stats', tripId, trip?.version, me?.role],
     queryFn: () => api<StatsResponse>('GET', `/trips/${tripId}/stats`),
@@ -104,6 +107,7 @@ export function ExpenseListPage() {
             suman al total compartido; sí a tu total global ({formatMoney(stats.data.me.globalConsumedMinor, trip.currency)}).
           </p>
         )}
+        {tab === 'shared' && <TripPendingList pending={pending} currency={trip.currency} />}
         <ErrorMessage error={list.error} />
         {list.loading && list.data.length === 0 && <Spinner />}
         {!list.loading && rows.length === 0 && <p className="text-slate-600">No hay gastos que mostrar.</p>}

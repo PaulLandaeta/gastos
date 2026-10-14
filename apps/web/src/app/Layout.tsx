@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link, Outlet } from 'react-router';
+import { StatusBar } from '../features/offline/StatusBar';
 
 export function Layout({ actions }: { actions?: ReactNode }) {
   return (
@@ -11,6 +12,7 @@ export function Layout({ actions }: { actions?: ReactNode }) {
           </Link>
           {actions}
         </div>
+        <StatusBar />
       </header>
       <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-4 py-6">
         <Outlet />

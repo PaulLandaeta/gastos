@@ -22,7 +22,10 @@ export interface QuerySpec {
   where?: [field: string, op: Op, value: unknown][];
   orderBy?: [field: string, direction: 'asc' | 'desc'][];
   limit?: number;
-  /** Collection-group query: `collectionPath` is then just the collection id. */
+  /**
+   * Collection-group query: `collectionPath` is the collection id, optionally prefixed by the
+   * document that scopes it (e.g. `trips/t1/refunds` = every `refunds` under trips/t1).
+   */
   allDescendants?: boolean;
 }
 
@@ -155,12 +158,15 @@ export class Firestore {
   }
 
   async query(collectionPath: string, spec: QuerySpec = {}, transaction?: string): Promise<Doc[]> {
-    const slash = spec.allDescendants ? -1 : collectionPath.lastIndexOf('/');
+    const slash = collectionPath.lastIndexOf('/');
     const parent = slash === -1 ? this.root : this.name(collectionPath.slice(0, slash));
     const collectionId = collectionPath.slice(slash + 1);
-    const filters = (spec.where ?? []).map(([field, op, value]) => ({
-      fieldFilter: { field: { fieldPath: field }, op: OPS[op], value: encodeValue(value) },
-    }));
+    const filters = (spec.where ?? []).map(([field, op, value]) =>
+      // Firestore only matches null through the unary IS_NULL / IS_NOT_NULL filters.
+      value === null && (op === '==' || op === '!=')
+        ? { unaryFilter: { field: { fieldPath: field }, op: op === '==' ? 'IS_NULL' : 'IS_NOT_NULL' } }
+        : { fieldFilter: { field: { fieldPath: field }, op: OPS[op], value: encodeValue(value) } },
+    );
     const structuredQuery: Record<string, unknown> = { from: [{ collectionId, ...(spec.allDescendants ? { allDescendants: true } : {}) }] };
     if (filters.length === 1) structuredQuery['where'] = filters[0];
     if (filters.length > 1) structuredQuery['where'] = { compositeFilter: { op: 'AND', filters } };

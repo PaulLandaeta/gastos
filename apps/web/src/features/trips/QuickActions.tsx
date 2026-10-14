@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { useScanQuota } from '../scan/useScanQuota';
 import type { LiveTrip } from './useTrip';
+import { RequiresOnline } from '../offline/RequiresOnline';
 
 /** RF-25: prominent shortcuts on the trip home (manual registration and AI scan, FR-007). */
 export function QuickActions({ trip }: { trip: LiveTrip }) {
@@ -22,6 +23,7 @@ export function QuickActions({ trip }: { trip: LiveTrip }) {
         <span aria-hidden className="text-2xl">✍️</span>
         Registro manual
       </Link>
+      <RequiresOnline label="📷 Escanear factura" className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-slate-300 px-4 py-5 text-center font-semibold text-slate-600">
       <Link
         to={`/trips/${trip.id}/scan`}
         aria-describedby="scan-quota-hint"
@@ -37,6 +39,7 @@ export function QuickActions({ trip }: { trip: LiveTrip }) {
             : 'Con IA'}
         </span>
       </Link>
+      </RequiresOnline>
     </div>
   );
 }

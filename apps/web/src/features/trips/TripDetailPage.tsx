@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { formatMoney } from '../../lib/format';
 import type { SavedFlash } from '../expenses/NewExpensePage';
 import { Link, useLocation, useParams } from 'react-router';
@@ -8,6 +8,7 @@ import { formatDateRange } from '../../lib/format';
 import { useCurrentUser } from '../auth/AuthProvider';
 import { BalancesPanel } from '../balances/BalancesPanel';
 import { DashboardPanel } from '../dashboard/DashboardPanel';
+import { ExportMenu } from '../export/ExportMenu';
 import { SettlementsPanel } from '../settlements/SettlementsPanel';
 import { MembersPanel } from '../members/MembersPanel';
 import { EditTripForm } from './EditTripForm';
@@ -16,12 +17,19 @@ import { QuickActions } from './QuickActions';
 import { StatusBadge } from './status';
 import { ReadOnlyBanner, TripStatusActions } from './TripStatusActions';
 import { useTrip } from './useTrip';
+import { RequiresOnline } from '../offline/RequiresOnline';
+import { tripAccessFor } from '../offline/runtime';
 
 export function TripDetailPage() {
   const { tripId = '' } = useParams();
   const { user } = useCurrentUser();
   const { trip, members, loading } = useTrip(tripId);
   const [editing, setEditing] = useState(false);
+  const opened = !!trip;
+  // Feature 005: trips opened in the last 30 days stay available offline.
+  useEffect(() => {
+    if (opened) void tripAccessFor(user.uid).touch(tripId);
+  }, [opened, tripId, user.uid]);
   const flash = (useLocation().state as { flash?: SavedFlash } | null)?.flash;
 
   if (loading || trip === undefined) return <Spinner />;
@@ -48,9 +56,11 @@ export function TripDetailPage() {
           </p>
         )}
         {canEdit && !editing && (
-          <button type="button" onClick={() => setEditing(true)} className="text-sm text-brand-700 underline">
-            Editar datos del viaje
-          </button>
+          <RequiresOnline label="Editar datos del viaje">
+            <button type="button" onClick={() => setEditing(true)} className="text-sm text-brand-700 underline">
+              Editar datos del viaje
+            </button>
+          </RequiresOnline>
         )}
       </header>
       {flash && (
@@ -84,6 +94,7 @@ export function TripDetailPage() {
       {trip.status !== 'pending' && <BalancesPanel trip={trip} members={members} />}
       {trip.status !== 'pending' && <SettlementsPanel trip={trip} members={members} />}
       <MembersPanel trip={trip} members={members} myRole={me.role} />
+      {trip.status !== 'pending' && <ExportMenu tripId={trip.id} />}
     </div>
   );
 }

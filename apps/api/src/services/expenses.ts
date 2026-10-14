@@ -30,9 +30,11 @@ import {
   newId,
   toTripDto,
   writeTrip,
+  tripRefOf,
   type LoadedTrip,
   type MutationContext,
 } from './tripRepo.js';
+import { actorName, notificationsFor, writeNotifications } from './notifications.js';
 import { canVoidExpense, viewerUidsOf } from './visibility.js';
 
 type ExpenseBody = z.output<typeof CreateExpenseBody>;
@@ -237,6 +239,11 @@ export async function createExpense(
       },
       ctx.now,
     );
+    writeNotifications(
+      tx,
+      notificationsFor({ kind: 'expense.created', trip: tripRefOf(trip), actor: { uid: ctx.actorUid, name: actorName(loaded.members, ctx.actorUid) }, expenseId, expense }),
+      ctx.now,
+    );
     return { expense: summary(expenseId, expense), trip: toTripDto(tripId, next) };
   });
 }
@@ -306,6 +313,11 @@ export async function voidExpense(
         afterVersion: expense.version + 1,
         correlationId: ctx.correlationId,
       },
+      ctx.now,
+    );
+    writeNotifications(
+      tx,
+      notificationsFor({ kind: 'expense.voided', trip: tripRefOf(loaded.trip), actor: { uid: ctx.actorUid, name: actorName(loaded.members, ctx.actorUid) }, expenseId, expense }),
       ctx.now,
     );
     return { expense: summary(expenseId, voided as unknown as ExpenseDoc) };
@@ -438,6 +450,18 @@ export async function updateExpense(
       },
       ctx.now,
     );
+    writeNotifications(
+      tx,
+      notificationsFor({
+        kind: 'expense.updated',
+        trip: tripRefOf(loaded.trip),
+        actor: { uid: ctx.actorUid, name: actorName(loaded.members, ctx.actorUid) },
+        expenseId,
+        before: previous,
+        after: { ...derived },
+      }),
+      ctx.now,
+    );
     return { expense: summary(expenseId, updated as unknown as ExpenseDoc), trip: toTripDto(tripId, next) };
   });
 }
@@ -506,6 +530,11 @@ export async function restoreExpense(
         afterVersion: expense.version + 1,
         correlationId: ctx.correlationId,
       },
+      ctx.now,
+    );
+    writeNotifications(
+      tx,
+      notificationsFor({ kind: 'expense.restored', trip: tripRefOf(loaded.trip), actor: { uid: ctx.actorUid, name: actorName(loaded.members, ctx.actorUid) }, expenseId, expense }),
       ctx.now,
     );
     return { expense: summary(expenseId, restored as unknown as ExpenseDoc) };

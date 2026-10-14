@@ -133,3 +133,32 @@ test('pantallas de escaneo y adjuntos (004) sin violaciones WCAG 2.1 AA a 360 px
   await expect(page.getByRole('region', { name: 'Comprobantes' }).getByRole('listitem')).toHaveCount(1);
   await expectNoViolations(page, 'lista de comprobantes');
 });
+
+test('pantallas de la Fase 5 sin violaciones WCAG 2.1 AA (pendientes, notificaciones, sin conexión, exportar)', async ({ browser }) => {
+  const { setupActiveTrip, ANA, PEDRO } = await import('./helpers');
+  const { page: ana, pages } = await setupActiveTrip(browser, ANA, [PEDRO]);
+  const pedro = pages[PEDRO.email]!;
+  await expect(ana.getByRole('region', { name: 'Exportar' })).toBeVisible();
+  await expectNoViolations(ana, 'detalle con menú exportar');
+
+  // Offline: status bar, a pending expense and the pending page.
+  await ana.context().setOffline(true);
+  await expect(ana.getByRole('status').filter({ hasText: 'Sin conexión' })).toBeVisible();
+  await ana.getByRole('link', { name: 'Registro manual' }).click();
+  await ana.getByLabel('Descripción').fill('Cena');
+  await ana.getByLabel('Importe total').fill('10');
+  await ana.getByRole('button', { name: 'Guardar gasto' }).click();
+  await expect(ana.getByRole('status').filter({ hasText: '1 pendiente' })).toBeVisible();
+  await expectNoViolations(ana, 'detalle sin conexión con pendiente');
+  await ana.goto('/pending').catch(() => undefined); // dev server: no service worker offline
+  await ana.context().setOffline(false);
+  await ana.goto('/pending');
+  await expect(ana.getByRole('heading', { name: 'Gastos pendientes' })).toBeVisible();
+  await expectNoViolations(ana, 'pendientes');
+
+  await expect(pedro.getByRole('link', { name: /notificaciones sin leer/ })).toBeVisible({ timeout: 15_000 });
+  await expectNoViolations(pedro, 'cabecera con contador');
+  await pedro.getByRole('link', { name: /notificaciones sin leer/ }).click();
+  await expect(pedro.getByRole('heading', { name: 'Notificaciones' })).toBeVisible();
+  await expectNoViolations(pedro, 'bandeja de notificaciones');
+});
