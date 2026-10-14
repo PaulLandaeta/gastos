@@ -1,0 +1,56 @@
+# Feature 006 (FR-017, FR-018, FR-021): daily encrypted Firestore backup to a private B2 bucket.
+# A failed run e-mails the repository owner (GitHub notifications). Logs never contain data.
+name: Backup
+
+on:
+  schedule:
+    - cron: '30 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+      FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      BACKUP_KEY: ${{ secrets.BACKUP_KEY }}
+      BACKUP_B2_ENDPOINT: ${{ vars.BACKUP_B2_ENDPOINT }}
+      BACKUP_B2_REGION: ${{ vars.BACKUP_B2_REGION }}
+      BACKUP_B2_BUCKET: ${{ vars.BACKUP_B2_BUCKET }}
+      BACKUP_B2_KEY_ID: ${{ secrets.BACKUP_B2_KEY_ID }}
+      BACKUP_B2_APPLICATION_KEY: ${{ secrets.BACKUP_B2_APPLICATION_KEY }}
+    steps:
+      - name: Skip until production is configured
+        id: configured
+        run: |
+          if [ -z "$FIREBASE_PROJECT_ID" ] || [ -z "$BACKUP_KEY" ]; then
+            echo "::notice::Backups no configurados todavía (ver docs/operations.md)."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.configured.outputs.ok == 'true'
+      - uses: pnpm/action-setup@v4
+        if: steps.configured.outputs.ok == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.configured.outputs.ok == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - if: steps.configured.outputs.ok == 'true'
+        run: pnpm install --frozen-lockfile
+      - name: Backup
+        if: steps.configured.outputs.ok == 'true'
+        run: pnpm --filter ops ops backup
+      - name: Prune (7 daily + 4 weekly)
+        if: steps.configured.outputs.ok == 'true'
+        run: pnpm --filter ops ops prune

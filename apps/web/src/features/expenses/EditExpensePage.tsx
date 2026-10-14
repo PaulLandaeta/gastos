@@ -35,9 +35,13 @@ export function EditExpensePage() {
   const [preview, setPreview] = useState<PreviewResponse | null>(null);
 
   const accepted = members.filter((m) => m.invitationStatus === 'accepted' && m.uid);
-  const options = accepted.map((m) => ({ uid: m.uid!, name: m.displayName ?? m.email }));
   const engineMembers: Member[] = accepted.map((m) => ({ uid: m.uid!, joinOrder: m.joinOrder ?? 0 }));
   const current = live.data ? ({ ...live.data, id: expenseId } as ExpenseView) : null;
+  // Feature 006: a deleted participant stays selectable only in the expenses they already were in.
+  const involved = new Set([...(current?.payers ?? []).map((p) => p.uid), ...(current?.items ?? []).flatMap((i) => i.beneficiaries)]);
+  const options = accepted
+    .filter((m) => !m.deletedAt || involved.has(m.uid!))
+    .map((m) => ({ uid: m.uid!, name: m.displayName ?? m.email }));
 
   if (current && draft === null) {
     setDraftState(fromExpense(current));

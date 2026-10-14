@@ -221,9 +221,19 @@ export function notificationsFor(event: NotificationEvent): NotificationDraft[] 
 
 export const notificationPath = (uid: string, id: string) => `users/${uid}/notifications/${id}`;
 
-/** Buffers the notifications in the caller's transaction (they exist only if the action commits). */
-export function writeNotifications(tx: Transaction, drafts: NotificationDraft[], now: Date): void {
+/**
+ * Buffers the notifications in the caller's transaction (they exist only if the action commits).
+ * Feature 006: members who deleted their account (RF-56) never receive notifications.
+ */
+export function writeNotifications(
+  tx: Transaction,
+  drafts: NotificationDraft[],
+  now: Date,
+  members: { data: { uid: string | null; deletedAt?: unknown } }[] = [],
+): void {
+  const deleted = new Set(members.filter((m) => m.data.deletedAt != null && m.data.uid).map((m) => m.data.uid!));
   for (const { recipientUid, ...n } of drafts) {
+    if (deleted.has(recipientUid)) continue;
     tx.set(
       notificationPath(recipientUid, newId()),
       { ...n, createdAt: now, readAt: null, expiresAt: notificationExpiry(now), schemaVersion: SCHEMA_VERSION },

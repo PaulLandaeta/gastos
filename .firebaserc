@@ -1,1 +1,6 @@
-{ "projects": { "default": "demo-gastos" } }
+{
+  "projects": {
+    "default": "demo-gastos",
+    "prod": "REPLACE_WITH_PROJECT_ID"
+  }
+}

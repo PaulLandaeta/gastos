@@ -14,6 +14,12 @@ export class AppError extends Error {
     return ERROR_HTTP_STATUS[this.code];
   }
 
+  /** Seconds to wait before retrying (RATE_LIMITED, SERVICE_UNAVAILABLE). */
+  get retryAfter(): number | null {
+    const v = this.details?.['retryAfter'];
+    return typeof v === 'number' ? v : null;
+  }
+
   toBody(): ErrorBody {
     return { error: { code: this.code, message: this.message, ...(this.details ? { details: this.details } : {}) } };
   }

@@ -2,6 +2,7 @@ import { MAX_TRIP_MEMBERS, SCHEMA_VERSION, normalizeEmail } from 'contracts';
 import type { AuthUser } from '../auth/verifyIdToken.js';
 import type { Firestore } from '../firestore/client.js';
 import { AppError, notFound } from '../http/errors.js';
+import { assertNotDeleted } from './accountDeletion.js';
 import { writeAudit } from './audit.js';
 import { actorName, notificationsFor, registeredUidsByEmail, writeNotifications } from './notifications.js';
 import { newInvitee } from './trips.js';
@@ -165,6 +166,7 @@ export async function acceptInvitation(db: Firestore, tripId: string, user: Auth
     throw new AppError('EMAIL_NOT_VERIFIED', 'A verified e-mail is required to answer invitations');
   }
   return db.runTransaction(async (tx) => {
+    await assertNotDeleted(tx, user.uid);
     const loaded = await loadTripRaw(tx, tripId);
     if (!loaded) throw notFound('Trip');
     const { trip, members } = loaded;

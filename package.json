@@ -9,11 +9,12 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "pnpm -r --parallel typecheck",
-    "test": "pnpm -r --filter finance-engine --filter contracts --filter web --filter api test",
+    "test": "pnpm -r --workspace-concurrency=1 --filter finance-engine --filter contracts --filter web --filter api --filter ops test",
     "test:rules": "vitest run --config firebase/vitest.config.ts",
     "emulators": "JAVA_HOME=${JAVA21_HOME:-/opt/homebrew/opt/openjdk@21} PATH=${JAVA21_HOME:-/opt/homebrew/opt/openjdk@21}/bin:$PATH firebase emulators:start --project demo-gastos --only auth,firestore",
     "emulators:exec": "JAVA_HOME=${JAVA21_HOME:-/opt/homebrew/opt/openjdk@21} PATH=${JAVA21_HOME:-/opt/homebrew/opt/openjdk@21}/bin:$PATH firebase emulators:exec --project demo-gastos --only auth,firestore",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "deploy:prod": "bash scripts/deploy.sh"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
@@ -33,6 +34,9 @@
       "workerd",
       "protobufjs",
       "@firebase/util"
-    ]
+    ],
+    "overrides": {
+      "@grpc/grpc-js": "^1.13.7"
+    }
   }
 }

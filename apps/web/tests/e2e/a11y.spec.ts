@@ -162,3 +162,28 @@ test('pantallas de la Fase 5 sin violaciones WCAG 2.1 AA (pendientes, notificaci
   await expect(pedro.getByRole('heading', { name: 'Notificaciones' })).toBeVisible();
   await expectNoViolations(pedro, 'bandeja de notificaciones');
 });
+
+test('pantallas de la Fase 6 sin violaciones WCAG 2.1 AA (baja de cuenta, participante eliminado, pago en su nombre)', async ({ browser }) => {
+  const { setupActiveTrip, ANA, PEDRO } = await import('./helpers');
+  const { page: ana, pages, tripUrl } = await setupActiveTrip(browser, ANA, [PEDRO]);
+  const pedro = pages[PEDRO.email]!;
+  await pedro.setViewportSize({ width: 360, height: 780 });
+
+  await pedro.getByRole('button', { name: /Cuenta de Pedro/ }).click();
+  await expectNoViolations(pedro, 'menú de cuenta con borrar cuenta');
+  await pedro.getByRole('menuitem', { name: 'Borrar mi cuenta' }).click();
+  await expect(pedro.getByRole('list', { name: 'Viajes afectados' })).toBeVisible();
+  await pedro.getByLabel('Escribe BORRAR para confirmar').fill('BOR');
+  await expectNoViolations(pedro, 'borrar cuenta');
+  await pedro.getByLabel('Escribe BORRAR para confirmar').fill('BORRAR');
+  await pedro.getByRole('button', { name: 'Borrar mi cuenta definitivamente' }).click();
+  await expect(pedro.getByRole('status').filter({ hasText: 'Tu cuenta se eliminó' })).toBeVisible();
+  await expectNoViolations(pedro, 'login tras la baja');
+
+  await ana.goto(tripUrl);
+  await expect(ana.getByRole('region', { name: 'Participantes' }).getByText('Participante eliminado 1')).toBeVisible();
+  await expectNoViolations(ana, 'viaje con participante eliminado');
+  await ana.getByRole('link', { name: 'Registrar pago' }).click();
+  await expect(ana.getByLabel('¿Quién pagó?')).toBeVisible();
+  await expectNoViolations(ana, 'registrar pago en nombre de un eliminado');
+});

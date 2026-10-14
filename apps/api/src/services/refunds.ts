@@ -171,7 +171,7 @@ export async function createRefund(
         expenseDescription: expense.description,
         recipientCanView: canViewExpense(recipient, expense),
       }),
-      ctx.now,
+      ctx.now, loaded.members,
     );
     const { ledgerEffect: _l, ...dto } = refund;
     return { refund: { id: refundId, ...dto }, expense: { id: expenseId, version: expense.version + 1 } };

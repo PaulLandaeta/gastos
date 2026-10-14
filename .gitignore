@@ -20,3 +20,5 @@ Thumbs.db
 .vscode/
 .idea/
 dist-e2e/
+!.env.production.example
+.gcp-sa.json

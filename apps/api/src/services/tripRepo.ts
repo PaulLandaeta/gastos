@@ -24,6 +24,16 @@ export interface LoadedTrip {
   me: MemberRecord;
 }
 
+/** Feature 006 (RF-56): the member deleted their account; the uid stays only as an opaque id. */
+export const isDeleted = (m: Pick<MemberData, 'deletedAt'>) => m.deletedAt != null;
+
+/** Uids of the accepted members that still have an account (notification recipients, actors). */
+export function activeUids(members: { data: MemberData }[]): Set<string> {
+  return new Set(
+    members.filter((m) => m.data.invitationStatus === 'accepted' && m.data.uid && !isDeleted(m.data)).map((m) => m.data.uid!),
+  );
+}
+
 /** Trip reference for notification texts (feature 005). */
 export const tripRefOf = (trip: TripRecord) => ({ id: trip.id, name: trip.data.name, currency: trip.data.currency });
 
@@ -68,7 +78,7 @@ export async function loadTripForMember(tx: Transaction, tripId: string, uid: st
   const [tripDoc, memberDocs] = await Promise.all([tx.get(tripPath(tripId)), tx.query(membersPath(tripId))]);
   if (!tripDoc) throw notFound('Trip');
   const members = memberDocs.map((d) => toRecord<MemberData>(d)).sort(compareMembers);
-  const me = members.find((m) => m.key === uid && m.data.invitationStatus === 'accepted');
+  const me = members.find((m) => m.key === uid && m.data.invitationStatus === 'accepted' && !isDeleted(m.data));
   if (!me) throw notFound('Trip');
   return { trip: { id: tripId, data: tripDoc.data as TripData, updateTime: tripDoc.updateTime }, members, me };
 }
@@ -145,6 +155,8 @@ export function syncIndexes(
 ): void {
   for (const m of members) {
     if (m.invitationStatus === 'accepted' && m.uid) {
+      // A deleted member (RF-56) has no account any more: never recreate their index.
+      if (isDeleted(m)) continue;
       tx.set(`users/${m.uid}/trips/${tripId}`, userTripIndex(tripId, trip, m.role, now));
     } else if (m.invitationStatus === 'invited' || m.invitationStatus === 'declined') {
       tx.set(`invitations/${m.email}/trips/${tripId}`, invitationIndex(tripId, trip, m.invitationStatus, inviterDisplayName, now));

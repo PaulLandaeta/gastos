@@ -52,7 +52,8 @@ export function NewExpensePage() {
   const { trip, members, loading } = useTrip(tripId);
   const { active: categories, loading: catLoading } = useCategories(tripId);
   const accepted = members.filter((m) => m.invitationStatus === 'accepted' && m.uid);
-  const options = accepted.map((m) => ({ uid: m.uid!, name: m.displayName ?? m.email }));
+  // Feature 006: deleted participants keep their rounding order but cannot be added to new expenses.
+  const options = accepted.filter((m) => !m.deletedAt).map((m) => ({ uid: m.uid!, name: m.displayName ?? m.email }));
   const engineMembers: Member[] = accepted.map((m) => ({ uid: m.uid!, joinOrder: m.joinOrder ?? 0 }));
 
   const [draft, setDraftState] = useState<ExpenseDraft | null>(null);

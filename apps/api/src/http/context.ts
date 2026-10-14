@@ -7,6 +7,8 @@ export interface AppVariables {
   correlationId: string;
   user: AuthUser;
   db: Firestore;
+  /** Domain error code of the response (request log, feature 006). */
+  errorCode: string;
 }
 
 export type AppEnv = { Bindings: Env; Variables: AppVariables };

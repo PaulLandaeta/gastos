@@ -71,6 +71,8 @@ export const Trip = z.object({
   pendingInvitationCount: z.number().int(),
   declinedInvitationCount: z.number().int(),
   confirmedSettlementCount: z.number().int().optional(),
+  /** Feature 006: numbers the «Participante eliminado N» labels. */
+  deletedMemberCount: z.number().int().optional(),
   createdAt: Timestamp,
   updatedAt: Timestamp,
   ...Versioned,
@@ -87,6 +89,9 @@ export const Member = z.object({
   invitedAt: Timestamp.nullable(),
   acceptedAt: Timestamp.nullable(),
   joinOrder: z.number().int().nullable(),
+  /** Feature 006 (RF-56): set when the member deleted their account; the uid stays as an opaque id. */
+  deletedAt: Timestamp.nullable().optional(),
+  deletedOrdinal: z.number().int().nullable().optional(),
   ...Versioned,
 });
 export type Member = z.infer<typeof Member>;

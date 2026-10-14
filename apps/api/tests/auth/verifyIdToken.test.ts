@@ -38,13 +38,15 @@ async function sign(overrides: Record<string, unknown> = {}, opts: { iss?: strin
 
 describe('verifyIdToken', () => {
   it('accepts a valid RS256 Google token', async () => {
-    const user = await verifyIdToken(await sign(), prodEnv, { keySet });
+    const now = Math.floor(Date.now() / 1000);
+    const user = await verifyIdToken(await sign({ auth_time: now - 5 }), prodEnv, { keySet });
     expect(user).toEqual({
       uid: 'uid-ana',
       email: 'ana@example.com',
       emailVerified: true,
       name: 'Ana',
       picture: null,
+      authTime: now - 5,
     });
   });
 

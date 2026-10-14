@@ -1,18 +1,9 @@
-import { isErrorCode, type ErrorCode } from 'contracts';
+import { isErrorCode } from 'contracts';
+import { ApiError } from './apiError';
 import { auth } from './firebase';
 import { reportNetworkFailure, reportNetworkSuccess } from './useOnline';
 
-export class ApiError extends Error {
-  constructor(
-    readonly code: ErrorCode | 'NETWORK',
-    readonly status: number,
-    message: string,
-    readonly details?: Record<string, unknown>,
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
-}
+export { ApiError };
 
 interface RequestOptions {
   body?: unknown;

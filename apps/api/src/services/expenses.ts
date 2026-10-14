@@ -26,6 +26,7 @@ import {
 } from './projections.js';
 import {
   assertMutable,
+  isDeleted,
   loadTripForMember,
   newId,
   toTripDto,
@@ -90,6 +91,17 @@ function engineMembers(loaded: LoadedTrip): Member[] {
 }
 
 const sortedUnique = (xs: Iterable<string>) => [...new Set(xs)].sort();
+
+/** Feature 006 (RF-56): deleted participants stay in their expenses but are never added again. */
+function assertNoNewDeletedParticipants(loaded: LoadedTrip, body: ExpenseBody, previous?: { payers: { uid: string }[]; items: { beneficiaries: string[] }[] }) {
+  const deleted = new Set(loaded.members.filter((m) => isDeleted(m.data)).map((m) => m.key));
+  if (deleted.size === 0) return;
+  const before = new Set([...(previous?.payers ?? []).map((p) => p.uid), ...(previous?.items ?? []).flatMap((i) => i.beneficiaries)]);
+  const used = [...body.payers.map((p) => p.uid), ...body.items.flatMap((i) => i.beneficiaries)];
+  if (used.some((uid) => deleted.has(uid) && !before.has(uid))) {
+    throw new AppError('VALIDATION_FAILED', 'Invalid request', { fields: { participants: 'Deleted participants cannot be added' } });
+  }
+}
 
 /** Fields derived from the body and the engine result (shared by create and update). */
 function deriveExpenseFields(body: ExpenseBody, input: ExpenseInput, computed: ReturnType<typeof computeExpense>, createdBy: string) {
@@ -177,6 +189,7 @@ export async function createExpense(
     await ensureActiveCategory(tx, tripId, body.categoryId, ctx.now);
 
     const seq = trip.data.expenseSeq + 1;
+    assertNoNewDeletedParticipants(loaded, body);
     const input = engineInput(body, seq, loaded);
     const computed = computeExpense(input);
 
@@ -242,7 +255,7 @@ export async function createExpense(
     writeNotifications(
       tx,
       notificationsFor({ kind: 'expense.created', trip: tripRefOf(trip), actor: { uid: ctx.actorUid, name: actorName(loaded.members, ctx.actorUid) }, expenseId, expense }),
-      ctx.now,
+      ctx.now, loaded.members,
     );
     return { expense: summary(expenseId, expense), trip: toTripDto(tripId, next) };
   });
@@ -318,7 +331,7 @@ export async function voidExpense(
     writeNotifications(
       tx,
       notificationsFor({ kind: 'expense.voided', trip: tripRefOf(loaded.trip), actor: { uid: ctx.actorUid, name: actorName(loaded.members, ctx.actorUid) }, expenseId, expense }),
-      ctx.now,
+      ctx.now, loaded.members,
     );
     return { expense: summary(expenseId, voided as unknown as ExpenseDoc) };
   });
@@ -409,6 +422,7 @@ export async function updateExpense(
     }
     if (body.categoryId !== previous.categoryId) await ensureActiveCategory(tx, tripId, body.categoryId, ctx.now);
 
+    assertNoNewDeletedParticipants(loaded, body, previous);
     const input = engineInput(body, previous.seq, loaded);
     const computed = computeExpense(input);
     if (maxRefundable) assertRefundConstraints(previous, input, (itemId, q) => maxRefundable(input, itemId, q));
@@ -460,7 +474,7 @@ export async function updateExpense(
         before: previous,
         after: { ...derived },
       }),
-      ctx.now,
+      ctx.now, loaded.members,
     );
     return { expense: summary(expenseId, updated as unknown as ExpenseDoc), trip: toTripDto(tripId, next) };
   });
@@ -535,7 +549,7 @@ export async function restoreExpense(
     writeNotifications(
       tx,
       notificationsFor({ kind: 'expense.restored', trip: tripRefOf(loaded.trip), actor: { uid: ctx.actorUid, name: actorName(loaded.members, ctx.actorUid) }, expenseId, expense }),
-      ctx.now,
+      ctx.now, loaded.members,
     );
     return { expense: summary(expenseId, restored as unknown as ExpenseDoc) };
   });

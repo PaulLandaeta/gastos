@@ -7,7 +7,8 @@ interface ServiceAccount {
 }
 
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
-const SCOPE = 'https://www.googleapis.com/auth/datastore';
+// Firestore + Firebase Auth admin (account deletion, feature 006).
+const SCOPE = 'https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/identitytoolkit';
 
 // Isolate-level cache: avoids signing a JWT (CPU) on every request (10 ms CPU budget).
 let cached: { token: string; expiresAt: number } | null = null;

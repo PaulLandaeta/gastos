@@ -19,7 +19,11 @@ export function PaySettlementPage() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const { trip, members, loading } = useTrip(tripId);
-  const others = members.filter((m) => m.invitationStatus === 'accepted' && m.uid && m.uid !== user.uid);
+  const isManager = ['creator', 'admin'].includes(members.find((m) => m.uid === user.uid)?.role ?? '');
+  // Feature 006 (FR-009): a manager can register a payment on behalf of a deleted participant.
+  const deletedPayers = isManager ? members.filter((m) => m.invitationStatus === 'accepted' && m.uid && m.deletedAt) : [];
+  const [fromUid, setFromUid] = useState(params.get('from') ?? user.uid);
+  const others = members.filter((m) => m.invitationStatus === 'accepted' && m.uid && m.uid !== fromUid && (fromUid === user.uid || !m.deletedAt));
   const [toUid, setToUid] = useState(params.get('to') ?? '');
   const [amount, setAmount] = useState<number | null>(params.get('amount') ? Number(params.get('amount')) : null);
   const [note, setNote] = useState('');
@@ -30,7 +34,7 @@ export function PaySettlementPage() {
 
   if (loading || trip === undefined) return <Spinner />;
   if (trip === null) return <NotFound />;
-  const receiver = toUid || others[0]?.uid || '';
+  const receiver = others.some((m) => m.uid === toUid) ? toUid : (others[0]?.uid ?? '');
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -39,7 +43,7 @@ export function PaySettlementPage() {
     setError(null);
     try {
       const res = await api<{ settlement: SettlementDto; exceedsDebt: boolean }>('POST', `/trips/${tripId}/settlements`, {
-        body: { toUid: receiver, amountMinor: amount, ...(note.trim() ? { note } : {}) },
+        body: { toUid: receiver, amountMinor: amount, ...(note.trim() ? { note } : {}), ...(fromUid !== user.uid ? { fromUid } : {}) },
         idempotencyKey: key.current,
       });
       let proofFailed = false;
@@ -73,7 +77,19 @@ export function PaySettlementPage() {
     <form onSubmit={submit} className="space-y-4">
       <h1 className="text-2xl font-semibold">Registrar pago</h1>
       <p className="text-sm text-slate-600">El pago queda pendiente hasta que la otra persona lo confirme. Solo los pagos confirmados cambian los saldos.</p>
-      <Field id="pay-to" label="¿A quién pagaste?">
+      {deletedPayers.length > 0 && (
+        <Field id="pay-from" label="¿Quién pagó?">
+          <select id="pay-from" className={inputClass} value={fromUid} onChange={(e) => setFromUid(e.target.value)}>
+            <option value={user.uid}>Yo</option>
+            {deletedPayers.map((m) => (
+              <option key={m.uid} value={m.uid!}>
+                {m.displayName}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
+      <Field id="pay-to" label={fromUid === user.uid ? '¿A quién pagaste?' : '¿A quién pagó?'}>
         <select id="pay-to" className={inputClass} value={receiver} onChange={(e) => setToUid(e.target.value)}>
           {others.map((m) => (
             <option key={m.uid} value={m.uid!}>

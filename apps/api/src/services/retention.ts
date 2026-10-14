@@ -153,7 +153,11 @@ async function notifyExpiring(db: Firestore, now: Date): Promise<number> {
     const sent = await db.runTransaction(async (tx) => {
       const fresh = await tx.get(doc.path);
       if (!fresh || fresh.data['status'] !== 'active' || fresh.data['expiringNotifiedAt']) return false;
-      const [trip, target] = await Promise.all([tx.get(`trips/${parent.tripId}`), tx.get(parent.targetPath)]);
+      const [trip, target, memberDocs] = await Promise.all([
+        tx.get(`trips/${parent.tripId}`),
+        tx.get(parent.targetPath),
+        tx.query(`trips/${parent.tripId}/members`),
+      ]);
       if (!trip || !target) return false;
       const isExpense = parent.kind === 'expenses';
       const recipientUids = isExpense
@@ -172,6 +176,7 @@ async function notifyExpiring(db: Firestore, now: Date): Promise<number> {
           expiresAt: fresh.data['expiresAt'] as Date,
         }),
         now,
+        memberDocs.map((d) => ({ data: d.data as { uid: string | null; deletedAt?: unknown } })),
       );
       return true;
     });

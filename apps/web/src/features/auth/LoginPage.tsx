@@ -1,13 +1,14 @@
 import { Navigate, useLocation } from 'react-router';
-import { Spinner } from '../../components/Spinner';
 import { useAuth } from './AuthProvider';
 
 export function LoginPage() {
   const { state, signIn } = useAuth();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from ?? '/';
+  const deleted = new URLSearchParams(location.search).get('deleted') === '1';
 
-  if (state.status === 'loading') return <Spinner />;
+  // The page paints at once (fast LCP); the button waits until Firebase Auth has restored the session.
+  const loading = state.status === 'loading';
   if (state.status === 'signedIn') return <Navigate to={from} replace />;
 
   return (
@@ -16,10 +17,17 @@ export function LoginPage() {
         <h1 className="text-3xl font-bold text-brand-800">Gastos de Viaje</h1>
         <p className="text-slate-600">Registra y reparte los gastos de tus viajes con exactitud al centavo.</p>
       </div>
+      {deleted && (
+        <p role="status" className="rounded-lg bg-slate-100 px-3 py-2 text-center text-sm text-slate-800">
+          Tu cuenta se eliminó. Si vuelves a entrar con Google empezarás como una cuenta nueva.
+        </p>
+      )}
       <button
         type="button"
+        disabled={loading}
+        aria-busy={loading}
         onClick={() => void signIn()}
-        className="flex items-center justify-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-3 text-base font-medium shadow-sm hover:bg-slate-50"
+        className="flex items-center justify-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-3 text-base font-medium shadow-sm hover:bg-slate-50 disabled:opacity-60"
       >
         <svg aria-hidden width="20" height="20" viewBox="0 0 48 48">
           <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" />
@@ -29,7 +37,7 @@ export function LoginPage() {
         </svg>
         Continuar con Google
       </button>
-      {state.error && (
+      {state.status === 'signedOut' && state.error && (
         <p role="alert" className="text-center text-sm text-red-700">
           {state.error}
         </p>

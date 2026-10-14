@@ -26,3 +26,30 @@ jobs:
         run: >
           npx -y firebase-tools@15 emulators:exec --project demo-gastos --only auth,firestore
           "pnpm test && pnpm test:rules"
+
+  # Feature 006 (SC-007): Lighthouse (mobile) on the production build of the sign-in page.
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build (emulator configuration, no secrets)
+        env:
+          VITE_FIREBASE_API_KEY: demo-key
+          VITE_FIREBASE_AUTH_DOMAIN: demo-gastos.firebaseapp.com
+          VITE_FIREBASE_PROJECT_ID: demo-gastos
+          VITE_FIREBASE_APP_ID: demo-app
+          VITE_API_URL: http://localhost:8787/v1
+          VITE_USE_EMULATORS: 'true'
+        run: pnpm --filter web exec vite build --outDir dist-e2e
+      - name: Lighthouse thresholds (a11y ≥ 90, best practices ≥ 90, performance ≥ 80)
+        working-directory: apps/web
+        run: |
+          npx vite preview --outDir dist-e2e --port 5181 --strictPort &
+          npx -y wait-on@8 http://localhost:5181/login
+          node scripts/lighthouse.mjs http://localhost:5181/login

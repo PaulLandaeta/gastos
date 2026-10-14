@@ -1,5 +1,6 @@
 import type { Hono } from 'hono';
 import type { AppEnv } from '../http/context.js';
+import { accountRoutes } from './account.js';
 import { attachmentRoutes } from './attachments.js';
 import { balanceRoutes } from './balances.js';
 import { categoryRoutes } from './categories.js';
@@ -19,6 +20,7 @@ import { tripRoutes } from './trips.js';
 /** Registers every /v1 route. */
 export function registerRoutes(app: Hono<AppEnv>): void {
   meRoutes(app);
+  accountRoutes(app);
   notificationRoutes(app);
   tripRoutes(app);
   invitationRoutes(app);

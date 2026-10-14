@@ -40,6 +40,7 @@ test('US4: expiry notice for viewers only; after retention the expense shows the
 
   await pedro.getByRole('link', { name: 'Ver gastos' }).click();
   await pedro.getByRole('link', { name: /Hotel/ }).click();
+  await pedro.waitForURL(/\/expenses\/[^/]+$/);
   const expenseUrl = pedro.url();
   const [, tripId, expenseId] = /trips\/([^/]+)\/expenses\/([^/?#]+)/.exec(expenseUrl)!;
   await expireIn(`trips/${tripId}/expenses/${expenseId}`, 10);
