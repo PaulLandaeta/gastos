@@ -6,6 +6,7 @@ import { ErrorMessage } from '../../components/ErrorMessage';
 import { inputClass } from '../../components/Field';
 import { api } from '../../lib/apiClient';
 import { formatMoney } from '../../lib/format';
+import { AttachmentList } from '../attachments/AttachmentList';
 import { useCurrentUser } from '../auth/AuthProvider';
 import type { LiveMember, LiveTrip } from '../trips/useTrip';
 import { useSettlements, type SettlementView } from './useSettlements';
@@ -24,7 +25,8 @@ const TABS: { key: 'all' | SettlementStatus; label: string }[] = [
   { key: 'rejected', label: 'Rechazados' },
 ];
 
-function Row({ s, trip, nameOf, uid }: { s: SettlementView; trip: LiveTrip; nameOf: (u: string) => string; uid: string }) {
+function Row({ s, trip, nameOf, uid, isManager }: { s: SettlementView; trip: LiveTrip; nameOf: (u: string) => string; uid: string; isManager: boolean }) {
+  const [showProof, setShowProof] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState('');
   const act = useMutation({
@@ -79,6 +81,22 @@ function Row({ s, trip, nameOf, uid }: { s: SettlementView; trip: LiveTrip; name
           Cancelar pago
         </button>
       )}
+      {(s.fromUid === uid || s.toUid === uid || isManager) && ((s.attachmentCount ?? 0) > 0 || (s.fromUid === uid && mutable && ['pending', 'confirmed'].includes(s.status))) && (
+        <div>
+          <button type="button" aria-expanded={showProof} onClick={() => setShowProof((v) => !v)} className="text-sm text-brand-800 underline">
+            {(s.attachmentCount ?? 0) > 0 ? `Comprobante de pago (${s.attachmentCount})` : 'Adjuntar comprobante'}
+          </button>
+          {showProof && (
+            <AttachmentList
+              tripId={trip.id}
+              target={{ settlementId: s.id }}
+              title="Comprobante de pago"
+              canAdd={s.fromUid === uid && mutable && ['pending', 'confirmed'].includes(s.status)}
+              canRemove={false}
+            />
+          )}
+        </div>
+      )}
       <ErrorMessage error={act.error} />
     </li>
   );
@@ -129,7 +147,7 @@ export function SettlementsPanel({ trip, members }: { trip: LiveTrip; members: L
       ) : (
         <ul className="space-y-2">
           {rows.map((s) => (
-            <Row key={s.id} s={s} trip={trip} nameOf={nameOf} uid={user.uid} />
+            <Row key={s.id} s={s} trip={trip} nameOf={nameOf} uid={user.uid} isManager={['creator', 'admin'].includes(members.find((m) => m.uid === user.uid)?.role ?? '')} />
           ))}
         </ul>
       )}

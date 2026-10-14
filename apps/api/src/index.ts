@@ -2,12 +2,17 @@ import { EngineError } from 'finance-engine';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { InvalidTokenError, verifyIdToken } from './auth/verifyIdToken.js';
+import { isEmulator } from './env.js';
 import { Firestore, FirestoreError } from './firestore/client.js';
+import type { LocalStorageProvider } from './providers/localStorage.js';
+import { createStorageProvider } from './providers/storage.js';
 import type { AppEnv } from './http/context.js';
 import { AppError } from './http/errors.js';
 import { assertSafeId } from './http/ids.js';
 import { log } from './http/log.js';
 import { registerRoutes } from './routes/index.js';
+import { runRetention } from './services/retention.js';
+import type { Env } from './env.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -35,6 +40,24 @@ app.use('*', (c, next) =>
 );
 
 app.get('/v1/health', (c) => c.json({ ok: true }));
+
+// Emulator-only local blob store (stands in for presigned B2 URLs in development and tests).
+app.on(['GET', 'PUT'], '/local-blobs/:token', async (c) => {
+  if (!isEmulator(c.env) || c.env.STORAGE !== 'local') throw new AppError('NOT_FOUND', 'Route not found');
+  const storage = createStorageProvider(c.env) as LocalStorageProvider;
+  const res = await storage.serve(c.req.param('token'), c.req.raw);
+  const origin = c.req.header('origin');
+  if (origin && (c.env.ALLOWED_ORIGINS ?? '').split(',').includes(origin)) res.headers.set('access-control-allow-origin', origin);
+  return res;
+});
+
+// Emulator-only: force the retention job with a chosen "now" (tests and the quickstart walkthrough).
+app.post('/local-admin/run-retention', async (c) => {
+  if (!isEmulator(c.env)) throw new AppError('NOT_FOUND', 'Route not found');
+  const now = c.req.query('now') ? new Date(c.req.query('now')!) : new Date();
+  if (Number.isNaN(now.getTime())) throw new AppError('VALIDATION_FAILED', 'Invalid now');
+  return c.json(await runRetention(new Firestore(c.env), createStorageProvider(c.env), now));
+});
 
 app.use('/v1/*', async (c, next) => {
   const header = c.req.header('authorization') ?? '';
@@ -82,4 +105,12 @@ app.onError((err, c) => {
   return c.json(appError.toBody(), appError.status as 400);
 });
 
-export default app;
+export { app };
+
+export default {
+  fetch: app.fetch,
+  /** Hourly Cron Trigger (wrangler.jsonc): receipt retention and orphan upload cleanup. */
+  async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext) {
+    ctx.waitUntil(runRetention(new Firestore(env), createStorageProvider(env), new Date()).then(() => undefined));
+  },
+} satisfies ExportedHandler<Env>;

@@ -49,6 +49,9 @@ export const CreateExpenseBody = z.object({
   splitMode: z.enum(['total', 'items']),
   items: z.array(ExpenseItemBody).min(1).max(MAX_ITEMS_PER_EXPENSE),
   adjustments: z.array(AdjustmentBody).max(10).default([]),
+  /** Feature 004: pending uploads to link as receipts, and the scan the draft came from. */
+  attachmentUploadIds: z.array(z.string().regex(/^[A-Za-z0-9_-]{1,128}$/)).max(10).optional(),
+  scanId: z.string().regex(/^[A-Za-z0-9_-]{1,128}$/).optional(),
 });
 export type CreateExpenseBody = z.input<typeof CreateExpenseBody>;
 
@@ -60,7 +63,7 @@ export const VoidExpenseBody = z.object({
 });
 
 /** PUT /trips/{t}/expenses/{e} (feature 003). */
-export const UpdateExpenseBody = CreateExpenseBody.extend({
+export const UpdateExpenseBody = CreateExpenseBody.omit({ attachmentUploadIds: true, scanId: true }).extend({
   expectedVersion: z.number().int().min(1),
   expectedLedgerRevision: z.number().int().min(0).optional(),
 });

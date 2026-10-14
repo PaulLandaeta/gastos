@@ -21,7 +21,11 @@ export interface ExpenseFormProps {
   /** Multiple payers editor (US2). */
   payersSection?: ReactNode;
   children?: ReactNode;
+  /** Fields flagged by the AI scan for review (FR-010): description, transactionDate, totalMinor. */
+  review?: string[];
 }
+
+const REVIEW_HINT = 'Revisar: dato dudoso del escaneo';
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -36,6 +40,7 @@ export function ExpenseForm(props: ExpenseFormProps) {
   const { currency, members, categories, draft, setDraft, evaluation, saving } = props;
   const nameOf = (uid: string) => members.find((m) => m.uid === uid)?.name ?? '—';
   const totalItem = draft.items[0]!;
+  const flagged = (field: string) => props.review?.includes(field) ?? false;
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -45,9 +50,10 @@ export function ExpenseForm(props: ExpenseFormProps) {
   return (
     <form noValidate onSubmit={submit} className="space-y-4 pb-2">
       <Section title="Datos del gasto">
-        <Field id="exp-description" label="Descripción">
+        <Field id="exp-description" label="Descripción" {...(flagged('description') ? { hint: `⚠️ ${REVIEW_HINT}` } : {})}>
           <input
             id="exp-description"
+            aria-describedby={flagged('description') ? 'exp-description-hint' : undefined}
             className={inputClass}
             maxLength={120}
             value={draft.description}
@@ -61,7 +67,13 @@ export function ExpenseForm(props: ExpenseFormProps) {
           valueMinor={draft.totalMinor}
           onChange={(v) => setDraft((d) => ({ ...d, totalMinor: v }))}
           required
+          {...(flagged('totalMinor') ? { describedBy: 'exp-total-review' } : {})}
         />
+        {flagged('totalMinor') && (
+          <p id="exp-total-review" className="text-xs text-amber-900">
+            ⚠️ {REVIEW_HINT}
+          </p>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <Field id="exp-category" label="Categoría">
             <select
@@ -77,9 +89,10 @@ export function ExpenseForm(props: ExpenseFormProps) {
               ))}
             </select>
           </Field>
-          <Field id="exp-date" label="Fecha de la transacción">
+          <Field id="exp-date" label="Fecha de la transacción" {...(flagged('transactionDate') ? { hint: `⚠️ ${REVIEW_HINT}` } : {})}>
             <input
               id="exp-date"
+              aria-describedby={flagged('transactionDate') ? 'exp-date-hint' : undefined}
               type="date"
               className={inputClass}
               value={draft.transactionDate}

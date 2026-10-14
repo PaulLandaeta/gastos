@@ -19,6 +19,7 @@ function ItemRow({
   currency,
   members,
   issues,
+  review,
   selected,
   onSelect,
   onChange,
@@ -29,6 +30,7 @@ function ItemRow({
   currency: string;
   members: MemberOption[];
   issues: Issue[];
+  review: boolean;
   selected: boolean;
   onSelect: (on: boolean) => void;
   onChange: (item: DraftItem) => void;
@@ -40,13 +42,18 @@ function ItemRow({
     <div
       role="group"
       aria-label={`Ítem ${index + 1}`}
-      className={`space-y-2 rounded-xl border p-3 ${withoutBeneficiary ? 'border-amber-500 bg-amber-50' : 'border-slate-200'}`}
+      className={`space-y-2 rounded-xl border p-3 ${withoutBeneficiary || review ? 'border-amber-500 bg-amber-50' : 'border-slate-200'}`}
     >
       <div className="flex items-center justify-between gap-2">
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" aria-label="Seleccionar ítem" checked={selected} onChange={(e) => onSelect(e.target.checked)} />
           <span className="font-medium">{item.description || `Ítem ${index + 1}`}</span>
         </label>
+        {review && (
+          <span id={`${item.key}-review`} className="rounded bg-amber-200 px-1.5 py-0.5 text-xs font-semibold text-amber-950">
+            Revisar
+          </span>
+        )}
         <button type="button" onClick={onRemove} className="text-sm text-red-700 underline" aria-label={`Quitar ítem ${index + 1}`}>
           Quitar
         </button>
@@ -58,6 +65,7 @@ function ItemRow({
           </label>
           <input
             id={`${item.key}-name`}
+            aria-describedby={review ? `${item.key}-review` : undefined}
             placeholder="Producto"
             className={inputClass}
             value={item.description}
@@ -192,12 +200,15 @@ export function ItemsEditor({
   currency,
   members,
   issues,
+  reviewItemKeys = [],
 }: {
   draft: ExpenseDraft;
   setDraft: (u: (d: ExpenseDraft) => ExpenseDraft) => void;
   currency: string;
   members: MemberOption[];
   issues: Issue[];
+  /** Rows flagged by the AI scan (low confidence). */
+  reviewItemKeys?: string[];
 }) {
   const [selected, setSelected] = useState<string[]>([]);
   const [bulkOpen, setBulkOpen] = useState(false);
@@ -214,6 +225,7 @@ export function ItemsEditor({
           currency={currency}
           members={members}
           issues={issues}
+          review={reviewItemKeys.includes(item.key)}
           selected={selected.includes(item.key)}
           onSelect={(on) => setSelected((s) => (on ? [...s, item.key] : s.filter((k) => k !== item.key)))}
           onChange={(next) => setDraft((d) => ({ ...d, items: d.items.map((i) => (i.key === item.key ? next : i)) }))}

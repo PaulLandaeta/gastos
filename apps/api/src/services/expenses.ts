@@ -136,6 +136,14 @@ export type DuplicateCheck = (
   payerUids: string[],
 ) => Promise<void>;
 
+/** Feature 004: receipts linked in the same transaction as the expense creation. */
+export interface ExpenseAttachments {
+  /** Links the verified uploads to the new expense; returns how many attachments were created. */
+  link: (tx: Transaction, expenseId: string) => Promise<number>;
+  source: 'manual' | 'ai';
+  scanId: string | null;
+}
+
 /**
  * Registers an expense (FR-002…FR-013): validates category and amounts with the finance engine,
  * assigns the immutable sequence number, derives the visibility set (RF-38), locks currency and
@@ -148,6 +156,7 @@ export async function createExpense(
   idempotencyKey: string,
   ctx: MutationContext,
   checkDuplicates?: DuplicateCheck,
+  attachments?: ExpenseAttachments,
 ) {
   const idemPath = idempotencyPath(tripId, ctx.actorUid, idempotencyKey);
   return db.runTransaction(async (tx) => {
@@ -174,9 +183,13 @@ export async function createExpense(
 
     const derived = deriveExpenseFields(body, input, computed, ctx.actorUid);
     const expenseId = newId();
+    const attachmentCount = attachments ? await attachments.link(tx, expenseId) : 0;
     const expense = {
       seq,
       ...derived,
+      source: attachments?.source ?? 'manual',
+      scanId: attachments?.scanId ?? null,
+      attachmentCount,
       currency: trip.data.currency,
       status: 'active' as const,
       createdBy: ctx.actorUid,

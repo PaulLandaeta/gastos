@@ -3,6 +3,8 @@ import { SignJWT, createLocalJWKSet, exportJWK, generateKeyPair } from 'jose';
 import { describe, expect, it } from 'vitest';
 import { verifyIdToken } from '../src/auth/verifyIdToken.js';
 import { decodeFields, encodeFields } from '../src/firestore/codec.js';
+import { normalizeDraft, type RawReceiptDraft } from 'contracts';
+import { B2StorageProvider } from '../src/providers/b2.js';
 
 /** Median wall time (ms) of `fn` after warm-up; synchronous work ≈ CPU time. */
 async function median(fn: () => unknown | Promise<unknown>, runs = 40): Promise<number> {
@@ -109,6 +111,28 @@ describe('CPU budget — edit and refund (feature 003)', () => {
       return combineEffects(delta, r.ledgerEffect);
     });
     console.log(JSON.stringify({ editRefundMs: ms.toFixed(3) }));
+    expect(ms).toBeLessThan(5);
+  });
+
+  it('scan bookkeeping: draft normalization + presigned URL + quota counters stay below 5 ms', async () => {
+    const raw: RawReceiptDraft = {
+      merchant: { value: 'Super', confidence: 0.9 },
+      transactionDate: { value: '2026-10-01', confidence: 0.9 },
+      detectedCurrency: 'EUR',
+      items: Array.from({ length: 300 }, (_, i) => ({ description: `Item ${i}`, quantity: 2, unitPrice: 1.25, total: 2.5, confidence: i % 3 ? 0.9 : 0.5 })),
+      tax: 10.5,
+      total: { value: 760.5, confidence: 0.95 },
+    };
+    const b2 = new B2StorageProvider({ bucket: 'b', endpoint: 'https://s3.us-west-004.backblazeb2.com', region: 'us-west-004', keyId: 'k', applicationKey: 's' });
+    const usage = { scope: 'trip', date: '2026-10-14', tripId: 't', requests: 5, pages: 9, bytes: 1e6, failures: 0, succeeded: 5, latencyMsTotal: 1000, byProvider: { gemini: 5 }, byUser: { a: 3, b: 2 }, version: 5 };
+    const fields = encodeFields(usage);
+    const normalize = await median(() => normalizeDraft(raw, { currency: 'USD', today: '2026-10-14' }));
+    const presign = await median(() => b2.presignGet('trips/t/uploads/u/ticket.jpg', 900));
+    const counters = await median(() => {
+      for (let i = 0; i < 3; i++) encodeFields({ ...decodeFields(fields), requests: 6 });
+    });
+    const ms = normalize + presign + counters;
+    console.log(JSON.stringify({ normalizeMs: normalize.toFixed(3), presignMs: presign.toFixed(3), countersMs: counters.toFixed(3), scanBookkeepingMs: ms.toFixed(3) }));
     expect(ms).toBeLessThan(5);
   });
 });

@@ -1,5 +1,6 @@
 import type { Hono } from 'hono';
 import type { AppEnv } from '../http/context.js';
+import { attachmentRoutes } from './attachments.js';
 import { balanceRoutes } from './balances.js';
 import { categoryRoutes } from './categories.js';
 import { expenseRoutes } from './expenses.js';
@@ -7,6 +8,7 @@ import { invitationRoutes } from './invitations.js';
 import { meRoutes } from './me.js';
 import { refundRoutes } from './refunds.js';
 import { roleRoutes } from './roles.js';
+import { scanRoutes } from './scans.js';
 import { settlementRoutes } from './settlements.js';
 import { statsRoutes } from './stats.js';
 import { statusRoutes } from './status.js';
@@ -25,4 +27,6 @@ export function registerRoutes(app: Hono<AppEnv>): void {
   statsRoutes(app);
   settlementRoutes(app);
   refundRoutes(app);
+  attachmentRoutes(app);
+  scanRoutes(app);
 }

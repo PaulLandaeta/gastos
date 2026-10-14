@@ -5,6 +5,7 @@ import { AppError } from '../http/errors.js';
 import { assertSafeId } from '../http/ids.js';
 import { mutationContext } from '../http/mutation.js';
 import { parseWith, readJson } from '../http/validate.js';
+import { expenseAttachmentsFor } from '../services/expenseAttachments.js';
 import { checkDuplicates } from '../services/duplicates.js';
 import { createExpense, restoreExpense, updateExpense, voidExpense } from '../services/expenses.js';
 import { getExpenseHistory } from '../services/history.js';
@@ -20,7 +21,10 @@ export function expenseRoutes(app: Hono<AppEnv>): void {
       });
     }
     const body = parseWith(CreateExpenseBody, await readJson(c.req.raw));
-    const result = await createExpense(c.get('db'), c.req.param('tripId'), body, key.data, mutationContext(c), checkDuplicates);
+    const ctx = mutationContext(c);
+    const tripId = c.req.param('tripId');
+    const attachments = await expenseAttachmentsFor(c.get('db'), c.env, tripId, body, key.data, ctx);
+    const result = await createExpense(c.get('db'), tripId, body, key.data, ctx, checkDuplicates, attachments);
     return c.json(result, 201);
   });
 

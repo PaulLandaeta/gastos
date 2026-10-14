@@ -2,7 +2,7 @@ import type { SettlementDto } from 'contracts';
 import { useMemo } from 'react';
 import { useCollection } from '../../lib/useFirestore';
 
-export type SettlementView = SettlementDto & { createdAt?: Date };
+export type SettlementView = SettlementDto & { createdAt?: Date; attachmentCount?: number };
 
 /** Live payments of the trip (readable by every member: public debt graph, RF-39). */
 export function useSettlements(tripId: string) {

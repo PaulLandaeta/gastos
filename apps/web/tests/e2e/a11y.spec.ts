@@ -109,3 +109,27 @@ test('pantallas de la fase 3 (pagos, edición, impacto, devolución) sin violaci
   const overflow = await ana.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(overflow).toBe(false);
 });
+
+test('pantallas de escaneo y adjuntos (004) sin violaciones WCAG 2.1 AA a 360 px', async ({ browser }) => {
+  const { setupActiveTrip, ANA, PEDRO } = await import('./helpers');
+  const { page } = await setupActiveTrip(browser, ANA, [PEDRO]);
+  await page.setViewportSize({ width: 360, height: 780 });
+
+  await page.getByRole('link', { name: /Escanear factura/ }).click();
+  await expect(page.getByRole('dialog', { name: 'Antes de escanear' })).toBeVisible();
+  await expectNoViolations(page, 'aviso de consentimiento');
+  await page.getByRole('button', { name: 'Acepto' }).click();
+  await expect(page.getByTestId('scan-quota')).toBeVisible();
+  await expectNoViolations(page, 'pantalla de escaneo');
+
+  await page.getByTestId('scan-input').setInputFiles([{ name: 'ticket.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('ticket') }]);
+  await expect(page.getByRole('heading', { name: 'Revisar factura escaneada' })).toBeVisible();
+  await expectNoViolations(page, 'formulario prellenado con campos dudosos');
+  await page.getByRole('button', { name: 'Guardar gasto' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
+
+  await page.getByRole('link', { name: 'Ver gastos' }).click();
+  await page.getByRole('link', { name: /Super Ahorro/ }).click();
+  await expect(page.getByRole('region', { name: 'Comprobantes' }).getByRole('listitem')).toHaveCount(1);
+  await expectNoViolations(page, 'lista de comprobantes');
+});

@@ -1,5 +1,5 @@
 import { env } from 'cloudflare:workers';
-import app from '../../src/index.js';
+import { app } from '../../src/index.js';
 import { emulatorToken, type TestUser } from './emulator.js';
 
 export interface CallOptions {

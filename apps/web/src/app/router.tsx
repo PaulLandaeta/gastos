@@ -8,6 +8,7 @@ import { EditExpensePage } from '../features/expenses/EditExpensePage';
 import { ExpenseDetailPage } from '../features/expenses/ExpenseDetailPage';
 import { ExpenseListPage } from '../features/expenses/ExpenseListPage';
 import { NewExpensePage } from '../features/expenses/NewExpensePage';
+import { ScanPage } from '../features/scan/ScanPage';
 import { PaySettlementPage } from '../features/settlements/PaySettlementPage';
 import { CreateTripPage } from '../features/trips/CreateTripPage';
 import { TripDetailPage } from '../features/trips/TripDetailPage';
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
           { path: '/trips/:tripId/categories', element: <CategoriesPage /> },
           { path: '/trips/:tripId/settlements/new', element: <PaySettlementPage /> },
           { path: '/trips/:tripId/expenses/new', element: <NewExpensePage /> },
+          { path: '/trips/:tripId/scan', element: <ScanPage /> },
           { path: '/trips/:tripId/expenses/:expenseId', element: <ExpenseDetailPage /> },
           { path: '/trips/:tripId/expenses/:expenseId/edit', element: <EditExpensePage /> },
           { path: '*', element: <NotFound /> },

@@ -1,4 +1,7 @@
+export * from './api/attachments.js';
 export * from './api/balances.js';
+export * from './api/consent.js';
+export * from './api/scans.js';
 export * from './api/categories.js';
 export * from './api/expenses.js';
 export * from './api/invitations.js';
@@ -14,3 +17,6 @@ export * from './currencies.js';
 export * from './domain.js';
 export * from './errors.js';
 export * from './money.js';
+export * from './providers.js';
+export * from './receipts.js';
+export * from './retention.js';

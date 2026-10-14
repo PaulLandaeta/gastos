@@ -1,6 +1,6 @@
 # Contrato HTTP API v1 — cambios de la feature 003
 
-Base: contratos de 001 y 002. Solo lo nuevo o modificado.
+Base: contratos de 001 y 002. Solo lo nuevo o modificado. Ampliado por [004](../../004-receipts-ai-attachments/contracts/http-api.md) (comprobantes en pagos, `attachmentUploadIds`/`scanId` al crear gastos).
 
 ## Códigos de error nuevos
 
