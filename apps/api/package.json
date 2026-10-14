@@ -1,0 +1,27 @@
+{
+  "name": "api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --port 8787",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json",
+    "perf": "vitest run --config vitest.perf.config.ts"
+  },
+  "dependencies": {
+    "contracts": "workspace:*",
+    "finance-engine": "workspace:*",
+    "hono": "^4.13.0",
+    "jose": "^6.2.0",
+    "zod": "^4.6.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.4.0",
+    "@cloudflare/workers-types": "^5.20261013.0",
+    "typescript": "~6.0.0",
+    "vitest": "^4.1.0",
+    "wrangler": "^4.150.0"
+  }
+}

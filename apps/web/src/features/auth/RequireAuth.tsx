@@ -1,0 +1,13 @@
+import { Navigate, Outlet, useLocation } from 'react-router';
+import { Spinner } from '../../components/Spinner';
+import { useAuth } from './AuthProvider';
+
+export function RequireAuth() {
+  const { state } = useAuth();
+  const location = useLocation();
+  if (state.status === 'loading') return <Spinner />;
+  if (state.status === 'signedOut') {
+    return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
+  }
+  return <Outlet />;
+}

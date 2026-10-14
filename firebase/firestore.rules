@@ -1,0 +1,61 @@
+rules_version = '2';
+
+// Deny-by-default (Constitution II). Clients only READ; every write goes through the API.
+// Access matrix: specs/001-finance-engine-trips/contracts/access-rules.md
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Accepted members have a members/{uid} row; invitees only have members/inv_* rows.
+    function isMember(tripId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/trips/$(tripId)/members/$(request.auth.uid));
+    }
+
+    function ownsVerifiedEmail(email) {
+      return signedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() == email;
+    }
+
+    match /trips/{tripId} {
+      allow read: if isMember(tripId);
+      allow write: if false;
+
+      match /members/{memberKey} {
+        allow read: if isMember(tripId);
+        allow write: if false;
+      }
+
+      // expenses, projections, auditEvents and any other subcollection: API only.
+      match /{subcollection}/{document=**} {
+        allow read, write: if false;
+      }
+    }
+
+    match /invitations/{email}/trips/{tripId} {
+      allow read: if ownsVerifiedEmail(email);
+      allow write: if false;
+    }
+
+    match /users/{uid} {
+      allow read: if isSelf(uid);
+      allow write: if false;
+
+      match /trips/{tripId} {
+        allow read: if isSelf(uid);
+        allow write: if false;
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

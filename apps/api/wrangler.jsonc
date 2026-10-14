@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "gastos-viaje-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": [],
+  "observability": { "enabled": true },
+  "vars": {
+    "ENVIRONMENT": "production",
+    "FIREBASE_PROJECT_ID": "REPLACE_WITH_PROJECT_ID",
+    "ALLOWED_ORIGINS": "https://REPLACE_WITH_PROJECT_ID.web.app"
+  }
+  // Secrets (wrangler secret put): FIREBASE_SERVICE_ACCOUNT (JSON key of the service account)
+}

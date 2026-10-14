@@ -1,0 +1,60 @@
+import { computeExpense, combineEffects, simplifiedDebts, originalDebts, type Member } from 'finance-engine';
+import { SignJWT, createLocalJWKSet, exportJWK, generateKeyPair } from 'jose';
+import { describe, expect, it } from 'vitest';
+import { verifyIdToken } from '../src/auth/verifyIdToken.js';
+import { decodeFields, encodeFields } from '../src/firestore/codec.js';
+
+/** Median wall time (ms) of `fn` after warm-up; synchronous work ≈ CPU time. */
+async function median(fn: () => unknown | Promise<unknown>, runs = 40): Promise<number> {
+  for (let i = 0; i < 10; i++) await fn();
+  const samples: number[] = [];
+  for (let i = 0; i < runs; i++) {
+    const t0 = performance.now();
+    await fn();
+    samples.push(performance.now() - t0);
+  }
+  samples.sort((a, b) => a - b);
+  return samples[Math.floor(runs / 2)]!;
+}
+
+describe('CPU budget per request (Workers Free: 10 ms)', () => {
+  it('worst-case "create expense" request stays well below 10 ms of CPU', async () => {
+    // 1. ID token verification (RS256 with WebCrypto, JWKS cached).
+    const { privateKey, publicKey } = await generateKeyPair('RS256');
+    const keySet = createLocalJWKSet({ keys: [{ ...(await exportJWK(publicKey)), kid: 'k', alg: 'RS256' }] });
+    const now = Math.floor(Date.now() / 1000);
+    const token = await new SignJWT({ email: 'a@example.com', email_verified: true, auth_time: now, firebase: { sign_in_provider: 'google.com' } })
+      .setProtectedHeader({ alg: 'RS256', kid: 'k' })
+      .setSubject('u0').setIssuer('https://securetoken.google.com/p').setAudience('p').setIssuedAt().setExpirationTime('1h')
+      .sign(privateKey);
+    const verify = await median(() => verifyIdToken(token, { ENVIRONMENT: 'production', FIREBASE_PROJECT_ID: 'p' }, { keySet }));
+
+    // 2. Decoding the trip + 50 member documents returned by Firestore REST.
+    const members: Member[] = Array.from({ length: 50 }, (_, i) => ({ uid: `u${i}`, joinOrder: i }));
+    const memberFields = members.map((m) =>
+      encodeFields({ uid: m.uid, email: `${m.uid}@example.com`, role: 'member', invitationStatus: 'accepted', joinOrder: m.joinOrder, version: 1, acceptedAt: new Date() }),
+    );
+    const decode = await median(() => memberFields.map((f) => decodeFields(f)));
+
+    // 3. Finance engine: 100 items × 50 members + ledger update + both debt views.
+    const uids = members.map((m) => m.uid);
+    const items = Array.from({ length: 100 }, (_, index) => ({
+      id: `i${index}`, index, grossMinor: 10_001 + index, discountMinor: 0, classification: 'shared' as const,
+      beneficiaries: uids, allocation: { mode: 'equal' as const },
+    }));
+    const total = items.reduce((a, i) => a + i.grossMinor, 0);
+    const input = { seq: 3, totalMinor: total, payers: [{ uid: 'u0', amountMinor: total - 5 }, { uid: 'u1', amountMinor: 5 }],
+      splitMode: 'items' as const, items, adjustments: [], members };
+    const engine = await median(() => {
+      const r = computeExpense(input);
+      const ledger = combineEffects(r.ledgerEffect, r.ledgerEffect);
+      simplifiedDebts(ledger, members);
+      originalDebts(ledger, members);
+      return encodeFields({ items, ledgerEffect: r.ledgerEffect, chargesByMember: r.chargesByMember });
+    });
+
+    const totalMs = verify + decode + engine;
+    console.log(JSON.stringify({ verifyMs: verify.toFixed(3), decodeMs: decode.toFixed(3), engineMs: engine.toFixed(3), totalMs: totalMs.toFixed(3) }));
+    expect(totalMs).toBeLessThan(5); // 50 % headroom against the 10 ms limit
+  });
+});
