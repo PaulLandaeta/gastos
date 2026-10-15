@@ -10,7 +10,7 @@ test('US1: consent → scan → prefilled form with highlights and currency warn
 
   await ana.getByRole('link', { name: /Escanear factura/ }).click();
   const dialog = ana.getByRole('dialog', { name: 'Antes de escanear' });
-  await expect(dialog).toContainText('puede usar esas imágenes para mejorar sus productos');
+  await expect(dialog).toContainText('puede conservarlas hasta 30 días');
   await dialog.getByRole('button', { name: 'Acepto' }).click();
   await expect(ana.getByTestId('scan-quota')).toHaveText('Quedan 20 escaneos hoy en este viaje.');
 

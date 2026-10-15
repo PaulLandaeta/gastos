@@ -68,7 +68,7 @@ export function checkConfig(input: ConfigInput): string[] {
   }
 
   if (input.secrets) {
-    const required = ['FIREBASE_SERVICE_ACCOUNT', 'B2_KEY_ID', 'B2_APPLICATION_KEY', ...(vars['AI_PROVIDER'] === 'gemini' ? ['GEMINI_API_KEY'] : [])];
+    const required = ['FIREBASE_SERVICE_ACCOUNT', 'B2_KEY_ID', 'B2_APPLICATION_KEY', ...(vars['AI_PROVIDER'] === 'gemini' ? ['GEMINI_API_KEY'] : []), ...(vars['AI_PROVIDER'] === 'openai' ? ['OPENAI_API_KEY'] : [])];
     for (const s of required) if (!input.secrets.includes(s)) problems.push(`Falta el secreto del Worker ${s}`);
   }
 

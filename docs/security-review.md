@@ -73,7 +73,7 @@ Leyenda: ✅ correcto · 🔧 corregido en esta revisión · ⚠️ riesgo acept
 | Logs estructurados sin correos, nombres, importes ni ids en las rutas | 🔧 | `http/requestLog.ts`, `tests/ops.test.ts` (SC-009) |
 | Los logs de Actions (repo público) solo muestran recuentos y nunca datos | ✅ | `apps/ops/src/cli.ts` imprime solo mensajes y nunca stacks |
 | `pnpm audit --prod`: `@grpc/grpc-js` < 1.13.6 (alta, solo en el SDK de Firestore para Node) | 🔧 | Override `^1.13.7` en `package.json`; auditoría limpia |
-| Gemini en nivel gratuito: Google puede usar el contenido para mejorar sus productos | ⚠️ | Riesgo registrado en la constitution, con aviso en el consentimiento de escaneo. Decidir un nivel de pago u otro proveedor antes de abrir más allá del piloto |
+| Proveedor de IA externo (OpenAI): retención de hasta 30 días para detectar abusos, sin entrenamiento | ✅ | Constitution 1.2.0. Aviso en el consentimiento de escaneo; `store: false` en cada petición |
 
 ## Hallazgos pendientes
 

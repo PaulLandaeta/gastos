@@ -1,7 +1,8 @@
 # Despliegue a producción
 
-Todo funciona sin tarjeta de crédito: Firebase Spark, Cloudflare Workers Free, Backblaze B2, Gemini (nivel gratuito) y
-GitHub Actions (repositorio público).
+Todo funciona sin tarjeta de crédito salvo la IA: Firebase Spark, Cloudflare Workers Free, Backblaze B2 y GitHub Actions
+(repositorio público). El escaneo usa la API de OpenAI con crédito prepagado; Gemini en su nivel gratuito queda como
+alternativa (`AI_PROVIDER=gemini`).
 
 Hay un solo entorno de producción. Para desarrollo y pruebas se usan los emuladores locales.
 
@@ -26,13 +27,16 @@ Hay un solo entorno de producción. Para desarrollo y pruebas se usan los emulad
 2. Rellena los `REPLACE_WITH_*` de `apps/api/wrangler.jsonc`, sección superior, que es la de producción:
    - `FIREBASE_PROJECT_ID`;
    - `ALLOWED_ORIGINS`, con `https://<proyecto>.web.app`;
-   - `GEMINI_MODEL`;
+   - `OPENAI_MODEL` (por defecto `gpt-4.1-mini`), o `AI_PROVIDER=gemini` y `GEMINI_MODEL`;
    - las variables `B2_*`.
 3. Carga los secretos, que nunca van en el repositorio:
+   El prompt `!` de Claude Code no es interactivo: copia el valor y usa
+   `pbpaste | pnpm exec wrangler secret put NOMBRE --env=""`.
+
    ```bash
    cd apps/api
    pnpm exec wrangler secret put FIREBASE_SERVICE_ACCOUNT   # JSON completo
-   pnpm exec wrangler secret put GEMINI_API_KEY
+   pnpm exec wrangler secret put OPENAI_API_KEY             # o GEMINI_API_KEY con AI_PROVIDER=gemini
    pnpm exec wrangler secret put B2_KEY_ID
    pnpm exec wrangler secret put B2_APPLICATION_KEY
    ```
@@ -50,12 +54,18 @@ Hay un solo entorno de producción. Para desarrollo y pruebas se usan los emulad
   `content-type`.
 - En el bucket de backups no configures CORS ni acceso público.
 
-### 4. Gemini
+### 4. IA (OpenAI)
 
-Crea una clave en Google AI Studio y cárgala como `GEMINI_API_KEY`.
+1. Crea una clave de proyecto en <https://platform.openai.com/api-keys> con crédito prepagado y, si quieres, un límite
+   de gasto mensual en *Limits*.
+2. Cárgala como `OPENAI_API_KEY`.
 
-> **Aviso de privacidad (riesgo aceptado para el piloto):** en el nivel gratuito, Google puede usar el contenido
-> enviado para mejorar sus productos. La pantalla de consentimiento de escaneo lo indica (feature 004).
+Las cuotas de la app (`AI_QUOTA_*`) limitan los escaneos por viaje, día y mes. OpenAI no entrena con los datos de la API
+y los conserva hasta 30 días para detectar abusos; la pantalla de consentimiento de escaneo lo indica.
+
+**Alternativa gratuita:** `AI_PROVIDER=gemini`, `GEMINI_MODEL` y el secreto `GEMINI_API_KEY` (Google AI Studio). En su
+nivel gratuito Google puede usar el contenido para mejorar sus productos; actualiza el texto del consentimiento si
+vuelves a él.
 
 ## Desplegar
 

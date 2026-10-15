@@ -62,8 +62,8 @@ Los bloqueantes y graves se revisan en 24 h; el resto se priorizan al cierre del
 
 - Tu nombre, correo y foto de Google se usan solo para identificarte ante tu grupo. El detalle de un gasto lo ven
   quienes participan en él y los administradores del viaje; los saldos los ve todo el grupo.
-- **Escaneo con IA**: las facturas se envían a Google Gemini en su nivel gratuito. Google puede usar ese contenido para
-  mejorar sus productos. Si no quieres, registra los gastos a mano.
+- **Escaneo con IA**: las facturas se envían a OpenAI. No las usa para entrenar sus modelos, pero puede conservarlas
+  hasta 30 días para detectar abusos. Si no quieres, registra los gastos a mano.
 - Los comprobantes se borran a los **6 meses**.
 - Puedes **borrar tu cuenta** desde el menú de tu cuenta.
   - Se eliminan tu nombre, tu correo, tu foto, tus notificaciones y tus comprobantes personales.

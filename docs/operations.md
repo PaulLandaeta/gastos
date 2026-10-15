@@ -94,7 +94,7 @@ Estimación para el piloto: 20 usuarios activos, 10 viajes activos y unos 5.000 
 | Workers CPU | 10 ms/petición | < 5 ms (`pnpm --filter api perf`) | — | — |
 | B2 almacenamiento | 10 GB | comprobantes ~1 GB + backups 11 × ~5 MB | 11 % | 7 GB |
 | B2 descargas | 1 GB/día (gratis) | < 100 MB | < 10 % | 700 MB |
-| Gemini | cuota de AI Studio | ≤ 100 escaneos/día (cuota global de la app) | — | 80 % de la cuota |
+| OpenAI | crédito prepagado (límite de gasto en *Limits*) | ≤ 100 escaneos/día (cuota global de la app), ≈ 1–2 céntimos de USD por factura con `gpt-4.1-mini` | — | 80 % del límite de gasto |
 | GitHub Actions | ilimitado (repo público) | 96 uptime + 1 backup | — | — |
 
 Cada usuario activo añade unas 400 lecturas y 75 escrituras al día. Con todo en < 50 % del límite, el piloto cabe

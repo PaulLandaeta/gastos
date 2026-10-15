@@ -39,6 +39,13 @@ describe('preflight (feature 006, FR-014)', () => {
     expect(checkConfig({ wrangler: wrangler(goodVars), webEnv: goodWeb, secrets: goodSecrets, firebaserc })).toEqual([]);
   });
 
+  it('requires the API key of the configured AI provider', () => {
+    const openai = { ...goodVars, AI_PROVIDER: 'openai', OPENAI_MODEL: 'gpt-4.1-mini' };
+    expect(checkConfig({ wrangler: wrangler(openai), webEnv: goodWeb, secrets: goodSecrets, firebaserc })).toEqual([
+      'Falta el secreto del Worker OPENAI_API_KEY',
+    ]);
+  });
+
   it('detects placeholders, missing variables, missing secrets and inconsistent projects', () => {
     const problems = checkConfig({
       wrangler: wrangler({ ...goodVars, B2_BUCKET: 'REPLACE_WITH_BUCKET', ALLOWED_ORIGINS: 'http://localhost:5180' }),

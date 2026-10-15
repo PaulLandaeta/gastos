@@ -15,8 +15,8 @@ Cada condición de la *Definición de terminado del MVP* tiene su evidencia.
 | 5 | Privacidad validada en cliente, API, Firestore, almacenamiento y exportaciones | `privacy.spec.ts`, `privacy.phase5.test.ts`, `rules.test.ts`, `phase6.rules.test.ts`, `attachments.test.ts`, `exports.test.ts` | 🤖 | ✅ |
 | 6 | PWA instalable en Android/iOS; el registro offline se recupera sin duplicados | E2E `pwa/install.spec.ts`, `pwa/offline*.spec.ts`, `expenses.offline.test.ts` | 🤖 | ✅ |
 | 6b | Instalación real en un Android y un iPhone del piloto | Seguir `docs/pilot-guide.md`, tarea 1 | ✍️ | ☐ |
-| 7 | Facturas procesadas con Gemini con corrección total; una caída de la IA no impide el registro manual | `scan.spec.ts`, `tests/routes/scans.test.ts` (proveedor falso, caída simulada) | 🤖 | ✅ |
-| 7b | Escaneo real con Gemini en producción (3 facturas variadas) | Guía del piloto, tarea 4 | ✍️ | ☐ |
+| 7 | Facturas procesadas con la IA (OpenAI) con corrección total; una caída de la IA no impide el registro manual | `scan.spec.ts`, `tests/routes/scans.test.ts` (proveedor falso, caída simulada) | 🤖 | ✅ |
+| 7b | Escaneo real con OpenAI en producción (3 facturas variadas) | Guía del piloto, tarea 4 | ✍️ | ☐ |
 | 8 | Se verifica la eliminación de comprobantes vencidos a los 6 meses | `retention.test.ts`, `retention.spec.ts` | 🤖 | ✅ |
 | 8b | El cron de retención corre en producción | Workers → *Triggers* → historial del cron `17 * * * *` | ✍️ | ☐ |
 | 9 | Se verifica la anonimización de cuenta | `account.test.ts` (saldos idénticos y 0 PII), `account-deletion.spec.ts` | 🤖 | ✅ |

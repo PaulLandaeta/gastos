@@ -43,6 +43,7 @@ describe('feature 004 hardening', () => {
     expect(() => createAiProvider({ ...prod, AI_PROVIDER: 'fake' })).toThrow();
     expect(() => createStorageProvider({ ...prod, STORAGE: 'local' })).toThrow();
     expect(() => createAiProvider({ ...prod, AI_PROVIDER: 'gemini' })).toThrow(/not configured/);
+    expect(() => createAiProvider({ ...prod, AI_PROVIDER: 'openai' })).toThrow(/not configured/);
   });
 
   it('scan failures log the error class only, never receipt content', async () => {

@@ -25,7 +25,7 @@ Gastos de viaje colaborativos: registro, reparto exacto al centavo y liquidació
 | API | Cloudflare Workers Free + Hono (`apps/api`) |
 | Datos / Auth | Firebase Spark: Firestore + Google Auth + Hosting |
 | Comprobantes | Backblaze B2 (URLs firmadas), R2 de Miniflare en local |
-| IA | Gemini (nivel gratuito) tras `ReceiptAIProvider`; proveedor falso en local |
+| IA | OpenAI (crédito prepagado) tras `ReceiptAIProvider`, Gemini gratuito como alternativa; proveedor falso en local |
 | Motor financiero | TypeScript puro, enteros en unidad menor (`packages/finance-engine`) |
 | Operación | `apps/ops` (Node): preflight, smoke, backup/restore; GitHub Actions (CI, Lighthouse, backup, uptime) |
 
