@@ -15,6 +15,12 @@ Hay un solo entorno de producción. Para desarrollo y pruebas se usan los emulad
 3. Crea **Firestore Database** en modo producción, en una región cercana a los usuarios.
 4. Registra una **app web** y copia su configuración SDK en `apps/web/.env.production`. Parte de
    `apps/web/.env.production.example`; ese archivo no se versiona.
+   - En `VITE_FIREBASE_AUTH_DOMAIN` pon `<proyecto>.web.app`, no el `<proyecto>.firebaseapp.com` que propone la
+     consola. Con el dominio de Firebase, Safari en iPhone bloquea el resultado del login al volver de Google y la app
+     instalada se queda en la pantalla de inicio de sesión.
+   - Para que Google acepte ese dominio, en Google Cloud Console → *APIs y servicios → Credenciales* → *Web client
+     (auto created by Google Service)* añade `https://<proyecto>.web.app/__/auth/handler` a *URIs de redirección
+     autorizados*. Hazlo **antes** de desplegar: sin esa URI el login falla para todos con `redirect_uri_mismatch`.
 5. Crea la **service account de la API** en *Project settings → Service accounts → Generate new private key*.
    - Guarda el JSON fuera del repositorio.
    - Para los backups crea otra cuenta con rol de **solo lectura** de Datastore, *Cloud Datastore Viewer*, desde
