@@ -1,6 +1,6 @@
 {
   "projects": {
     "default": "demo-gastos",
-    "prod": "REPLACE_WITH_PROJECT_ID"
+    "prod": "gastos-viaje-pl"
   }
 }

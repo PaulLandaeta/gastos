@@ -29,9 +29,9 @@ function ConsentDialog({ onAccept, busy, error, manualTo }: { onAccept: () => vo
         Antes de escanear
       </h2>
       <p className="text-sm text-slate-800">
-        Para leer la factura, la foto o el PDF se envía a un proveedor externo de IA (Google Gemini). En su nivel gratuito,
-        <strong> el proveedor puede usar esas imágenes para mejorar sus productos</strong>. No escanees comprobantes con datos que
-        no quieras compartir.
+        Para leer la factura, la foto o el PDF se envía a un proveedor externo de IA (OpenAI).
+        <strong> OpenAI no usa esas imágenes para entrenar sus modelos, pero puede conservarlas hasta 30 días</strong> para
+        detectar abusos. No escanees comprobantes con datos que no quieras compartir.
       </p>
       <p className="text-sm text-slate-700">
         Puedes retirar tu consentimiento cuando quieras; el registro manual con adjuntos sigue disponible sin él. (Versión del aviso:{' '}

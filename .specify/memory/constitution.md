@@ -1,6 +1,9 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.1 → 1.1.0 (MINOR: estructura amplía `apps/ops` para operación; decisiones pendientes
+- Version change: 1.1.0 → 1.2.0 (MINOR: excepción de pago para la IA. OpenAI pasa a ser el proveedor de
+  producción por decisión del responsable, que paga el consumo; Gemini queda como alternativa gratuita.
+  Decisión pendiente #2 resuelta)
+- Anterior: 1.0.1 → 1.1.0 (MINOR: estructura amplía `apps/ops` para operación; decisiones pendientes
   PRD #2, #7 y #10 resueltas en 005/006; backups y monitoreo con GitHub Actions)
 - Anterior: 1.0.0 → 1.0.1 (PATCH: Principio I admite desempate rotativo determinista,
   decidido en /speckit-clarify de 001-finance-engine-trips)
@@ -102,9 +105,12 @@ sin requerir tarjeta.
 ### VI. Free-Tier First y Proveedores Intercambiables
 
 - Solo se usan servicios utilizables sin tarjeta de crédito: Firebase Spark (Auth, Firestore,
-  Hosting), Cloudflare Workers Free, Backblaze B2 (10 GB) y Gemini API free tier.
+  Hosting), Cloudflare Workers Free y Backblaze B2 (10 GB).
+- Única excepción: el proveedor de IA puede ser de pago (OpenAI API con crédito prepagado del
+  responsable), acotado por las cuotas de RF-51. Gemini free tier sigue disponible con
+  `AI_PROVIDER=gemini` sin cambiar código.
 - Dependencias externas variables MUST estar detrás de interfaces en `packages/contracts`:
-  `ReceiptAIProvider` (Gemini inicial, OpenAI futuro) y `ReceiptStorageProvider`
+  `ReceiptAIProvider` (OpenAI en producción, Gemini como alternativa) y `ReceiptStorageProvider`
   (Backblaze B2 inicial, Supabase Storage como alternativa).
 - Las cuotas IA (globales y por viaje, tamaño, páginas, reintentos) MUST validarse de forma
   atómica antes de llamar al proveedor (RF-51). Una caída o agotamiento de IA nunca impide el
@@ -141,7 +147,7 @@ sin requerir tarjeta.
 | Base de datos | Cloud Firestore (plan Spark: 1 GiB, 50k lecturas / 20k escrituras / 20k borrados por día) |
 | Backend | Cloudflare Workers (TypeScript), Firestore vía REST con service account, `jose` para JWT, Cron Triggers para jobs (retención 6 meses, cuotas, anonimización) |
 | Archivos | Backblaze B2 vía API S3 (presigned URLs, bucket privado); alternativa Supabase Storage |
-| IA | Gemini API (Google AI Studio) vía `ReceiptAIProvider`, salida validada con Zod |
+| IA | OpenAI API (Chat Completions, JSON schema estricto) vía `ReceiptAIProvider`; Gemini como alternativa. Salida validada con Zod |
 | Hosting | Firebase Hosting (SPA + HTTPS) |
 | Tooling | pnpm workspaces, ESLint, Prettier, Vitest, fast-check, Playwright, Firebase Emulator Suite, Wrangler |
 | Operación | GitHub Actions (CI, Lighthouse, backup diario cifrado a B2, uptime), `apps/ops` |
@@ -180,9 +186,9 @@ Deben resolverse (vía `/speckit-clarify`) antes de implementar la feature afect
 1. Las decisiones del PRD §14 que sigan abiertas. Resueltas: #2 borrado de cuenta y #7 inferencia
    por agregados (spec 006, riesgo aceptado y comunicado), #10 límites offline y #11 exports
    (spec 005), y las de las specs 001–004 en sus secciones Clarifications.
-2. **Privacidad Gemini free tier:** en el nivel gratuito Google puede usar el contenido para
-   mejorar sus productos; decidir si se acepta para el MVP (con aviso al usuario) o si se exige
-   un nivel de pago/otro proveedor antes de producción.
+2. ~~**Privacidad Gemini free tier**~~ Resuelta (1.2.0): producción usa OpenAI API, que no entrena
+   con los datos enviados por API y los retiene hasta 30 días para detectar abusos (aviso en el
+   consentimiento de escaneo).
 3. **Backblaze B2:** confirmar que el alta no exige tarjeta; si la exige, adoptar Supabase
    Storage (1 GB) sin cambiar contratos.
 4. **Límites Spark:** validar con prototipo el costo de lecturas de balances/agregados; si se
@@ -199,4 +205,4 @@ Deben resolverse (vía `/speckit-clarify`) antes de implementar la feature afect
   se aceptan documentadas en Complexity Tracking. La guía operativa del agente vive en
   `CLAUDE.md`.
 
-**Version**: 1.1.0 | **Ratified**: 2026-10-13 | **Last Amended**: 2026-10-14
+**Version**: 1.2.0 | **Ratified**: 2026-10-13 | **Last Amended**: 2026-10-15

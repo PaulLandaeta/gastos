@@ -10,7 +10,9 @@ export interface Env {
   /** Service-account JSON key (Workers secret). Not used in the emulator. */
   FIREBASE_SERVICE_ACCOUNT?: string;
   // Feature 004 — AI and attachments
-  AI_PROVIDER?: 'gemini' | 'fake' | string;
+  AI_PROVIDER?: 'openai' | 'gemini' | 'fake' | string;
+  OPENAI_API_KEY?: string;
+  OPENAI_MODEL?: string;
   GEMINI_API_KEY?: string;
   GEMINI_MODEL?: string;
   STORAGE?: 'b2' | 'local' | string;
