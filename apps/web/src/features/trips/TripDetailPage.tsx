@@ -7,6 +7,8 @@ import { Spinner } from '../../components/Spinner';
 import { formatDateRange } from '../../lib/format';
 import { useCurrentUser } from '../auth/AuthProvider';
 import { BalancesPanel } from '../balances/BalancesPanel';
+import { RoastPanel } from '../roast/RoastPanel';
+import { SpicyModeToggle } from '../roast/SpicyModeToggle';
 import { DashboardPanel } from '../dashboard/DashboardPanel';
 import { ExportMenu } from '../export/ExportMenu';
 import { SettlementsPanel } from '../settlements/SettlementsPanel';
@@ -90,8 +92,10 @@ export function TripDetailPage() {
       )}
       <TripStatusActions trip={trip} role={me.role} />
       {editing && <EditTripForm trip={trip} myRole={me.role} onDone={() => setEditing(false)} />}
+      {canEdit && <SpicyModeToggle trip={trip} />}
       {trip.status !== 'pending' && <DashboardPanel trip={trip} members={members} />}
       {trip.status !== 'pending' && <BalancesPanel trip={trip} members={members} />}
+      {trip.status !== 'pending' && trip.spicyMode === true && <RoastPanel trip={trip} members={members} />}
       {trip.status !== 'pending' && <SettlementsPanel trip={trip} members={members} />}
       <MembersPanel trip={trip} members={members} myRole={me.role} />
       {trip.status !== 'pending' && <ExportMenu tripId={trip.id} />}

@@ -28,6 +28,7 @@ Cada tarea se observa o se pregunta al final del viaje.
 | 7 | Saldar una deuda: registrar el pago y que el receptor lo confirme | El saldo baja a 0 | Pagos rechazados por error |
 | 8 | Exportar el viaje a Excel y PDF al terminar | Los totales coinciden con la app | Diferencias (objetivo 0) |
 | 9 | (Voluntario, cuenta de prueba) Borrar la cuenta | El resto ve «Participante eliminado» y los saldos no cambian | Comprensión del aviso |
+| 10 | (Opcional, solo grupos que lo quieran) El creador activa «Modo picante» en el viaje; todos miran el ranking y cambian entre «Transitiva» y «Directa» | Cada uno entiende a quién le debe y cuánto | Personas que lo entienden sin explicación (objetivo ≥ 4 de 5, SC-006 de la feature 007) |
 
 ## Métricas del piloto
 

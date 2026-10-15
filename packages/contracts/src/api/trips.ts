@@ -23,10 +23,20 @@ export const UpdateTripBody = z
     startDate: IsoDate.optional(),
     endDate: IsoDate.optional(),
     currency: Currency.optional(),
+    /** Feature 007 (RF-57): debt roast ranking, creator/admin only. */
+    spicyMode: z.boolean().optional(),
   })
-  .refine((b) => b.name !== undefined || b.startDate !== undefined || b.endDate !== undefined || b.currency !== undefined, {
-    message: 'Nothing to update',
-  });
+  .refine(
+    (b) =>
+      b.name !== undefined ||
+      b.startDate !== undefined ||
+      b.endDate !== undefined ||
+      b.currency !== undefined ||
+      b.spicyMode !== undefined,
+    {
+      message: 'Nothing to update',
+    },
+  );
 export type UpdateTripBody = z.input<typeof UpdateTripBody>;
 
 export const TripResponse = z.object({ trip: Trip });

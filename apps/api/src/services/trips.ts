@@ -156,6 +156,8 @@ export async function updateTrip(db: Firestore, tripId: string, body: UpdateInpu
     if (body.name !== undefined) patch.name = body.name;
     if (body.startDate !== undefined) patch.startDate = body.startDate;
     if (body.endDate !== undefined) patch.endDate = body.endDate;
+    // Feature 007 (RF-57): the debt roast ranking; the audit diff records who switched it.
+    if (body.spicyMode !== undefined) patch.spicyMode = body.spicyMode;
     if (body.currency !== undefined && body.currency !== trip.data.currency) {
       if (me.data.role !== 'creator') throw forbidden('Only the creator can change the currency');
       if (trip.data.currencyLocked) {

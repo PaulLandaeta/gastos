@@ -8,7 +8,7 @@ Cada condición de la *Definición de terminado del MVP* tiene su evidencia.
 
 | # | Condición del PRD §15 | Evidencia | Tipo | Estado |
 |---|---|---|---|---|
-| 1 | Los 56 RF están implementados o excluidos de forma expresa | Specs 001–006 (`specs/*/spec.md`). RF-56 en 006 y exclusiones en PRD §2 y la constitution (Principio VIII) | 🤖 + ✍️ | ✅ |
+| 1 | Los 57 RF están implementados o excluidos de forma expresa | Specs 001–007 (`specs/*/spec.md`). RF-56 en 006, RF-57 en 007 y exclusiones en PRD §2 y la constitution (Principio VIII) | 🤖 + ✍️ | ✅ |
 | 2 | Los escenarios críticos financieros y de permisos pasan en CI | `pnpm test` (motor, contratos, API, ops), `pnpm test:rules`, E2E Playwright | 🤖 | ✅ |
 | 3 | Total de pagadores = consumo asignado = gasto neto | `packages/finance-engine` (propiedades con fast-check), `tests/routes/expenses*.test.ts` | 🤖 | ✅ |
 | 4 | Σ saldos = 0 y la simplificación conserva saldos | Tests de propiedades del motor; `account.test.ts` (también tras la baja) | 🤖 | ✅ |
@@ -24,6 +24,7 @@ Cada condición de la *Definición de terminado del MVP* tiene su evidencia.
 | 11 | Monitoreo documentado y activo | `docs/operations.md`. Workflow `uptime.yml` con `APP_URL`/`API_URL` definidos | ✍️ | ☐ (al desplegar) |
 | 12 | Backups y recuperación documentados y probados | `docs/operations.md`, simulacro `apps/ops/tests/restore.test.ts` | 🤖 | ✅ |
 | 12b | Primer backup real en B2 y restauración en un emulador | `ops backup` en Actions + `ops restore` local con `FIRESTORE_EMULATOR_HOST` | ✍️ | ☐ |
+| 13 | RF-57: el modo picante viene apagado y solo lo cambian creador o administradores; el ranking no altera saldos | `roast.test.ts` y `roast.property.test.ts` (motor), `trips.update.test.ts` (API), `roast.spec.ts` (E2E + axe) | 🤖 | ✅ |
 
 ## Calidad (fase 6)
 
