@@ -10,7 +10,10 @@ import type { AppEnv } from './http/context.js';
 import { AppError } from './http/errors.js';
 import { assertSafeId } from './http/ids.js';
 import { log } from './http/log.js';
+import { rateLimit } from './http/rateLimit.js';
+import { requestLog } from './http/requestLog.js';
 import { registerRoutes } from './routes/index.js';
+import { resumeDeletions } from './services/accountDeletion.js';
 import { runRetention } from './services/retention.js';
 import type { Env } from './env.js';
 
@@ -24,7 +27,19 @@ app.use('*', async (c, next) => {
   c.set('correlationId', correlationId);
   await next();
   c.header('x-correlation-id', correlationId);
+  // Feature 006: API responses are never cached nor sniffed.
+  c.header('x-content-type-options', 'nosniff');
+  if (!c.res.headers.has('cache-control')) c.header('cache-control', 'no-store');
 });
+
+app.use('*', requestLog);
+
+// Feature 006 (FR-027): public routes are limited per network address before any work.
+// The emulator (local dev, tests, E2E) never limits: suites legitimately send bursts.
+const clientIp = (c: { req: { header: (n: string) => string | undefined } }) => c.req.header('cf-connecting-ip') ?? 'unknown';
+const ipLimiter = (c: { env: Env }) => (isEmulator(c.env) ? undefined : c.env.IP_LIMITER);
+app.use('/v1/health', rateLimit(ipLimiter, clientIp));
+app.use('/local-blobs/*', rateLimit(ipLimiter, clientIp));
 
 app.use('*', (c, next) =>
   cors({
@@ -39,7 +54,17 @@ app.use('*', (c, next) =>
   })(c, next),
 );
 
-app.get('/v1/health', (c) => c.json({ ok: true }));
+/** Feature 006 (FR-022): public health check; `?deep=1` also reads Firestore (1 read). */
+app.get('/v1/health', async (c) => {
+  const base = { version: c.env.API_VERSION || 'dev', environment: c.env.ENVIRONMENT };
+  if (c.req.query('deep') !== '1') return c.json({ ok: true, ...base });
+  try {
+    await new Firestore(c.env).get('ops/health');
+    return c.json({ ok: true, ...base, firestore: 'ok' });
+  } catch {
+    return c.json({ ok: false, ...base, firestore: 'error' }, 503);
+  }
+});
 
 // Emulator-only local blob store (stands in for presigned B2 URLs in development and tests).
 app.on(['GET', 'PUT'], '/local-blobs/:token', async (c) => {
@@ -73,6 +98,8 @@ app.use('/v1/*', async (c, next) => {
   await next();
 });
 
+app.use('/v1/*', rateLimit((c) => (isEmulator(c.env) ? undefined : c.env.USER_LIMITER), (c) => c.get('user').uid));
+
 app.use('/v1/trips/:tripId/*', async (c, next) => {
   assertSafeId(c.req.param('tripId'));
   await next();
@@ -95,12 +122,16 @@ app.onError((err, c) => {
   else if (err instanceof EngineError) appError = new AppError(err.code === 'INVALID_CURRENCY' ? 'VALIDATION_FAILED' : err.code, err.message, err.details as Record<string, unknown> | undefined);
   else if (err instanceof FirestoreError && ['FAILED_PRECONDITION', 'ALREADY_EXISTS', 'ABORTED'].includes(err.status)) {
     appError = new AppError('CONFLICT', 'Concurrent modification, please retry');
+  } else if (err instanceof FirestoreError && err.status === 'RESOURCE_EXHAUSTED') {
+    // Feature 006 (FR-031): the free daily quota is exhausted; it resets within the day.
+    log('warn', 'quota_exhausted', { correlationId, service: 'firestore' });
+    appError = new AppError('SERVICE_UNAVAILABLE', 'Service temporarily unavailable', { retryAfter: 3600 });
   } else {
     log('error', 'unhandled_error', { correlationId, name: err.name, message: err.message });
     appError = new AppError('INTERNAL', 'Unexpected error');
   }
-  if (appError.status >= 500) c.header('x-correlation-id', correlationId);
-  else log('info', 'request_rejected', { correlationId, code: appError.code, path: c.req.path });
+  c.set('errorCode', appError.code);
+  if (appError.retryAfter) c.header('retry-after', String(appError.retryAfter));
   c.header('x-correlation-id', correlationId);
   return c.json(appError.toBody(), appError.status as 400);
 });
@@ -111,6 +142,13 @@ export default {
   fetch: app.fetch,
   /** Hourly Cron Trigger (wrangler.jsonc): receipt retention and orphan upload cleanup. */
   async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext) {
-    ctx.waitUntil(runRetention(new Firestore(env), createStorageProvider(env), new Date()).then(() => undefined));
+    const db = new Firestore(env);
+    const storage = createStorageProvider(env);
+    ctx.waitUntil(
+      runRetention(db, storage, new Date())
+        // Feature 006 (FR-010): finish account deletions interrupted by a failure.
+        .then(() => resumeDeletions(db, storage, env, new Date()))
+        .then(() => undefined),
+    );
   },
 } satisfies ExportedHandler<Env>;

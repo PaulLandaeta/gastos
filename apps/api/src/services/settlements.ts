@@ -6,7 +6,7 @@ import { writeAudit } from './audit.js';
 import { findIdempotent, idempotencyPath, recordIdempotent } from './idempotency.js';
 import { applyToLedger, readLedger } from './ledgerRepo.js';
 import { actorName, notificationsFor, writeNotifications } from './notifications.js';
-import { assertMutable, loadTripForMember, newId, toTripDto, tripRefOf, writeTrip, type LoadedTrip, type MutationContext } from './tripRepo.js';
+import { assertMutable, isDeleted, loadTripForMember, newId, toTripDto, tripRefOf, writeTrip, type LoadedTrip, type MutationContext } from './tripRepo.js';
 
 const settlementPath = (tripId: string, id: string) => `trips/${tripId}/settlements/${id}`;
 
@@ -37,6 +37,8 @@ function acceptedUids(loaded: LoadedTrip): string[] {
   return loaded.members.filter((m) => m.data.invitationStatus === 'accepted' && m.data.uid).map((m) => m.data.uid!);
 }
 
+const isManager = (loaded: LoadedTrip) => loaded.me.data.role === 'creator' || loaded.me.data.role === 'admin';
+
 function assertSettlementsAllowed(loaded: LoadedTrip): void {
   assertMutable(loaded.trip);
   if (loaded.trip.data.status === 'pending') {
@@ -48,7 +50,7 @@ function assertSettlementsAllowed(loaded: LoadedTrip): void {
 export async function createSettlement(
   db: Firestore,
   tripId: string,
-  body: { toUid: string; amountMinor: number; note?: string | undefined },
+  body: { toUid: string; amountMinor: number; note?: string | undefined; fromUid?: string | undefined },
   idempotencyKey: string,
   ctx: MutationContext,
 ) {
@@ -62,18 +64,27 @@ export async function createSettlement(
       if (!doc) throw new AppError('CONFLICT', 'Idempotency key refers to a missing payment');
       return { settlement: toDto(doc.id, doc.data as unknown as SettlementData), exceedsDebt: false };
     }
-    if (body.toUid === ctx.actorUid || !acceptedUids(loaded).includes(body.toUid)) {
+    // Feature 006 (FR-009): a manager registers a payment on behalf of a deleted participant.
+    const fromUid = body.fromUid ?? ctx.actorUid;
+    const onBehalfOf = fromUid !== ctx.actorUid ? fromUid : null;
+    if (onBehalfOf) {
+      const from = loaded.members.find((m) => m.key === onBehalfOf);
+      if (!from || !isDeleted(from.data) || !isManager(loaded)) {
+        throw forbidden('Only managers can register a payment for a deleted participant');
+      }
+    }
+    if (body.toUid === fromUid || !acceptedUids(loaded).includes(body.toUid)) {
       throw new AppError('VALIDATION_FAILED', 'Invalid request', { fields: { toUid: 'Must be another trip participant' } });
     }
     const ledger = await readLedger(tx, tripId);
     const members = loaded.members
       .filter((m) => m.data.invitationStatus === 'accepted' && m.data.uid)
       .map((m) => ({ uid: m.data.uid!, joinOrder: m.data.joinOrder ?? 0 }));
-    const owed = originalDebts(ledger.effect, members).find((t) => t.fromUid === ctx.actorUid && t.toUid === body.toUid)?.amountMinor ?? 0;
+    const owed = originalDebts(ledger.effect, members).find((t) => t.fromUid === fromUid && t.toUid === body.toUid)?.amountMinor ?? 0;
 
     const id = newId();
     const data = {
-      fromUid: ctx.actorUid,
+      fromUid,
       toUid: body.toUid,
       amountMinor: body.amountMinor,
       note: body.note || null,
@@ -83,16 +94,17 @@ export async function createSettlement(
       createdAt: ctx.now,
       resolvedAt: null,
       idempotencyKey,
+      createdBy: ctx.actorUid,
       schemaVersion: SCHEMA_VERSION,
       version: 1,
     };
     tx.set(settlementPath(tripId, id), data, { exists: false });
     recordIdempotent(tx, idemPath, { operation: 'settlement.create', resultRef: id }, ctx.now);
-    writeAudit(tx, { tripId, actorUid: ctx.actorUid, action: 'settlement.create', entityType: 'settlement', entityId: id, beforeVersion: null, afterVersion: 1, correlationId: ctx.correlationId, diff: { amountMinor: body.amountMinor } }, ctx.now);
+    writeAudit(tx, { tripId, actorUid: ctx.actorUid, action: 'settlement.create', entityType: 'settlement', entityId: id, beforeVersion: null, afterVersion: 1, correlationId: ctx.correlationId, diff: { amountMinor: body.amountMinor, ...(onBehalfOf ? { onBehalfOf } : {}) } }, ctx.now);
     writeNotifications(
       tx,
-      notificationsFor({ kind: 'settlement.pending', trip: tripRefOf(loaded.trip), actor: { uid: ctx.actorUid, name: actorName(loaded.members, ctx.actorUid) }, settlementId: id, fromUid: ctx.actorUid, toUid: body.toUid, amountMinor: body.amountMinor }),
-      ctx.now,
+      notificationsFor({ kind: 'settlement.pending', trip: tripRefOf(loaded.trip), actor: { uid: ctx.actorUid, name: actorName(loaded.members, ctx.actorUid) }, settlementId: id, fromUid, toUid: body.toUid, amountMinor: body.amountMinor }),
+      ctx.now, loaded.members,
     );
     return { settlement: toDto(id, data), exceedsDebt: body.amountMinor > owed };
   });
@@ -121,7 +133,10 @@ export async function resolveSettlement(
     assertSettlementsAllowed(loaded);
     const { doc, data } = await loadPending(tx, tripId, id, body.expectedVersion);
     const actorMustBe = action === 'cancel' ? data.fromUid : data.toUid;
-    if (ctx.actorUid !== actorMustBe) {
+    // Feature 006 (FR-009): managers act for a deleted emitter (cancel) or receiver (confirm/reject).
+    const counterpart = loaded.members.find((m) => m.key === actorMustBe);
+    const onBehalfOf = ctx.actorUid !== actorMustBe && counterpart && isDeleted(counterpart.data) && isManager(loaded) ? actorMustBe : null;
+    if (ctx.actorUid !== actorMustBe && !onBehalfOf) {
       throw forbidden(action === 'cancel' ? 'Only the emitter can cancel' : 'Only the receiver can resolve this payment');
     }
     const status = action === 'confirm' ? 'confirmed' : action === 'reject' ? 'rejected' : 'cancelled';
@@ -141,7 +156,7 @@ export async function resolveSettlement(
       trip = writeTrip(tx, loaded.trip, { confirmedSettlementCount: (loaded.trip.data.confirmedSettlementCount ?? 0) + 1 }, ctx.now);
       applyToLedger(tx, tripId, ledger, paymentEffect({ fromUid: data.fromUid, toUid: data.toUid, amountMinor: data.amountMinor, status: 'confirmed' }), trip.version);
     }
-    writeAudit(tx, { tripId, actorUid: ctx.actorUid, action: `settlement.${action}`, entityType: 'settlement', entityId: id, beforeVersion: data.version, afterVersion: next.version, correlationId: ctx.correlationId }, ctx.now);
+    writeAudit(tx, { tripId, actorUid: ctx.actorUid, action: `settlement.${action}`, entityType: 'settlement', entityId: id, beforeVersion: data.version, afterVersion: next.version, correlationId: ctx.correlationId, ...(onBehalfOf ? { diff: { onBehalfOf } } : {}) }, ctx.now);
     if (action !== 'cancel') {
       writeNotifications(
         tx,
@@ -154,7 +169,7 @@ export async function resolveSettlement(
           toUid: data.toUid,
           amountMinor: data.amountMinor,
         }),
-        ctx.now,
+        ctx.now, loaded.members,
       );
     }
     return { settlement: toDto(id, next), trip: toTripDto(tripId, trip) };

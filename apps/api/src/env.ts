@@ -3,6 +3,8 @@ export interface Env {
   FIREBASE_PROJECT_ID: string;
   /** host:port of the Firestore emulator; only honoured when ENVIRONMENT=emulator. */
   FIRESTORE_EMULATOR_HOST?: string;
+  /** host:port of the Auth emulator (account deletion); only honoured when ENVIRONMENT=emulator. */
+  FIREBASE_AUTH_EMULATOR_HOST?: string;
   /** Comma-separated list of allowed CORS origins. */
   ALLOWED_ORIGINS?: string;
   /** Service-account JSON key (Workers secret). Not used in the emulator. */
@@ -26,6 +28,12 @@ export interface Env {
   AI_QUOTA_GLOBAL_MONTH?: string;
   /** Comma-separated uids allowed to read AI usage metrics. */
   ADMIN_UIDS?: string;
+  // Feature 006 — operations and hardening
+  /** Git sha of the deployed build (`wrangler deploy --var API_VERSION:<sha>`). */
+  API_VERSION?: string;
+  /** Workers rate limiting bindings (absent in the emulator and tests). */
+  USER_LIMITER?: RateLimit;
+  IP_LIMITER?: RateLimit;
 }
 
 /**

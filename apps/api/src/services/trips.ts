@@ -4,6 +4,7 @@ import type { z } from 'zod';
 import type { AuthUser } from '../auth/verifyIdToken.js';
 import type { Firestore } from '../firestore/client.js';
 import { AppError, forbidden } from '../http/errors.js';
+import { assertNotDeleted } from './accountDeletion.js';
 import { writeAudit } from './audit.js';
 import { notificationsFor, registeredUidsByEmail, writeNotifications } from './notifications.js';
 import { seedDefaultCategories } from './categories.js';
@@ -32,6 +33,7 @@ type UpdateInput = z.output<typeof UpdateTripBody>;
 
 export async function createTrip(db: Firestore, user: AuthUser, body: CreateInput, ctx: MutationContext) {
   if (!user.email) throw new AppError('VALIDATION_FAILED', 'The Google account has no e-mail');
+  await assertNotDeleted(db, user.uid);
   const creatorEmail = normalizeEmail(user.email);
   const invitees = body.inviteEmails;
   if (new Set(invitees).size !== invitees.length || invitees.includes(creatorEmail)) {

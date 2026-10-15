@@ -12,6 +12,10 @@ Gastos de viaje colaborativos: registro, reparto exacto al centavo y liquidació
     previsualización de impacto en saldos, restauración de gastos y devoluciones por ítem.
   - `004-receipts-ai-attachments`: comprobantes privados (fotos y PDF) en gastos y pagos, escaneo de facturas con IA
     (consentimiento, borrador revisable), cuotas atómicas de IA y retención de 6 meses.
+  - `005-pwa-offline-collaboration`: PWA instalable, registro sin conexión con cola local, notificaciones internas y
+    exportación Excel/PDF sujeta a privacidad.
+  - `006-hardening-pilot`: baja y anonimización de cuenta (RF-56), despliegue reproducible con smoke test, backups
+    cifrados con restauración probada, monitoreo, CSP, rate limiting y lista de lanzamiento del piloto.
 
 ## Stack (sin tarjeta de crédito)
 
@@ -23,6 +27,7 @@ Gastos de viaje colaborativos: registro, reparto exacto al centavo y liquidació
 | Comprobantes | Backblaze B2 (URLs firmadas), R2 de Miniflare en local |
 | IA | Gemini (nivel gratuito) tras `ReceiptAIProvider`; proveedor falso en local |
 | Motor financiero | TypeScript puro, enteros en unidad menor (`packages/finance-engine`) |
+| Operación | `apps/ops` (Node): preflight, smoke, backup/restore; GitHub Actions (CI, Lighthouse, backup, uptime) |
 
 ## Desarrollo
 
@@ -31,9 +36,16 @@ Requisitos: Node 24, pnpm 10, Java 21 (emuladores), firebase-tools 15.
 ```bash
 pnpm install
 pnpm emulators            # Auth + Firestore locales
-pnpm test && pnpm test:rules
+pnpm test && pnpm test:rules      # incluye los tests de apps/ops (simulacro de backup/restore)
+pnpm --filter api perf            # presupuesto de CPU del Worker
 pnpm --filter web test:e2e
 ```
 
 Guía completa: [`specs/001-finance-engine-trips/quickstart.md`](specs/001-finance-engine-trips/quickstart.md).
-Despliegue: [`apps/api/README.md`](apps/api/README.md).
+
+## Producción y operación
+
+- Despliegue y vuelta atrás: [`docs/deploy.md`](docs/deploy.md) (`pnpm deploy:prod`).
+- Monitoreo, backups, restauración, costos y límites: [`docs/operations.md`](docs/operations.md).
+- Revisión de seguridad: [`docs/security-review.md`](docs/security-review.md).
+- Piloto: [`docs/launch-checklist.md`](docs/launch-checklist.md) y [`docs/pilot-guide.md`](docs/pilot-guide.md).

@@ -26,7 +26,10 @@ const TABS: { key: 'all' | SettlementStatus; label: string }[] = [
   { key: 'rejected', label: 'Rechazados' },
 ];
 
-function Row({ s, trip, nameOf, uid, isManager }: { s: SettlementView; trip: LiveTrip; nameOf: (u: string) => string; uid: string; isManager: boolean }) {
+function Row({ s, trip, nameOf, uid, isManager, deleted }: { s: SettlementView; trip: LiveTrip; nameOf: (u: string) => string; uid: string; isManager: boolean; deleted: Set<string> }) {
+  // Feature 006 (FR-009): managers act for a deleted receiver (confirm/reject) or emitter (cancel).
+  const canResolve = s.toUid === uid || (isManager && deleted.has(s.toUid));
+  const canCancel = s.fromUid === uid || (isManager && deleted.has(s.fromUid));
   const [showProof, setShowProof] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState('');
@@ -46,7 +49,7 @@ function Row({ s, trip, nameOf, uid, isManager }: { s: SettlementView; trip: Liv
         <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold">{STATUS_LABEL[s.status]}</span>
       </div>
       {s.status === 'rejected' && s.rejectionReason && <p className="text-sm text-slate-700">Motivo: {s.rejectionReason}</p>}
-      {pending && mutable && s.toUid === uid && !rejecting && (
+      {pending && mutable && canResolve && !rejecting && (
         <RequiresOnline label="Confirmar o rechazar">
         <div className="flex gap-2">
           <button type="button" disabled={act.isPending} onClick={() => act.mutate({ action: 'confirm' })} className="rounded-lg bg-brand-700 px-3 py-1.5 text-sm font-medium text-white">
@@ -79,7 +82,7 @@ function Row({ s, trip, nameOf, uid, isManager }: { s: SettlementView; trip: Liv
           </div>
         </div>
       )}
-      {pending && mutable && s.fromUid === uid && (
+      {pending && mutable && canCancel && (
         <button type="button" disabled={act.isPending} onClick={() => act.mutate({ action: 'cancel' })} className="text-sm text-red-700 underline">
           Cancelar pago
         </button>
@@ -111,6 +114,7 @@ export function SettlementsPanel({ trip, members }: { trip: LiveTrip; members: L
   const { settlements } = useSettlements(trip.id);
   const [tab, setTab] = useState<(typeof TABS)[number]['key']>('all');
   const nameOf = (uid: string) => members.find((m) => m.uid === uid)?.displayName ?? 'Participante';
+  const deleted = new Set(members.filter((m) => m.deletedAt && m.uid).map((m) => m.uid!));
   const toConfirm = settlements.filter((s) => s.status === 'pending' && s.toUid === user.uid).length;
   const rows = tab === 'all' ? settlements : settlements.filter((s) => s.status === tab);
 
@@ -152,7 +156,7 @@ export function SettlementsPanel({ trip, members }: { trip: LiveTrip; members: L
       ) : (
         <ul className="space-y-2">
           {rows.map((s) => (
-            <Row key={s.id} s={s} trip={trip} nameOf={nameOf} uid={user.uid} isManager={['creator', 'admin'].includes(members.find((m) => m.uid === user.uid)?.role ?? '')} />
+            <Row key={s.id} s={s} trip={trip} nameOf={nameOf} uid={user.uid} isManager={['creator', 'admin'].includes(members.find((m) => m.uid === user.uid)?.role ?? '')} deleted={deleted} />
           ))}
         </ul>
       )}

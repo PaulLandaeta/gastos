@@ -12,6 +12,8 @@ test('editar un gasto y conflicto de edición concurrente (PRD)', async ({ brows
   await ana.getByRole('button', { name: 'Guardar gasto' }).click();
   await ana.getByRole('link', { name: 'Ver gastos' }).click();
   await ana.getByRole('link', { name: /Cena/ }).click();
+  // Screens load on demand: the URL changes once the detail is ready.
+  await ana.waitForURL(/\/expenses\/[^/]+$/);
   const detailUrl = ana.url();
 
   // Pedro (beneficiary, not author/admin) has no edit action.
@@ -21,6 +23,7 @@ test('editar un gasto y conflicto de edición concurrente (PRD)', async ({ brows
 
   // Ana opens the editor in two tabs (version 1).
   await ana.getByRole('link', { name: 'Editar gasto' }).click();
+  await ana.waitForURL(/\/edit$/);
   const second = await ana.context().newPage();
   await second.goto(ana.url());
   await expect(second.getByLabel('Descripción')).toHaveValue('Cena');

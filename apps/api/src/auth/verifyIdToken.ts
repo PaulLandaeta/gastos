@@ -7,6 +7,8 @@ export interface AuthUser {
   emailVerified: boolean;
   name: string | null;
   picture: string | null;
+  /** Seconds since epoch of the last sign-in (`auth_time`); sensitive operations require a recent one. */
+  authTime: number;
 }
 
 const JWKS_URL = new URL(
@@ -74,5 +76,6 @@ export async function verifyIdToken(
     emailVerified: payload['email_verified'] === true,
     name: str(payload['name']),
     picture: str(payload['picture']),
+    authTime,
   };
 }

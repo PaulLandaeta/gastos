@@ -1,0 +1,26 @@
+{
+  "name": "ops",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "ops": "tsx src/cli.ts",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "aws4fetch": "^1.0.20",
+    "contracts": "workspace:*",
+    "finance-engine": "workspace:*",
+    "hono": "^4.13.0",
+    "jose": "^6.2.0",
+    "zod": "^4.6.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261013.0",
+    "@types/node": "^24.19.2",
+    "tsx": "^4.20.0",
+    "typescript": "~6.0.0",
+    "vitest": "^4.1.0"
+  }
+}

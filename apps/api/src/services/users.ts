@@ -2,6 +2,7 @@ import { SCHEMA_VERSION, normalizeEmail } from 'contracts';
 import type { AuthUser } from '../auth/verifyIdToken.js';
 import type { Firestore } from '../firestore/client.js';
 import { AppError } from '../http/errors.js';
+import { registryPath } from './accountDeletion.js';
 
 export interface ProfileDto {
   uid: string;
@@ -27,7 +28,9 @@ export async function syncProfile(db: Firestore, user: AuthUser, now = new Date(
   };
   return db.runTransaction(async (tx) => {
     const path = `users/${user.uid}`;
-    const current = await tx.get(path);
+    const [current, deleted] = await Promise.all([tx.get(path), tx.get(registryPath(user.uid))]);
+    // RF-56: a deleted account never gets its profile back (its ID token may live up to 1 h).
+    if (deleted) throw new AppError('ACCOUNT_DELETED', 'This account was deleted');
     if (!current) {
       const profile: ProfileDto = { ...desired, createdAt: now, updatedAt: now, schemaVersion: SCHEMA_VERSION, version: 1 };
       tx.set(path, { ...profile }, { exists: false });

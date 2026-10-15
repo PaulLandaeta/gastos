@@ -52,11 +52,12 @@ export function MembersPanel({ trip, members, myRole }: { trip: LiveTrip; member
               </p>
               <p className="text-sm text-slate-600">
                 {m.invitationStatus === 'accepted' ? ROLE_LABEL[m.role] : INVITATION_LABEL[m.invitationStatus]}
-                {m.displayName && m.invitationStatus === 'accepted' ? ` · ${m.email}` : ''}
+                {m.displayName && m.invitationStatus === 'accepted' && !m.deletedAt ? ` · ${m.email}` : ''}
+                {m.deletedAt ? ' · Cuenta eliminada' : ''}
               </p>
             </div>
             <div className="flex gap-2" data-member-actions={m.id}>
-              {isCreator && mutable && m.invitationStatus === 'accepted' && m.role !== 'creator' && m.uid && (
+              {isCreator && mutable && m.invitationStatus === 'accepted' && m.role !== 'creator' && m.uid && !m.deletedAt && (
                 <button
                   type="button"
                   disabled={setRole.isPending}

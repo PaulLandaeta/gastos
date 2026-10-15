@@ -1,4 +1,4 @@
-import { ApiError } from '../lib/apiClient';
+import { ApiError } from '../lib/apiError';
 
 const MESSAGES: Partial<Record<string, string>> = {
   CONFLICT: 'Otra persona hizo cambios mientras editabas. Revisa los datos actualizados e inténtalo de nuevo.',
@@ -27,9 +27,18 @@ const MESSAGES: Partial<Record<string, string>> = {
   NOT_RECONCILED: 'Los importes no cuadran con el total.',
   INVALID_PERCENT: 'Los porcentajes deben sumar exactamente 100,00 %.',
   ITEM_WITHOUT_BENEFICIARY: 'Hay ítems sin beneficiario.',
+  ACCOUNT_DELETION_BLOCKED: 'Tienes pagos pendientes de confirmar. Resuélvelos antes de borrar la cuenta.',
+  ACCOUNT_DELETED: 'Esta cuenta fue eliminada.',
+  REAUTH_REQUIRED: 'Por seguridad, vuelve a iniciar sesión para continuar.',
+  SERVICE_UNAVAILABLE:
+    'El servicio no está disponible temporalmente. Lo que estabas haciendo no se ha perdido; inténtalo más tarde.',
 };
 
 export function errorText(error: unknown): string {
+  if (error instanceof ApiError && error.code === 'RATE_LIMITED') {
+    const wait = Number(error.details?.['retryAfter'] ?? 60);
+    return `Demasiadas solicitudes seguidas. Espera ${wait} s e inténtalo de nuevo.`;
+  }
   if (error instanceof ApiError) return MESSAGES[error.code] ?? error.message;
   return 'Ocurrió un error inesperado.';
 }

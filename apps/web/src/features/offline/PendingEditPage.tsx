@@ -42,7 +42,7 @@ function PendingEditForm({ pending }: { pending: PendingExpense }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const accepted = members.filter((m) => m.invitationStatus === 'accepted' && m.uid);
-  const options = accepted.map((m) => ({ uid: m.uid!, name: m.displayName ?? m.email }));
+  const options = accepted.filter((m) => !m.deletedAt).map((m) => ({ uid: m.uid!, name: m.displayName ?? m.email }));
   const engineMembers: Member[] = accepted.map((m) => ({ uid: m.uid!, joinOrder: m.joinOrder ?? 0 }));
 
   if (draft === null) setDraftState(fromExpense(pending.input as unknown as ExpenseView));

@@ -13,9 +13,12 @@ service cloud.firestore {
     }
 
     // Accepted members have a members/{uid} row; invitees only have members/inv_* rows.
+    // Feature 006 (RF-56): a member who deleted their account keeps the row (opaque id) but loses
+    // access immediately, even with an ID token that is still valid.
     function isMember(tripId) {
       return signedIn()
-        && exists(/databases/$(database)/documents/trips/$(tripId)/members/$(request.auth.uid));
+        && exists(/databases/$(database)/documents/trips/$(tripId)/members/$(request.auth.uid))
+        && get(/databases/$(database)/documents/trips/$(tripId)/members/$(request.auth.uid)).data.get('deletedAt', null) == null;
     }
 
     // Live role check: a demoted admin loses access immediately (spec 002 edge case).

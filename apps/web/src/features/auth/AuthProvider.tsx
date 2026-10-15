@@ -3,6 +3,7 @@ import {
   GoogleAuthProvider,
   getRedirectResult,
   onAuthStateChanged,
+  reauthenticateWithPopup,
   signInWithCredential,
   signInWithPopup,
   signInWithRedirect,
@@ -10,7 +11,7 @@ import {
   type User,
 } from 'firebase/auth';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { api } from '../../lib/apiClient';
+import { ApiError, api } from '../../lib/apiClient';
 import { clearLocalData, ensureCacheOwner } from '../../lib/cacheOwner';
 import { auth, usingEmulators } from '../../lib/firebase';
 import { localStores, startOfflineSession, stopOfflineSession } from '../offline/runtime';
@@ -32,6 +33,8 @@ interface AuthContextValue {
   state: AuthState;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
+  /** Feature 006 (RF-56): deletes the account; resolves after local data is wiped. */
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -70,7 +73,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .then(({ user: profile }) =>
           setState((s) => (s.status === 'signedIn' && s.user.uid === user.uid ? { ...s, profile } : s)),
         )
-        .catch(() => synced.current.delete(user.uid));
+        .catch((e: unknown) => {
+          synced.current.delete(user.uid);
+          // RF-56: the account was deleted from another device: wipe this one too (FR-011).
+          if (e instanceof ApiError && e.code === 'ACCOUNT_DELETED') void wipeAndLeave('/login?deleted=1');
+        });
     });
   }, [queryClient]);
 
@@ -89,16 +96,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /** Pending expenses of this device are discarded (the caller warns first, FR-008). */
-  const signOut = useCallback(async () => {
-    const uid = auth.currentUser?.uid;
-    stopOfflineSession();
-    await firebaseSignOut(auth);
-    synced.current.clear();
-    queryClient.clear();
-    if (uid) await clearLocalData(uid, localStores).catch(() => undefined);
-    // The Firestore instance is terminated by the wipe: start clean.
-    window.location.assign('/login');
-  }, [queryClient]);
+  const wipeAndLeave = useCallback(
+    async (to: string) => {
+      const uid = auth.currentUser?.uid;
+      stopOfflineSession();
+      await firebaseSignOut(auth).catch(() => undefined);
+      synced.current.clear();
+      queryClient.clear();
+      if (uid) await clearLocalData(uid, localStores).catch(() => undefined);
+      // The Firestore instance is terminated by the wipe: start clean.
+      window.location.assign(to);
+    },
+    [queryClient],
+  );
+  const signOut = useCallback(() => wipeAndLeave('/login'), [wipeAndLeave]);
+
+  /** RF-56: a recent sign-in is required (REAUTH_REQUIRED → Google popup, then retry once). */
+  const deleteAccount = useCallback(async () => {
+    const run = () => api<{ status: 'in_progress' | 'completed' }>('POST', '/me/deletion', { body: { confirm: 'BORRAR' } });
+    try {
+      await run();
+    } catch (e) {
+      if (!(e instanceof ApiError && e.code === 'REAUTH_REQUIRED') || !auth.currentUser) throw e;
+      await reauthenticateWithPopup(auth.currentUser, new GoogleAuthProvider());
+      await auth.currentUser.getIdToken(true);
+      await run();
+    }
+    await wipeAndLeave('/login?deleted=1');
+  }, [wipeAndLeave]);
 
   // E2E hook: only exists when running against the emulators (never in production builds).
   useEffect(() => {
@@ -115,7 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const value = useMemo(() => ({ state, signIn, signOut }), [state, signIn, signOut]);
+  const value = useMemo(() => ({ state, signIn, signOut, deleteAccount }), [state, signIn, signOut, deleteAccount]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

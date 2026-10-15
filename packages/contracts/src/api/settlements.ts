@@ -9,6 +9,8 @@ export const CreateSettlementBody = z.object({
   toUid: z.string().min(1).max(128),
   amountMinor: Minor.refine((v) => v > 0, 'Must be positive'),
   note: z.string().trim().max(200).optional(),
+  /** Feature 006: a manager registers a payment on behalf of a deleted member. */
+  fromUid: z.string().min(1).max(128).optional(),
 });
 export type CreateSettlementBody = z.input<typeof CreateSettlementBody>;
 

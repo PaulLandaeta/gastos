@@ -1,0 +1,44 @@
+# Feature 006 (FR-023, SC-006): uptime check every 15 minutes. A failed run e-mails the
+# repository owner. Note: GitHub disables scheduled workflows after 60 days without repository
+# activity (docs/operations.md explains how to re-enable it, or use UptimeRobot instead).
+name: Uptime
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  uptime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      APP_URL: ${{ vars.APP_URL }}
+      API_URL: ${{ vars.API_URL }}
+    steps:
+      - name: Skip until production is configured
+        id: configured
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$API_URL" ]; then
+            echo "::notice::Define las variables APP_URL y API_URL del repositorio para activar el uptime."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.configured.outputs.ok == 'true'
+      - uses: pnpm/action-setup@v4
+        if: steps.configured.outputs.ok == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.configured.outputs.ok == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - if: steps.configured.outputs.ok == 'true'
+        run: pnpm install --frozen-lockfile
+      - name: Smoke (light)
+        if: steps.configured.outputs.ok == 'true'
+        run: pnpm --filter ops ops smoke --light

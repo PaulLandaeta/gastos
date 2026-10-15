@@ -21,8 +21,15 @@
     "AI_QUOTA_TRIP_DAY": "20",
     "AI_QUOTA_GLOBAL_DAY": "100",
     "AI_QUOTA_GLOBAL_MONTH": "1500",
-    "ADMIN_UIDS": ""
+    "ADMIN_UIDS": "",
+    // Set by the deploy script: `wrangler deploy --var API_VERSION:<git sha>` (health, smoke test).
+    "API_VERSION": "dev"
   },
+  // Feature 006 (FR-027): Workers rate limiting (Free plan). namespace_id is any number unique per account.
+  "ratelimits": [
+    { "name": "USER_LIMITER", "namespace_id": "1061", "simple": { "limit": 120, "period": 60 } },
+    { "name": "IP_LIMITER", "namespace_id": "1062", "simple": { "limit": 60, "period": 60 } }
+  ],
   // Secrets (wrangler secret put): FIREBASE_SERVICE_ACCOUNT, GEMINI_API_KEY, B2_KEY_ID, B2_APPLICATION_KEY
   "env": {
     // Local development only: Miniflare's local R2 stands in for B2 (never used in production).
@@ -31,6 +38,7 @@
         "ENVIRONMENT": "emulator",
         "FIREBASE_PROJECT_ID": "demo-gastos",
         "FIRESTORE_EMULATOR_HOST": "127.0.0.1:8080",
+        "FIREBASE_AUTH_EMULATOR_HOST": "127.0.0.1:9099",
         "ALLOWED_ORIGINS": "http://localhost:5180,http://localhost:5181",
         "AI_PROVIDER": "fake",
         "STORAGE": "local",

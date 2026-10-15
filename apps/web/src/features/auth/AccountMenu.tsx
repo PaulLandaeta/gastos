@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router';
 import { InstallButton } from '../pwa/InstallButton';
 import { pendingCounts, usePending } from '../offline/usePending';
 import { useAuth, useCurrentUser } from './AuthProvider';
@@ -48,6 +49,14 @@ export function AccountMenu() {
             <p className="truncate text-sm text-slate-600">{email}</p>
           </div>
           <InstallButton />
+          <Link
+            to="/account/delete"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="block w-full rounded-lg px-3 py-2 text-left text-sm text-red-800 hover:bg-red-50"
+          >
+            Borrar mi cuenta
+          </Link>
           <button
             type="button"
             role="menuitem"

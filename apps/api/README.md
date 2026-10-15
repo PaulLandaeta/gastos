@@ -17,6 +17,9 @@ El modo emulador (tokens sin firma, Firestore local) solo se activa con `ENVIRON
 
 ## Despliegue (sin tarjeta)
 
+> Desde la feature 006 el procedimiento completo y automatizado está en [`docs/deploy.md`](../../docs/deploy.md)
+> (`pnpm deploy:prod` con preflight y smoke test). Esta sección queda como referencia de cada servicio.
+
 ### 1. Firebase (plan Spark)
 
 1. Crear el proyecto en <https://console.firebase.google.com> (plan Spark, gratuito).

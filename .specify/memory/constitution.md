@@ -1,6 +1,8 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 → 1.0.1 (PATCH: Principio I admite desempate rotativo determinista,
+- Version change: 1.0.1 → 1.1.0 (MINOR: estructura amplía `apps/ops` para operación; decisiones pendientes
+  PRD #2, #7 y #10 resueltas en 005/006; backups y monitoreo con GitHub Actions)
+- Anterior: 1.0.0 → 1.0.1 (PATCH: Principio I admite desempate rotativo determinista,
   decidido en /speckit-clarify de 001-finance-engine-trips)
 - Versión anterior: (plantilla) → 1.0.0
 - Principios definidos: I–VIII (nuevos)
@@ -142,12 +144,14 @@ sin requerir tarjeta.
 | IA | Gemini API (Google AI Studio) vía `ReceiptAIProvider`, salida validada con Zod |
 | Hosting | Firebase Hosting (SPA + HTTPS) |
 | Tooling | pnpm workspaces, ESLint, Prettier, Vitest, fast-check, Playwright, Firebase Emulator Suite, Wrangler |
+| Operación | GitHub Actions (CI, Lighthouse, backup diario cifrado a B2, uptime), `apps/ops` |
 
 Estructura de repositorio (monorepo):
 
 ```text
 apps/web/                 # React PWA
 apps/api/                 # Cloudflare Worker (API + cron)
+apps/ops/                 # operación en Node: preflight, smoke, backup/restore (feature 006)
 packages/finance-engine/  # motor financiero puro
 packages/contracts/       # tipos, esquemas Zod, códigos de error, interfaces de proveedores
 firebase/                 # firestore.rules, índices, configuración de emuladores
@@ -173,10 +177,9 @@ firebase/                 # firestore.rules, índices, configuración de emulado
 
 Deben resolverse (vía `/speckit-clarify`) antes de implementar la feature afectada:
 
-1. Las 12 decisiones del PRD §14 (estado cerrado y pagos pendientes, política de borrado de
-   cuenta, aviso de expiración, reparto de ajustes en devoluciones, reversión de pago confirmado,
-   permisos de archivo/restauración, inferencia por agregados, valores de cuotas IA, conversión
-   manual, límites offline, formato de exports, monedas sin decimales).
+1. Las decisiones del PRD §14 que sigan abiertas. Resueltas: #2 borrado de cuenta y #7 inferencia
+   por agregados (spec 006, riesgo aceptado y comunicado), #10 límites offline y #11 exports
+   (spec 005), y las de las specs 001–004 en sus secciones Clarifications.
 2. **Privacidad Gemini free tier:** en el nivel gratuito Google puede usar el contenido para
    mejorar sus productos; decidir si se acepta para el MVP (con aviso al usuario) o si se exige
    un nivel de pago/otro proveedor antes de producción.
@@ -196,4 +199,4 @@ Deben resolverse (vía `/speckit-clarify`) antes de implementar la feature afect
   se aceptan documentadas en Complexity Tracking. La guía operativa del agente vive en
   `CLAUDE.md`.
 
-**Version**: 1.0.1 | **Ratified**: 2026-10-13 | **Last Amended**: 2026-10-13
+**Version**: 1.1.0 | **Ratified**: 2026-10-13 | **Last Amended**: 2026-10-14

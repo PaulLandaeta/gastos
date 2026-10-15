@@ -1,3 +1,4 @@
+export * from './api/account.js';
 export * from './api/attachments.js';
 export * from './api/balances.js';
 export * from './api/consent.js';

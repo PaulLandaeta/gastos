@@ -80,7 +80,7 @@ export async function changeTripStatus(
         status: next.status,
         memberUids: members.filter((m) => m.data.invitationStatus === 'accepted' && m.data.uid).map((m) => m.data.uid!),
       }),
-      ctx.now,
+      ctx.now, members,
     );
     return { trip: toTripDto(tripId, next) };
   });
