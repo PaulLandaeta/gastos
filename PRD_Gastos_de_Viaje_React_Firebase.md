@@ -105,6 +105,7 @@ Las compras grupales generan confusión cuando una persona paga por varias, una 
 | RF-54 | Captura en moneda del viaje | Importes registrados solo en moneda oficial; conversiones externas son manuales. |
 | RF-55 | Moneda inmutable | Bloquear cambio desde el primer gasto, incluso si luego se elimina. |
 | RF-56 | Baja y anonimización | Eliminar acceso/datos personales aplicables, preservar integridad financiera con identidad anónima. |
+| RF-57 | Ranking de deudores en tono de broma | Opcional por viaje (lo activa creador/admin, apagado por defecto); etiquetas fijas según saldo neto y relación «quién le debe a quién» en vista directa y simplificada; solo presentación, sin cambiar saldos. Añadido el 2026-10-15 (feature 007). |
 
 ## 5. Reglas de negocio y máquina de estados
 
