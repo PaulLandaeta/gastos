@@ -20,7 +20,9 @@ export default defineConfig(({ mode }) => {
         workbox: {
           // Any route opens the app shell offline instead of the browser error page.
           navigateFallback: '/index.html',
-          navigateFallbackDenylist: [/^\/v1\//, /^\/local-blobs\//],
+          // `/__/` is Firebase Hosting's reserved space (auth handler for popup/redirect sign-in): if the
+          // shell answered it, the Google popup would open the app itself instead of the sign-in flow.
+          navigateFallbackDenylist: [/^\/__\//, /^\/v1\//, /^\/local-blobs\//],
           // Data is cached by Firestore and TanStack Query per account, never by the service worker.
           runtimeCaching: [],
         },
