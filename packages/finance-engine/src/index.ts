@@ -15,6 +15,7 @@ export {
 export { EMPTY_LEDGER, combineEffects, negateEffect, paymentEffect, rebuildLedger } from './ledger.js';
 export { EngineError, assertSafeMinor, minorUnits, type EngineErrorCode } from './money.js';
 export { memberRanking } from './order.js';
+export { roastRanking, type RoastEntry, type RoastTier } from './roast.js';
 export type {
   Allocation,
   ExpenseInput,

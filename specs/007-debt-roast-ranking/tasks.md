@@ -16,13 +16,13 @@ debe fallar primero.
 
 ## Phase 1: Setup
 
-- [ ] T001 [P] Añadir `spicyMode: z.boolean().optional()` a `Trip` en packages/contracts/src/domain.ts y a `UpdateTripBody` en packages/contracts/src/api/trips.ts, incluyéndolo en el `refine` de «Nothing to update»; tests en packages/contracts/tests/roast.test.ts (acepta `{expectedVersion, spicyMode: true}`, rechaza `spicyMode: 'si'` y el cuerpo solo con `expectedVersion`)
+- [X] T001 [P] Añadir `spicyMode: z.boolean().optional()` a `Trip` en packages/contracts/src/domain.ts y a `UpdateTripBody` en packages/contracts/src/api/trips.ts, incluyéndolo en el `refine` de «Nothing to update»; tests en packages/contracts/tests/roast.test.ts (acepta `{expectedVersion, spicyMode: true}`, rechaza `spicyMode: 'si'` y el cuerpo solo con `expectedVersion`)
 
 ---
 
 ## Phase 2: Foundational
 
-- [ ] T002 Crear el esqueleto de packages/finance-engine/src/roast.ts con los tipos `RoastTier` (`'top' | 'golfa' | 'senorita' | 'macho'`), `RoastEntry` (`uid`, `netMinor`, `debtMinor`, `tier`, `owes`, `mainOwnerUid`) y la firma `roastRanking(netByMember, transfers, members)` según contracts/http-api.md; exportarlos en packages/finance-engine/src/index.ts
+- [X] T002 Crear el esqueleto de packages/finance-engine/src/roast.ts con los tipos `RoastTier` (`'top' | 'golfa' | 'senorita' | 'macho'`), `RoastEntry` (`uid`, `netMinor`, `debtMinor`, `tier`, `owes`, `mainOwnerUid`) y la firma `roastRanking(netByMember, transfers, members)` según contracts/http-api.md; exportarlos en packages/finance-engine/src/index.ts
 
 **Checkpoint**: contrato y tipos listos; las historias pueden empezar.
 
@@ -36,16 +36,16 @@ debe fallar primero.
 
 ### Tests (primero, deben fallar)
 
-- [ ] T003 [P] [US1] Ejemplos en packages/finance-engine/tests/unit/roast.test.ts: escenario US1-1 (etiquetas y orden), empate en la deuda máxima resuelto por `joinOrder` (US1-2), deuda exactamente 50 % → `senorita` (US1-3), todo saldado → todos `macho` y sin `top` (US1-4), un solo deudor, deuda de 1 unidad menor, uid ausente de `members` al final, importe no entero → `EngineError`
-- [ ] T004 [P] [US1] Propiedades fast-check en packages/finance-engine/tests/property/roast.property.test.ts sobre ledgers generados (reutilizar los generadores de tests/property): una entrada por miembro, exactamente un `top` si hay algún saldo negativo y ninguno si no, `macho ⇔ netMinor ≥ 0`, `golfa ⇔ 2·debt > maxDebt` (salvo el top), orden de la lista (deuda desc, luego `memberRanking`) y determinismo ante permutaciones de la entrada
-- [ ] T005 [P] [US1] Tests de frases en apps/web/tests/unit/roastCopy.test.ts: etiqueta y frase de cada tier con nombre, importe formateado en la moneda del viaje y dueño; `macho` sin importe; dueño ausente → frase sin «a {dueño}»
+- [X] T003 [P] [US1] Ejemplos en packages/finance-engine/tests/unit/roast.test.ts: escenario US1-1 (etiquetas y orden), empate en la deuda máxima resuelto por `joinOrder` (US1-2), deuda exactamente 50 % → `senorita` (US1-3), todo saldado → todos `macho` y sin `top` (US1-4), un solo deudor, deuda de 1 unidad menor, uid ausente de `members` al final, importe no entero → `EngineError`
+- [X] T004 [P] [US1] Propiedades fast-check en packages/finance-engine/tests/property/roast.property.test.ts sobre ledgers generados (reutilizar los generadores de tests/property): una entrada por miembro, exactamente un `top` si hay algún saldo negativo y ninguno si no, `macho ⇔ netMinor ≥ 0`, `golfa ⇔ 2·debt > maxDebt` (salvo el top), orden de la lista (deuda desc, luego `memberRanking`) y determinismo ante permutaciones de la entrada
+- [X] T005 [P] [US1] Tests de frases en apps/web/tests/unit/roastCopy.test.ts: etiqueta y frase de cada tier con nombre, importe formateado en la moneda del viaje y dueño; `macho` sin importe; dueño ausente → frase sin «a {dueño}»
 
 ### Implementation
 
-- [ ] T006 [US1] Implementar la asignación de etiquetas, `debtMinor` y el orden en packages/finance-engine/src/roast.ts (regla R5 de research.md: `2 * debt > maxDebt` en enteros, desempate `memberRanking`, uids desconocidos al final por uid, `assertSafeMinor` en cada importe) hasta pasar T003–T004
-- [ ] T007 [P] [US1] Crear apps/web/src/features/roast/roastCopy.ts con `ROAST_LABELS` y `roastSentence(entry, name, currency)` según la tabla de data-model.md, usando `formatMoney` de apps/web/src/lib/format.ts, hasta pasar T005
-- [ ] T008 [US1] Crear apps/web/src/features/roast/RoastPanel.tsx: sección «Ranking del grupo» (`aria-labelledby`), consulta `['balances', trip.id, view, trip.version]` con `GET /trips/:id/balances?view=` y `meta: { persist: true }` igual que apps/web/src/features/balances/BalancesPanel.tsx, `roastRanking` con los miembros (`uid`, `joinOrder`) y una lista con etiqueta en texto (no solo color/emoji), nombre y frase; nombres de miembros como en BalancesPanel (los eliminados ya traen «Participante eliminado N»); `Spinner` y `ErrorMessage` para carga y error
-- [ ] T009 [US1] Montar `RoastPanel` en apps/web/src/features/trips/TripDetailPage.tsx debajo de `BalancesPanel`, solo si `trip.spicyMode === true` y `trip.status !== 'pending'`
+- [X] T006 [US1] Implementar la asignación de etiquetas, `debtMinor` y el orden en packages/finance-engine/src/roast.ts (regla R5 de research.md: `2 * debt > maxDebt` en enteros, desempate `memberRanking`, uids desconocidos al final por uid, `assertSafeMinor` en cada importe) hasta pasar T003–T004
+- [X] T007 [P] [US1] Crear apps/web/src/features/roast/roastCopy.ts con `ROAST_LABELS` y `roastSentence(entry, name, currency)` según la tabla de data-model.md, usando `formatMoney` de apps/web/src/lib/format.ts, hasta pasar T005
+- [X] T008 [US1] Crear apps/web/src/features/roast/RoastPanel.tsx: sección «Ranking del grupo» (`aria-labelledby`), consulta `['balances', trip.id, view, trip.version]` con `GET /trips/:id/balances?view=` y `meta: { persist: true }` igual que apps/web/src/features/balances/BalancesPanel.tsx, `roastRanking` con los miembros (`uid`, `joinOrder`) y una lista con etiqueta en texto (no solo color/emoji), nombre y frase; nombres de miembros como en BalancesPanel (los eliminados ya traen «Participante eliminado N»); `Spinner` y `ErrorMessage` para carga y error
+- [X] T009 [US1] Montar `RoastPanel` en apps/web/src/features/trips/TripDetailPage.tsx debajo de `BalancesPanel`, solo si `trip.spicyMode === true` y `trip.status !== 'pending'`
 
 **Checkpoint**: activando `spicyMode` a mano en el emulador, cualquier miembro ve el ranking.
 
@@ -59,13 +59,13 @@ debe fallar primero.
 
 ### Tests (primero, deben fallar)
 
-- [ ] T010 [P] [US2] Añadir a packages/finance-engine/tests/unit/roast.test.ts los escenarios US2-1/2/3: cadena A→B→C con `originalDebts` (directa) y `simplifiedDebts` (transitiva), varios acreedores ordenados por importe con empate por `joinOrder`, `mainOwnerUid` = primero de `owes` o `null`, y un `macho` que en la vista directa sigue debiendo a alguien (caso límite)
-- [ ] T011 [P] [US2] Añadir a packages/finance-engine/tests/property/roast.property.test.ts: para `originalDebts` y `simplifiedDebts` del mismo ledger, `Σ owes(uid) − Σ recibido(uid) = −netMinor` para todo miembro y los `tier` coinciden entre ambas vistas (FR-013, SC-002)
+- [X] T010 [P] [US2] Añadir a packages/finance-engine/tests/unit/roast.test.ts los escenarios US2-1/2/3: cadena A→B→C con `originalDebts` (directa) y `simplifiedDebts` (transitiva), varios acreedores ordenados por importe con empate por `joinOrder`, `mainOwnerUid` = primero de `owes` o `null`, y un `macho` que en la vista directa sigue debiendo a alguien (caso límite)
+- [X] T011 [P] [US2] Añadir a packages/finance-engine/tests/property/roast.property.test.ts: para `originalDebts` y `simplifiedDebts` del mismo ledger, `Σ owes(uid) − Σ recibido(uid) = −netMinor` para todo miembro y los `tier` coinciden entre ambas vistas (FR-013, SC-002)
 
 ### Implementation
 
-- [ ] T012 [US2] Implementar `owes` y `mainOwnerUid` en packages/finance-engine/src/roast.ts a partir de `transfers` (importe desc, desempate `memberRanking`) hasta pasar T010–T011
-- [ ] T013 [US2] En apps/web/src/features/roast/RoastPanel.tsx añadir el interruptor «Directa / Transitiva» (`role="group"`, botones con `aria-pressed`, por defecto Transitiva = `simplified`) y, por cada deudor, «X es la zorra de Y (importe)» para cada acreedor con «dueño principal» destacado en texto
+- [X] T012 [US2] Implementar `owes` y `mainOwnerUid` en packages/finance-engine/src/roast.ts a partir de `transfers` (importe desc, desempate `memberRanking`) hasta pasar T010–T011
+- [X] T013 [US2] En apps/web/src/features/roast/RoastPanel.tsx añadir el interruptor «Directa / Transitiva» (`role="group"`, botones con `aria-pressed`, por defecto Transitiva = `simplified`) y, por cada deudor, «X es la zorra de Y (importe)» para cada acreedor con «dueño principal» destacado en texto
 
 **Checkpoint**: US1 + US2 completas con el ajuste puesto a mano.
 
@@ -79,13 +79,13 @@ debe fallar primero.
 
 ### Tests (primero, deben fallar)
 
-- [ ] T014 [P] [US3] Añadir a apps/api/tests/routes/trips.update.test.ts: viaje nuevo sin `spicyMode` (o `false`); creador y administrador ponen `spicyMode: true` → 200, `version` + 1 y auditoría `trip.update` con `diff.spicyMode === true`; participante → 403 `FORBIDDEN`; viaje archivado → 409 `TRIP_READ_ONLY`; `expectedVersion` desfasada → 409 `CONFLICT`; desactivar → `spicyMode: false`
-- [ ] T015 [P] [US3] Crear apps/web/tests/e2e/roast.spec.ts (helpers de los E2E existentes en apps/web/tests/e2e): creadora y participante en un viaje con gastos; sin modo picante no hay «Ranking del grupo»; la creadora lo activa; el participante ve las etiquetas y cambia Directa/Transitiva; el participante no ve el interruptor; la creadora lo desactiva y desaparece; axe sin violaciones en la tarjeta
+- [X] T014 [P] [US3] Añadir a apps/api/tests/routes/trips.update.test.ts: viaje nuevo sin `spicyMode` (o `false`); creador y administrador ponen `spicyMode: true` → 200, `version` + 1 y auditoría `trip.update` con `diff.spicyMode === true`; participante → 403 `FORBIDDEN`; viaje archivado → 409 `TRIP_READ_ONLY`; `expectedVersion` desfasada → 409 `CONFLICT`; desactivar → `spicyMode: false`
+- [X] T015 [P] [US3] Crear apps/web/tests/e2e/roast.spec.ts (helpers de los E2E existentes en apps/web/tests/e2e): creadora y participante en un viaje con gastos; sin modo picante no hay «Ranking del grupo»; la creadora lo activa; el participante ve las etiquetas y cambia Directa/Transitiva; el participante no ve el interruptor; la creadora lo desactiva y desaparece; axe sin violaciones en la tarjeta
 
 ### Implementation
 
-- [ ] T016 [US3] En apps/api/src/services/trips.ts, `updateTrip` aplica `body.spicyMode` al `patch` (el rol, `assertMutable`, la versión y la auditoría ya existen) y el tipo `TripData` en apps/api/src/services/tripRepo.ts incluye `spicyMode?: boolean`, hasta pasar T014
-- [ ] T017 [US3] Crear apps/web/src/features/roast/SpicyModeToggle.tsx: interruptor accesible «Modo picante» (botón con `aria-pressed` y texto de estado) que hace `PATCH /trips/:id` con `{ expectedVersion: trip.version, spicyMode }`, envuelto en `RequiresOnline`, con `ErrorMessage` para 403/409; mostrarlo en apps/web/src/features/trips/TripDetailPage.tsx solo a creador/administrador con el viaje `pending` o `active`, hasta pasar T015
+- [X] T016 [US3] En apps/api/src/services/trips.ts, `updateTrip` aplica `body.spicyMode` al `patch` (el rol, `assertMutable`, la versión y la auditoría ya existen) y el tipo `TripData` en apps/api/src/services/tripRepo.ts incluye `spicyMode?: boolean`, hasta pasar T014
+- [X] T017 [US3] Crear apps/web/src/features/roast/SpicyModeToggle.tsx: interruptor accesible «Modo picante» (botón con `aria-pressed` y texto de estado) que hace `PATCH /trips/:id` con `{ expectedVersion: trip.version, spicyMode }`, envuelto en `RequiresOnline`, con `ErrorMessage` para 403/409; mostrarlo en apps/web/src/features/trips/TripDetailPage.tsx solo a creador/administrador con el viaje `pending` o `active`, hasta pasar T015
 
 **Checkpoint**: las tres historias funcionan de punta a punta.
 
@@ -93,9 +93,9 @@ debe fallar primero.
 
 ## Phase 6: Polish
 
-- [ ] T018 [P] Añadir el modo picante a docs/pilot-guide.md (cómo activarlo y qué probar) y una fila RF-57 en docs/launch-checklist.md
-- [ ] T019 Ejecutar `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:rules`, `pnpm --filter finance-engine perf` y `pnpm --filter web test:e2e`; corregir lo que falle
-- [ ] T020 Recorrer specs/007-debt-roast-ranking/quickstart.md en local y marcar las tareas completadas
+- [X] T018 [P] Añadir el modo picante a docs/pilot-guide.md (cómo activarlo y qué probar) y una fila RF-57 en docs/launch-checklist.md
+- [X] T019 Ejecutar `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:rules`, `pnpm --filter finance-engine perf` y `pnpm --filter web test:e2e`; corregir lo que falle
+- [X] T020 Recorrer specs/007-debt-roast-ranking/quickstart.md en local y marcar las tareas completadas
 
 ---
 

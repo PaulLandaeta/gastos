@@ -73,6 +73,8 @@ export const Trip = z.object({
   confirmedSettlementCount: z.number().int().optional(),
   /** Feature 006: numbers the «Participante eliminado N» labels. */
   deletedMemberCount: z.number().int().optional(),
+  /** Feature 007 (RF-57): debt roast ranking; absent means off. */
+  spicyMode: z.boolean().optional(),
   createdAt: Timestamp,
   updatedAt: Timestamp,
   ...Versioned,

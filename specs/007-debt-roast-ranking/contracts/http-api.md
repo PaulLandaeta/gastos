@@ -15,8 +15,8 @@ Solo cambia un endpoint existente. Ninguna ruta nueva.
 | Participante normal | `403 FORBIDDEN` |
 | Viaje archivado/cerrado | `409 TRIP_READ_ONLY` (comportamiento actual de `assertMutable`) |
 | `expectedVersion` desfasada | `409 CONFLICT` |
-| `spicyMode` no booleano | `400 VALIDATION_FAILED` |
-| Solo `expectedVersion` | `400 VALIDATION_FAILED` ("Nothing to update") |
+| `spicyMode` no booleano | `422 VALIDATION_FAILED` |
+| Solo `expectedVersion` | `422 VALIDATION_FAILED` ("Nothing to update") |
 
 ## `Trip` (contrato compartido)
 
@@ -43,4 +43,4 @@ export function roastRanking(
 
 - `members` define el desempate (`memberRanking`). Los uids de `netByMember` que falten en `members` se ordenan al
   final por uid (defensivo; no debería ocurrir).
-- Lanza `EngineError('INVALID_ALLOCATION')` si un importe no es entero seguro.
+- Lanza `EngineError('AMOUNT_NOT_SAFE_INTEGER')` si un importe no es entero seguro.
