@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip } from './helpers';
+import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip, openTab } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -11,7 +11,7 @@ test('dashboard: total compartido, personales, total global y filtros', async ({
     await ana.getByRole('link', { name: 'Registro manual' }).click();
     await ana.getByLabel('Descripción').fill(description);
     await ana.getByLabel('Importe total').fill(amount);
-    await ana.getByLabel('Categoría').selectOption({ label: category });
+    await ana.getByRole('radio', { name: category }).check();
     if (personal) await ana.getByLabel(/Gasto personal/).check();
     await ana.getByRole('button', { name: 'Guardar gasto' }).click();
     await expect(ana.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
@@ -20,6 +20,7 @@ test('dashboard: total compartido, personales, total global y filtros', async ({
   await register('Bus', '30', 'Transporte');
   await register('Champú', '12', 'Compras', true);
 
+  await openTab(ana, 'Resumen');
   const dash = ana.getByRole('region', { name: 'Resumen del viaje' });
   await expect(dash.getByText('Total compartido del viaje')).toBeVisible();
   await expect(dash).toContainText('120,00');
@@ -35,10 +36,11 @@ test('dashboard: total compartido, personales, total global y filtros', async ({
 
   // Juan sees the public total too.
   await juan.reload();
+  await openTab(juan, 'Resumen');
   await expect(juan.getByRole('region', { name: 'Resumen del viaje' })).toContainText('120,00');
 
-  await ana.getByRole('link', { name: 'Ver gastos' }).click();
+  await ana.getByRole('tab', { name: 'Gastos' }).click();
   await ana.getByRole('tab', { name: 'Personales' }).click();
-  await expect(ana.getByRole('tabpanel')).toContainText('Champú');
-  await expect(ana.getByRole('tabpanel')).not.toContainText('Cena');
+  await expect(ana.getByRole('tabpanel', { name: 'Personales' })).toContainText('Champú');
+  await expect(ana.getByRole('tabpanel', { name: 'Personales' })).not.toContainText('Cena');
 });

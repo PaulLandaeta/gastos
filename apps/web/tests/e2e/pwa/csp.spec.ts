@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { formatReport, runSmoke } from '../../../../ops/src/smoke';
-import { ANA, resetEmulators, signIn } from '../helpers';
+import { ANA, openTab, resetEmulators, signIn } from '../helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -32,6 +32,7 @@ test('FR-026: con la CSP del build se inicia sesión, se registra un gasto y se 
   await page.getByRole('button', { name: 'Guardar gasto' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
 
+  await openTab(page, 'Resumen');
   for (const name of ['Excel detallado', 'PDF resumen']) {
     const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name }).click()]);
     expect(download.suggestedFilename()).toMatch(/\.(xlsx|pdf)$/);

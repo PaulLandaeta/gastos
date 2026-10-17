@@ -1,3 +1,4 @@
+import { buttonClass } from '../../components/ui/Button';
 import { MoneyInput } from '../../components/MoneyInput';
 import type { ExpenseDraft } from './expenseFormModel';
 import type { MemberOption } from './MemberChips';
@@ -27,7 +28,7 @@ export function PayersEditor({
             <label className="space-y-1 text-sm">
               <span className="block font-medium text-slate-800">Pagador {index + 1}</span>
               <select
-                className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                className="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-base shadow-sm focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
                 value={p.uid}
                 onChange={(e) => setPayer(index, { uid: e.target.value })}
               >
@@ -61,7 +62,7 @@ export function PayersEditor({
       {draft.payers.length < members.length && (
         <button
           type="button"
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className={buttonClass('secondary', 'sm')}
           onClick={() =>
             setDraft((d) => {
               const next = members.find((m) => !d.payers.some((p) => p.uid === m.uid));

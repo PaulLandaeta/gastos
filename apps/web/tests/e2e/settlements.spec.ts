@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ANA, PEDRO, resetEmulators, setupActiveTrip } from './helpers';
+import { ANA, PEDRO, resetEmulators, setupActiveTrip, openTab } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -17,6 +17,7 @@ test('PRD: pago pendiente no afecta saldos; confirmar, rechazar con motivo y pag
   await expect(pedro.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
 
   await ana.reload();
+  await openTab(ana, 'Saldos');
   const balances = ana.getByRole('region', { name: 'Saldos' });
   await expect(balances).toContainText('debe 20,00');
 
@@ -27,17 +28,20 @@ test('PRD: pago pendiente no afecta saldos; confirmar, rechazar con motivo y pag
   await ana.getByRole('button', { name: 'Registrar pago' }).click();
   await expect(ana.getByRole('status').filter({ hasText: 'pendiente de confirmación' })).toBeVisible();
   console.log(`SC-006 pay from proposal: ${Date.now() - started} ms`);
+  await openTab(ana, 'Saldos');
   const payments = ana.getByRole('region', { name: 'Pagos' });
   await expect(payments).toContainText('Pendiente');
   await expect(balances).toContainText('debe 20,00');
 
   await pedro.reload();
+  await openTab(pedro, 'Saldos');
   const pedroPayments = pedro.getByRole('region', { name: 'Pagos' });
   await expect(pedroPayments).toContainText('1 pago por confirmar');
   await pedroPayments.getByRole('button', { name: 'Confirmar' }).click();
   await expect(balances).toContainText('debe 10,00');
 
   // A second payment rejected with a reason.
+  await openTab(ana, 'Saldos');
   await ana.getByRole('link', { name: 'Registrar pago' }).click();
   await ana.getByLabel('¿A quién pagaste?').selectOption({ label: 'Pedro' });
   await ana.getByLabel('Importe pagado').fill('5');

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ANA, PEDRO, resetEmulators, setupActiveTrip } from './helpers';
+import { ANA, PEDRO, resetEmulators, setupActiveTrip, openTab } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -15,15 +15,18 @@ test('con un pago confirmado, editar y anular muestran el impacto y piden confir
 
   // Pedro owes Ana 20.00 and pays 10.00; Ana confirms.
   await pedro.reload();
+  await openTab(pedro, 'Saldos');
   await pedro.getByRole('region', { name: 'Saldos' }).getByRole('link', { name: /Pagar/ }).click();
   await pedro.getByLabel('Importe pagado').fill('10');
   await pedro.getByRole('button', { name: 'Registrar pago' }).click();
   await ana.reload();
+  await openTab(ana, 'Saldos');
   await ana.getByRole('region', { name: 'Pagos' }).getByRole('button', { name: 'Confirmar' }).click();
+  await openTab(ana, 'Saldos');
   await expect(ana.getByRole('region', { name: 'Saldos' })).toContainText('le deben 10,00');
 
   // Edit: preview required.
-  await ana.getByRole('link', { name: 'Ver gastos' }).click();
+  await ana.getByRole('tab', { name: 'Gastos' }).click();
   await ana.getByRole('link', { name: /Cena/ }).click();
   await ana.getByRole('link', { name: 'Editar gasto' }).click();
   await ana.getByLabel('Importe total').fill('60');

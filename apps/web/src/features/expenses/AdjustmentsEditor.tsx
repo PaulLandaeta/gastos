@@ -1,3 +1,4 @@
+import { buttonClass } from '../../components/ui/Button';
 import { MoneyInput } from '../../components/MoneyInput';
 import { newKey, type DraftAdjustment, type ExpenseDraft } from './expenseFormModel';
 import type { MemberOption } from './MemberChips';
@@ -41,7 +42,7 @@ export function AdjustmentsEditor({
     <section aria-label="Ajustes generales" className="space-y-3">
       <h3 className="text-sm font-semibold">Ajustes generales</h3>
       {draft.adjustments.map((a) => (
-        <div key={a.key} className="space-y-2 rounded-xl border border-slate-200 p-3">
+        <div key={a.key} className="space-y-2 rounded-2xl border border-slate-200/70 bg-surface shadow-card p-3">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">{KIND[a.kind].title}</span>
             <button
@@ -62,7 +63,7 @@ export function AdjustmentsEditor({
             <label className="space-y-1 text-sm">
               <span className="block font-medium text-slate-800">{KIND[a.kind].mode}</span>
               <select
-                className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                className="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-base shadow-sm focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
                 value={a.mode}
                 onChange={(e) => update(a.key, { mode: e.target.value as DraftAdjustment['mode'] })}
               >
@@ -94,7 +95,7 @@ export function AdjustmentsEditor({
       ))}
       <div className="flex flex-wrap gap-2">
         {(Object.keys(KIND) as DraftAdjustment['kind'][]).map((k) => (
-          <button key={k} type="button" onClick={() => add(k)} className="rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          <button key={k} type="button" onClick={() => add(k)} className={buttonClass('secondary', 'sm')}>
             {KIND[k].add}
           </button>
         ))}

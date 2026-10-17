@@ -1,3 +1,5 @@
+import { FilePdfIcon, FileXlsIcon } from '@phosphor-icons/react';
+import { buttonClass } from '../../components/ui/Button';
 import type { ExportFormat, TripExport, TripExportPage } from 'contracts';
 import { useState } from 'react';
 import { ErrorMessage } from '../../components/ErrorMessage';
@@ -54,7 +56,7 @@ export function ExportMenu({ tripId }: { tripId: string }) {
 
   return (
     <section aria-labelledby="export-title" className="space-y-2">
-      <h2 id="export-title" className="text-lg font-semibold">
+      <h2 id="export-title" className="text-lg font-semibold tracking-tight">
         Exportar
       </h2>
       <RequiresOnline label="Exportar">
@@ -65,8 +67,9 @@ export function ExportMenu({ tripId }: { tripId: string }) {
               type="button"
               disabled={busy !== null}
               onClick={() => void run(f)}
-              className="rounded-lg border border-brand-700 px-3 py-2 text-sm font-medium text-brand-800 disabled:opacity-50"
+              className={buttonClass('secondary', 'md')}
             >
+              {f === 'xlsx' ? <FileXlsIcon size={20} className="text-emerald-700" /> : <FilePdfIcon size={20} className="text-rose-700" />}
               {f === 'xlsx' ? 'Excel detallado' : 'PDF resumen'}
             </button>
           ))}

@@ -10,7 +10,7 @@ test('editar un gasto y conflicto de edición concurrente (PRD)', async ({ brows
   await ana.getByLabel('Descripción').fill('Cena');
   await ana.getByLabel('Importe total').fill('30');
   await ana.getByRole('button', { name: 'Guardar gasto' }).click();
-  await ana.getByRole('link', { name: 'Ver gastos' }).click();
+  await ana.getByRole('tab', { name: 'Gastos' }).click();
   await ana.getByRole('link', { name: /Cena/ }).click();
   // Screens load on demand: the URL changes once the detail is ready.
   await ana.waitForURL(/\/expenses\/[^/]+$/);

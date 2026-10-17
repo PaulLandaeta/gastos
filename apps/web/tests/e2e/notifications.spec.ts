@@ -44,7 +44,7 @@ test('US3: Juan solo recibe lo que puede ver, navega al gasto y gestiona leídas
   await expect(juan.getByRole('link', { name: 'Notificaciones', exact: true })).toBeVisible();
 
   // Ana removes Juan from «Cena»: he is told without details, and the old link is «no longer available».
-  await ana.getByRole('link', { name: 'Ver gastos' }).click();
+  await ana.getByRole('tab', { name: 'Gastos' }).click();
   await ana.getByRole('link', { name: /^Cena/ }).click();
   await ana.getByRole('link', { name: 'Editar gasto' }).click();
   await ana.getByRole('button', { name: 'Juan', pressed: true }).first().click();

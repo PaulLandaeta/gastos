@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { resetEmulators, signIn } from './helpers';
+import { resetEmulators, signIn, openTab } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -28,6 +28,7 @@ test('pantallas principales sin violaciones WCAG 2.1 AA', async ({ page }) => {
   await page.getByLabel('Fecha de fin').fill('2027-02-03');
   await page.getByRole('button', { name: 'Crear viaje' }).click();
   await expect(page.getByRole('heading', { name: 'Sucre' })).toBeVisible();
+  await openTab(page, 'Saldos');
   await expect(page.getByRole('region', { name: 'Saldos' }).getByText('No hay deudas pendientes.')).toBeVisible();
   await expectNoViolations(page, 'detalle del viaje');
 
@@ -63,14 +64,14 @@ test('pantallas de gastos (002) sin violaciones WCAG 2.1 AA a 360 px', async ({ 
   await page.getByRole('button', { name: 'Guardar gasto' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
 
-  await page.getByRole('link', { name: 'Ver gastos' }).click();
+  await page.getByRole('tab', { name: 'Gastos' }).click();
   await expectNoViolations(page, 'lista de gastos');
   await page.getByRole('link', { name: /Museo/ }).click();
   await expect(page.getByRole('heading', { name: 'Museo' })).toBeVisible();
   await expectNoViolations(page, 'detalle del gasto');
 
   await page.getByRole('link', { name: 'Volver a gastos' }).click();
-  await page.getByRole('link', { name: 'Volver al viaje' }).click();
+  await openTab(page, 'Resumen');
   await page.getByRole('link', { name: 'Categorías' }).click();
   await expectNoViolations(page, 'categorías');
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
@@ -90,14 +91,16 @@ test('pantallas de la fase 3 (pagos, edición, impacto, devolución) sin violaci
   await expect(ana.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
 
   await pedro.reload();
+  await openTab(pedro, 'Saldos');
   await pedro.getByRole('region', { name: 'Saldos' }).getByRole('link', { name: /Pagar/ }).click();
   await expectNoViolations(pedro, 'registrar pago');
   await pedro.getByRole('button', { name: 'Registrar pago' }).click();
   await ana.reload();
   await expectNoViolations(ana, 'inicio con pagos pendientes');
+  await openTab(ana, 'Saldos');
   await ana.getByRole('region', { name: 'Pagos' }).getByRole('button', { name: 'Confirmar' }).click();
 
-  await ana.getByRole('link', { name: 'Ver gastos' }).click();
+  await ana.getByRole('tab', { name: 'Gastos' }).click();
   await ana.getByRole('link', { name: /Cena/ }).click();
   await ana.getByRole('button', { name: 'Registrar devolución de Cena' }).click();
   await expectNoViolations(ana, 'detalle con formulario de devolución');
@@ -128,7 +131,7 @@ test('pantallas de escaneo y adjuntos (004) sin violaciones WCAG 2.1 AA a 360 px
   await page.getByRole('button', { name: 'Guardar gasto' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
 
-  await page.getByRole('link', { name: 'Ver gastos' }).click();
+  await page.getByRole('tab', { name: 'Gastos' }).click();
   await page.getByRole('link', { name: /Super Ahorro/ }).click();
   await expect(page.getByRole('region', { name: 'Comprobantes' }).getByRole('listitem')).toHaveCount(1);
   await expectNoViolations(page, 'lista de comprobantes');
@@ -138,6 +141,7 @@ test('pantallas de la Fase 5 sin violaciones WCAG 2.1 AA (pendientes, notificaci
   const { setupActiveTrip, ANA, PEDRO } = await import('./helpers');
   const { page: ana, pages } = await setupActiveTrip(browser, ANA, [PEDRO]);
   const pedro = pages[PEDRO.email]!;
+  await openTab(ana, 'Resumen');
   await expect(ana.getByRole('region', { name: 'Exportar' })).toBeVisible();
   await expectNoViolations(ana, 'detalle con menú exportar');
 
@@ -181,8 +185,10 @@ test('pantallas de la Fase 6 sin violaciones WCAG 2.1 AA (baja de cuenta, partic
   await expectNoViolations(pedro, 'login tras la baja');
 
   await ana.goto(tripUrl);
+  await openTab(ana, 'Resumen');
   await expect(ana.getByRole('region', { name: 'Participantes' }).getByText('Participante eliminado 1')).toBeVisible();
   await expectNoViolations(ana, 'viaje con participante eliminado');
+  await openTab(ana, 'Saldos');
   await ana.getByRole('link', { name: 'Registrar pago' }).click();
   await expect(ana.getByLabel('¿Quién pagó?')).toBeVisible();
   await expectNoViolations(ana, 'registrar pago en nombre de un eliminado');

@@ -1,3 +1,8 @@
+import { UserPlusIcon } from '@phosphor-icons/react';
+import { Avatar } from '../../components/ui/Avatar';
+import { buttonClass } from '../../components/ui/Button';
+import { cardClass } from '../../components/ui/Card';
+import { LockSimpleIcon } from '@phosphor-icons/react';
 import { useMutation } from '@tanstack/react-query';
 import type { Role } from 'contracts';
 import { useState, type FormEvent } from 'react';
@@ -39,13 +44,15 @@ export function MembersPanel({ trip, members, myRole }: { trip: LiveTrip; member
 
   return (
     <section aria-labelledby="members-title" className="space-y-3">
-      <h2 id="members-title" className="text-lg font-semibold">
+      <h2 id="members-title" className="text-lg font-semibold tracking-tight">
         Participantes
       </h2>
-      <ul className="divide-y divide-slate-200 rounded-xl border border-slate-200">
+      <ul className={`${cardClass} divide-y divide-slate-100`}>
         {members.map((m) => (
           <li key={m.id} className="flex flex-wrap items-center justify-between gap-2 p-3">
-            <div>
+            <div className="flex min-w-0 items-center gap-3">
+              <Avatar name={m.displayName ?? m.email} seed={m.uid ?? m.email} />
+              <div className="min-w-0">
               <p className="font-medium">
                 {m.displayName ?? m.email}
                 {m.uid === user.uid && <span className="text-slate-500"> (tú)</span>}
@@ -55,6 +62,7 @@ export function MembersPanel({ trip, members, myRole }: { trip: LiveTrip; member
                 {m.displayName && m.invitationStatus === 'accepted' && !m.deletedAt ? ` · ${m.email}` : ''}
                 {m.deletedAt ? ' · Cuenta eliminada' : ''}
               </p>
+              </div>
             </div>
             <div className="flex gap-2" data-member-actions={m.id}>
               {isCreator && mutable && m.invitationStatus === 'accepted' && m.role !== 'creator' && m.uid && !m.deletedAt && (
@@ -62,7 +70,7 @@ export function MembersPanel({ trip, members, myRole }: { trip: LiveTrip; member
                   type="button"
                   disabled={setRole.isPending}
                   onClick={() => setRole.mutate({ uid: m.uid!, role: m.role === 'admin' ? 'member' : 'admin' })}
-                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+                  className={buttonClass('secondary', 'sm')}
                   aria-label={`${m.role === 'admin' ? 'Quitar admin a' : 'Hacer admin a'} ${m.displayName ?? m.email}`}
                 >
                   {m.role === 'admin' ? 'Quitar admin' : 'Hacer admin'}
@@ -73,7 +81,7 @@ export function MembersPanel({ trip, members, myRole }: { trip: LiveTrip; member
                   type="button"
                   disabled={remove.isPending}
                   onClick={() => remove.mutate(m.id)}
-                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+                  className={buttonClass('secondary', 'sm')}
                   aria-label={`Retirar invitación de ${m.email}`}
                 >
                   Retirar
@@ -96,14 +104,15 @@ export function MembersPanel({ trip, members, myRole }: { trip: LiveTrip; member
             placeholder="correo@ejemplo.com"
             className={inputClass}
           />
-          <button type="submit" disabled={invite.isPending} className="rounded-lg bg-brand-700 px-4 py-2 font-medium text-white">
+          <button type="submit" disabled={invite.isPending} className={buttonClass('primary', 'md', 'shrink-0')}>
+            <UserPlusIcon size={18} />
             Invitar
           </button>
         </form>
       )}
       <ErrorMessage error={invite.error} />
       {trip.participantsLocked && (
-        <p className="text-sm text-slate-600">🔒 Los participantes quedaron fijos al registrar el primer gasto.</p>
+        <p className="flex items-center gap-1.5 text-sm text-slate-600"><LockSimpleIcon className="shrink-0" />Los participantes quedaron fijos al registrar el primer gasto.</p>
       )}
     </section>
   );

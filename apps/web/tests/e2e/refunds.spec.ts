@@ -18,7 +18,7 @@ test('devolución parcial de un ítem con importe sugerido y máximo', async ({ 
   await page.getByRole('button', { name: 'Guardar gasto' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
 
-  await page.getByRole('link', { name: 'Ver gastos' }).click();
+  await page.getByRole('tab', { name: 'Gastos' }).click();
   await page.getByRole('link', { name: /Súper/ }).click();
   await page.getByRole('button', { name: 'Registrar devolución de Vino' }).click();
   const form = page.getByRole('region', { name: 'Devolución de Vino' });

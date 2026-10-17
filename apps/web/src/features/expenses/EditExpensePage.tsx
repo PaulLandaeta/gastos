@@ -86,7 +86,7 @@ export function EditExpensePage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Editar gasto</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Editar gasto</h1>
       <p className="text-sm text-slate-600">
         {trip.name} · Moneda {trip.currency} · versión {baseVersion}
       </p>

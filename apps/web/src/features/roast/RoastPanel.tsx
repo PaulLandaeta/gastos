@@ -1,3 +1,7 @@
+import { FireIcon } from '@phosphor-icons/react';
+import { Avatar } from '../../components/ui/Avatar';
+import { cardClass } from '../../components/ui/Card';
+import { PressedGroup } from '../../components/ui/Segmented';
 import { useQuery } from '@tanstack/react-query';
 import type { BalancesResponse } from 'contracts';
 import { roastRanking, type Member } from 'finance-engine';
@@ -32,31 +36,31 @@ export function RoastPanel({ trip, members }: { trip: LiveTrip; members: LiveMem
   return (
     <section aria-labelledby="roast-title" className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="roast-title" className="text-lg font-semibold">
+        <h2 id="roast-title" className="flex items-center gap-2 text-lg font-semibold tracking-tight">
+          <FireIcon weight="fill" className="text-orange-500" />
           Ranking del grupo
         </h2>
-        <div role="group" aria-label="Vista del ranking" className="inline-flex rounded-lg border border-slate-300 p-0.5">
-          {(['simplified', 'original'] as const).map((v) => (
-            <button
-              key={v}
-              type="button"
-              aria-pressed={view === v}
-              onClick={() => setView(v)}
-              className="rounded-md px-3 py-1.5 text-sm aria-pressed:bg-brand-700 aria-pressed:text-white"
-            >
-              {v === 'simplified' ? 'Transitiva' : 'Directa'}
-            </button>
-          ))}
-        </div>
+        <PressedGroup
+          label="Vista del ranking"
+          value={view}
+          onChange={setView}
+          options={[
+            { value: 'simplified', label: 'Transitiva' },
+            { value: 'original', label: 'Directa' },
+          ]}
+        />
       </div>
       {isLoading && <Spinner label="Calculando el ranking…" />}
       <ErrorMessage error={error} />
       {data && (
-        <ol className="divide-y divide-slate-200 rounded-xl border border-slate-200">
+        <ol className={`${cardClass} divide-y divide-slate-100`}>
           {ranking.map((e) => (
             <li key={e.uid} className="space-y-1 p-3">
-              <p className="flex flex-wrap items-baseline justify-between gap-2">
-                <span className="font-medium">{name(e.uid)}</span>
+              <p className="flex flex-wrap items-center justify-between gap-2">
+                <span className="flex items-center gap-2 font-medium">
+                  <Avatar name={name(e.uid)} seed={e.uid} size="sm" />
+                  {name(e.uid)}
+                </span>
                 <span className={e.tier === 'macho' ? 'text-sm font-semibold text-emerald-800' : 'text-sm font-semibold text-red-800'}>
                   {ROAST_LABELS[e.tier]}
                 </span>

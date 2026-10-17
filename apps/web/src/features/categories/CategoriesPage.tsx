@@ -1,3 +1,6 @@
+import { CategoryIcon } from '../../lib/categoryIcon';
+import { BackLink } from '../../components/ui/BackLink';
+import { buttonClass } from '../../components/ui/Button';
 import { useMutation } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router';
@@ -39,15 +42,15 @@ export function CategoriesPage() {
 
   return (
     <div className="space-y-5">
-      <Link to={`/trips/${tripId}`} className="text-sm text-brand-800 underline">
-        Volver al viaje
-      </Link>
-      <h1 className="text-2xl font-semibold">Categorías</h1>
-      <ul className="divide-y divide-slate-200 rounded-xl border border-slate-200">
+      <BackLink to={`/trips/${tripId}?tab=resumen`}>Volver al viaje</BackLink>
+      <h1 className="text-2xl font-bold tracking-tight">Categorías</h1>
+      <ul className="divide-y divide-slate-100 rounded-2xl border border-slate-200/70 bg-surface shadow-card">
         {all.map((c) => (
           <li key={c.id} className="flex items-center justify-between gap-3 p-3">
             <span className="flex items-center gap-2">
-              <span aria-hidden className="h-4 w-4 rounded-full" style={{ backgroundColor: c.color }} />
+              <span className={c.active ? '' : 'opacity-50 grayscale'}>
+                <CategoryIcon category={c} size="sm" />
+              </span>
               <span className={c.active ? '' : 'text-slate-500'}>{c.name}</span>
               {!c.active && <span className="rounded bg-slate-200 px-1.5 text-xs">Inactiva</span>}
               {c.isDefault && <span className="text-xs text-slate-500">inicial</span>}
@@ -57,7 +60,7 @@ export function CategoriesPage() {
                 type="button"
                 disabled={toggle.isPending}
                 onClick={() => toggle.mutate({ id: c.id, version: c.version, active: c.active })}
-                className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+                className={buttonClass('secondary', 'sm')}
                 aria-label={`${c.active ? 'Desactivar' : 'Activar'} ${c.name}`}
               >
                 {c.active ? 'Desactivar' : 'Activar'}
@@ -68,18 +71,18 @@ export function CategoriesPage() {
       </ul>
       <ErrorMessage error={toggle.error} />
       {manager && (
-        <form onSubmit={onCreate} className="space-y-3 rounded-xl border border-slate-200 p-4">
+        <form onSubmit={onCreate} className="space-y-3 rounded-2xl border border-slate-200/70 bg-surface shadow-card p-4">
           <h2 className="font-semibold">Nueva categoría</h2>
           <div className="grid grid-cols-[1fr_5rem] gap-3">
             <Field id="cat-name" label="Nombre de la categoría">
               <input id="cat-name" maxLength={40} className={inputClass} value={name} onChange={(e) => setName(e.target.value)} />
             </Field>
             <Field id="cat-color" label="Color">
-              <input id="cat-color" type="color" className="h-10 w-full rounded-lg border border-slate-300" value={color} onChange={(e) => setColor(e.target.value)} />
+              <input id="cat-color" type="color" className="h-11 w-full rounded-xl border border-slate-300 bg-white p-1" value={color} onChange={(e) => setColor(e.target.value)} />
             </Field>
           </div>
           <ErrorMessage error={create.error} />
-          <button type="submit" disabled={create.isPending} className="rounded-lg bg-brand-700 px-4 py-2 font-medium text-white">
+          <button type="submit" disabled={create.isPending} className={buttonClass('primary', 'md')}>
             Crear categoría
           </button>
         </form>

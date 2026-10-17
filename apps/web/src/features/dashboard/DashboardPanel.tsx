@@ -1,3 +1,4 @@
+import { Card, cardClass } from '../../components/ui/Card';
 import { useQuery } from '@tanstack/react-query';
 import type { StatsResponse } from 'contracts';
 import { useState } from 'react';
@@ -14,9 +15,13 @@ import { Filters } from './Filters';
 
 function Tile({ label, value, emphasis }: { label: string; value: string; emphasis?: boolean }) {
   return (
-    <div role="group" aria-label={label} className="rounded-xl border border-slate-200 p-3">
-      <p className="text-xs text-slate-600">{label}</p>
-      <p className={`tabular-nums ${emphasis ? 'text-xl font-bold' : 'text-lg font-semibold'}`}>{value}</p>
+    <div
+      role="group"
+      aria-label={label}
+      className={emphasis ? 'col-span-2 rounded-2xl bg-brand-50 p-4 ring-1 ring-brand-100 sm:col-span-1' : `${cardClass} p-3`}
+    >
+      <p className={`text-xs ${emphasis ? 'font-medium text-brand-800' : 'text-slate-600'}`}>{label}</p>
+      <p className={`amount ${emphasis ? 'text-2xl font-bold text-brand-900' : 'text-lg font-semibold'}`}>{value}</p>
     </div>
   );
 }
@@ -64,7 +69,7 @@ export function DashboardPanel({ trip, members }: { trip: LiveTrip; members: Liv
 
   return (
     <section aria-labelledby="dashboard-title" className="space-y-3">
-      <h2 id="dashboard-title" className="text-lg font-semibold">
+      <h2 id="dashboard-title" className="text-lg font-semibold tracking-tight">
         Resumen del viaje
       </h2>
       <Filters value={filters} onChange={setFilters} categories={categories} people={people} />
@@ -94,13 +99,15 @@ export function DashboardPanel({ trip, members }: { trip: LiveTrip; members: Liv
               />
             )}
           </div>
+          <Card className="p-4">
           <CategoryChart
             caption="Gasto compartido por categoría"
             currency={trip.currency}
             data={categoryData(figures.byCategory)}
           />
+          </Card>
           {!filtering && isManager && stats.data?.members && (
-            <details className="text-sm">
+            <details className={`${cardClass} p-3 text-sm`}>
               <summary className="cursor-pointer font-medium">Totales por participante (solo administradores)</summary>
               <table className="mt-2 w-full text-left">
                 <thead>

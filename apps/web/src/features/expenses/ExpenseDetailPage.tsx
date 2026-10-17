@@ -1,3 +1,8 @@
+import { ScanIcon } from '@phosphor-icons/react';
+import { Avatar } from '../../components/ui/Avatar';
+import { CategoryIcon } from '../../lib/categoryIcon';
+import { BackLink } from '../../components/ui/BackLink';
+import { buttonClass } from '../../components/ui/Button';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { PreviewResponse } from 'contracts';
 import { useState } from 'react';
@@ -108,16 +113,20 @@ export function ExpenseDetailPage() {
 
   return (
     <article className="space-y-5">
-      <Link to={`/trips/${tripId}/expenses`} className="text-sm text-brand-800 underline">
-        Volver a gastos
-      </Link>
-      <header className="space-y-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-semibold">{e.description}</h1>
-          {e.status === 'voided' && <span className="rounded bg-slate-200 px-2 py-0.5 text-xs font-semibold">Anulado</span>}
-          {e.source === 'ai' && <span className="rounded bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-900">Escaneado</span>}
+      <BackLink to={`/trips/${tripId}?tab=gastos`}>Volver a gastos</BackLink>
+      <header className="flex flex-col items-center gap-2 rounded-3xl bg-surface px-4 py-6 text-center shadow-card">
+        <CategoryIcon category={categories.find((c) => c.id === e.categoryId)} size="lg" />
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight">{e.description}</h1>
+          {e.status === 'voided' && <span className="rounded-full bg-slate-200 px-2.5 py-0.5 text-xs font-semibold">Anulado</span>}
+          {e.source === 'ai' && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-900">
+              <ScanIcon size={14} weight="bold" />
+              Escaneado
+            </span>
+          )}
         </div>
-        <p className={`text-2xl font-bold ${e.status === 'voided' ? 'line-through text-slate-500' : ''}`}>{money(e.totalMinor)}</p>
+        <p className={`amount text-4xl font-bold tracking-tight ${e.status === 'voided' ? 'line-through text-slate-500' : ''}`}>{money(e.totalMinor)}</p>
         <p className="text-sm text-slate-600">
           {formatDate(e.transactionDate)} · {categories.find((c) => c.id === e.categoryId)?.name ?? '—'} · registrado por{' '}
           {nameOf(e.createdBy)}
@@ -129,11 +138,14 @@ export function ExpenseDetailPage() {
       </header>
 
       <section aria-label="Reparto por persona" className="space-y-2">
-        <h2 className="text-lg font-semibold">Reparto por persona</h2>
-        <ul className="divide-y divide-slate-200 rounded-xl border border-slate-200">
+        <h2 className="text-lg font-semibold tracking-tight">Reparto por persona</h2>
+        <ul className="divide-y divide-slate-100 rounded-2xl border border-slate-200/70 bg-surface shadow-card">
           {Object.entries(e.chargesByMember).map(([uid, c]) => (
-            <li key={uid} className="flex justify-between gap-2 p-3 text-sm">
-              <span>{nameOf(uid)}</span>
+            <li key={uid} className="flex items-center justify-between gap-2 p-3 text-sm">
+              <span className="flex items-center gap-2.5">
+                <Avatar name={nameOf(uid)} seed={uid} size="sm" />
+                {nameOf(uid)}
+              </span>
               <span className="text-right">
                 <strong>{money(c.netMinor)}</strong>
                 <span className="block text-xs text-slate-600">
@@ -147,7 +159,7 @@ export function ExpenseDetailPage() {
       </section>
 
       <section aria-label="Pagadores" className="space-y-1">
-        <h2 className="text-lg font-semibold">Pagadores</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Pagadores</h2>
         <ul className="text-sm">
           {e.payers.map((p) => (
             <li key={p.uid}>
@@ -159,7 +171,7 @@ export function ExpenseDetailPage() {
 
       {(e.splitMode === 'items' || e.status === 'active' || (refunds.data ?? []).length > 0) && (
         <section aria-label="Ítems" className="space-y-1">
-          <h2 className="text-lg font-semibold">{e.splitMode === 'items' ? 'Ítems' : 'Importe y devoluciones'}</h2>
+          <h2 className="text-lg font-semibold tracking-tight">{e.splitMode === 'items' ? 'Ítems' : 'Importe y devoluciones'}</h2>
           <ul className="space-y-1 text-sm">
             {e.items.map((i) => {
               const name = i.description ?? (e.splitMode === 'total' ? e.description : 'Ítem');
@@ -227,7 +239,7 @@ export function ExpenseDetailPage() {
         <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">Editar, anular, restaurar o registrar devoluciones necesita conexión.</p>
       )}
       {canVoid && online && (
-        <Link to={`/trips/${tripId}/expenses/${expenseId}/edit`} className="inline-block rounded-lg border border-brand-700 px-4 py-2 font-medium text-brand-800">
+        <Link to={`/trips/${tripId}/expenses/${expenseId}/edit`} className={buttonClass('secondary', 'md', 'border-brand-600 text-brand-800')}>
           Editar gasto
         </Link>
       )}
@@ -237,7 +249,7 @@ export function ExpenseDetailPage() {
             <button
               type="button"
               onClick={() => ((trip.confirmedSettlementCount ?? 0) > 0 ? previewMutation.mutate('void') : setConfirming(true))}
-              className="rounded-lg border border-red-300 px-4 py-2 text-red-800"
+              className={buttonClass('secondary', 'md', 'border-red-300 text-red-800 hover:bg-red-50')}
             >
               Anular gasto
             </button>
@@ -253,7 +265,7 @@ export function ExpenseDetailPage() {
                 >
                   Confirmar anulación
                 </button>
-                <button type="button" onClick={() => setConfirming(false)} className="rounded-lg border border-slate-300 px-4 py-2">
+                <button type="button" onClick={() => setConfirming(false)} className={buttonClass('secondary', 'md')}>
                   Cancelar
                 </button>
               </div>
@@ -279,7 +291,7 @@ export function ExpenseDetailPage() {
             type="button"
             disabled={restoreMutation.isPending || previewMutation.isPending}
             onClick={() => (needsPreview ? previewMutation.mutate('restore') : restoreMutation.mutate({ version: e.version }))}
-            className="rounded-lg border border-brand-700 px-4 py-2 font-medium text-brand-800"
+            className={buttonClass('secondary', 'md', 'border-brand-600 text-brand-800')}
           >
             Restaurar gasto
           </button>
@@ -318,7 +330,7 @@ export function ExpenseDetailPage() {
       />
 
       <section aria-label="Historial" className="space-y-1">
-        <h2 className="text-lg font-semibold">Historial</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Historial</h2>
         {history.isLoading && <Spinner label="Cargando historial…" />}
         <ol className="space-y-1 text-sm">
           {history.data?.events.map((ev, k) => (

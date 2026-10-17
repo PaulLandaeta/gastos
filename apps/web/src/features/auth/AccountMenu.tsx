@@ -1,3 +1,5 @@
+import { buttonClass } from '../../components/ui/Button';
+import { SignOutIcon, TrashIcon } from '@phosphor-icons/react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { InstallButton } from '../pwa/InstallButton';
@@ -38,12 +40,12 @@ export function AccountMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-brand-700 font-semibold text-white"
+        className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-brand-700 font-semibold text-white ring-2 ring-brand-100"
       >
         {user.photoURL ? <img src={user.photoURL} alt="" className="h-full w-full object-cover" /> : name.slice(0, 1).toUpperCase()}
       </button>
       {open && (
-        <div role="menu" className="absolute right-0 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+        <div role="menu" className="absolute right-0 mt-2 w-64 rounded-2xl border border-slate-200/70 bg-surface shadow-card bg-white p-2 shadow-xl">
           <div className="px-3 py-2">
             <p className="font-medium">{name}</p>
             <p className="truncate text-sm text-slate-600">{email}</p>
@@ -53,16 +55,18 @@ export function AccountMenu() {
             to="/account/delete"
             role="menuitem"
             onClick={() => setOpen(false)}
-            className="block w-full rounded-lg px-3 py-2 text-left text-sm text-red-800 hover:bg-red-50"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-red-800 hover:bg-red-50"
           >
+            <TrashIcon />
             Borrar mi cuenta
           </Link>
           <button
             type="button"
             role="menuitem"
             onClick={() => (unsent > 0 ? setConfirmSignOut(true) : void signOut())}
-            className="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-100"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-100"
           >
+            <SignOutIcon />
             Cerrar sesión
           </button>
           {confirmSignOut && (
@@ -72,7 +76,7 @@ export function AccountMenu() {
                 dispositivo.
               </p>
               <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={() => setConfirmSignOut(false)} className="rounded-lg border border-slate-300 bg-white px-3 py-1.5">
+                <button type="button" onClick={() => setConfirmSignOut(false)} className={buttonClass('secondary', 'sm')}>
                   Cancelar
                 </button>
                 <button type="button" onClick={() => void signOut()} className="rounded-lg bg-red-700 px-3 py-1.5 font-medium text-white">

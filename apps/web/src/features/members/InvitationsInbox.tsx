@@ -1,3 +1,4 @@
+import { buttonClass } from '../../components/ui/Button';
 import { normalizeEmail, type InvitationIndex } from 'contracts';
 import { useState } from 'react';
 import { ErrorMessage } from '../../components/ErrorMessage';
@@ -29,7 +30,7 @@ export function InvitationsInbox() {
 
   return (
     <section aria-labelledby="invitations-title" className="space-y-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-      <h2 id="invitations-title" className="text-lg font-semibold">
+      <h2 id="invitations-title" className="text-lg font-semibold tracking-tight">
         Invitaciones
       </h2>
       <ErrorMessage error={error} />
@@ -49,7 +50,7 @@ export function InvitationsInbox() {
                   type="button"
                   disabled={busy === inv.tripId}
                   onClick={() => void answer(inv.tripId, 'decline')}
-                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className={buttonClass('secondary', 'sm')}
                 >
                   Rechazar
                 </button>
@@ -57,7 +58,7 @@ export function InvitationsInbox() {
                   type="button"
                   disabled={busy === inv.tripId}
                   onClick={() => void answer(inv.tripId, 'accept')}
-                  className="rounded-lg bg-brand-700 px-3 py-2 text-sm font-medium text-white"
+                  className={buttonClass('primary', 'sm')}
                 >
                   Aceptar
                 </button>

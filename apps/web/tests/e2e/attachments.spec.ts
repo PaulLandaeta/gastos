@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip } from './helpers';
+import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip, openTab } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -31,12 +31,12 @@ test('US2: receipts on an expense are private, deduplicated and downloadable; pa
   await chooseBeneficiaries(pedro, ['Ana', 'Pedro']);
   await pedro.getByTestId('attachment-input').setInputFiles([img('ticket-1.jpg', 'foto uno'), img('ticket-2.jpg', 'foto dos'), PDF]);
   const pending = pedro.getByRole('region', { name: 'Comprobantes' });
-  await expect(pending.getByText('📎 factura.pdf')).toBeVisible();
+  await expect(pending.getByText('factura.pdf').first()).toBeVisible();
   await expect(pending.getByRole('listitem')).toHaveCount(3);
   await pedro.getByRole('button', { name: 'Guardar gasto' }).click();
   await expect(pedro.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
 
-  await pedro.getByRole('link', { name: 'Ver gastos' }).click();
+  await pedro.getByRole('tab', { name: 'Gastos' }).click();
   await pedro.getByRole('link', { name: /Cena/ }).click();
   const receipts = pedro.getByRole('region', { name: 'Comprobantes' });
   await expect(receipts.getByRole('listitem')).toHaveCount(3);
@@ -61,6 +61,7 @@ test('US2: receipts on an expense are private, deduplicated and downloadable; pa
   await expect(juan.getByText('ticket-1.jpg')).toHaveCount(0);
 
   // Ana pays Pedro with a proof; Pedro (receiver) can open it, Juan cannot see it.
+  await openTab(ana, 'Saldos');
   await ana.getByRole('link', { name: 'Registrar pago' }).click();
   await ana.getByLabel('¿A quién pagaste?').selectOption({ label: 'Pedro' });
   await ana.getByLabel('Importe pagado').fill('15');
@@ -69,9 +70,11 @@ test('US2: receipts on an expense are private, deduplicated and downloadable; pa
   await expect(ana.getByText(/Pago registrado/)).toBeVisible();
 
   await pedro.goto(expenseUrl.replace(/\/expenses\/.+$/, ''));
+  await openTab(pedro, 'Saldos');
   await pedro.getByRole('button', { name: 'Comprobante de pago (1)' }).click();
   await expect(pedro.getByRole('button', { name: 'Abrir transferencia.jpg' })).toBeVisible();
   await juan.goto(expenseUrl.replace(/\/expenses\/.+$/, ''));
+  await openTab(juan, 'Saldos');
   await expect(juan.getByRole('heading', { name: 'Pagos' })).toBeVisible();
   await expect(juan.getByRole('button', { name: /Comprobante de pago/ })).toHaveCount(0);
 });

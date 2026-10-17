@@ -73,7 +73,7 @@ function PendingEditForm({ pending }: { pending: PendingExpense }) {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Corregir gasto pendiente</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Corregir gasto pendiente</h1>
       <p className="text-sm text-slate-600">
         {trip.name} · Moneda {trip.currency}
       </p>

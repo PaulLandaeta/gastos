@@ -21,13 +21,13 @@ test('US1: consent → scan → prefilled form with highlights and currency warn
   await expect(ana.getByText('Revisa estos datos dudosos: «Agua».')).toBeVisible();
   const agua = ana.getByRole('group', { name: 'Ítem 2' });
   await expect(agua.getByText('Revisar', { exact: true })).toBeVisible();
-  await expect(ana.getByText('📎 ticket.jpg (escaneado)')).toBeVisible();
+  await expect(ana.getByText('ticket.jpg (escaneado)').first()).toBeVisible();
 
   // Total 9,90 = 6 + 3 + 0,90 tax: balanced, can save.
   await ana.getByRole('button', { name: 'Guardar gasto' }).click();
   await expect(ana.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
 
-  await ana.getByRole('link', { name: 'Ver gastos' }).click();
+  await ana.getByRole('tab', { name: 'Gastos' }).click();
   await ana.getByRole('link', { name: /Super Ahorro/ }).click();
   await expect(ana.getByText('Escaneado', { exact: true })).toBeVisible();
   await expect(ana.getByRole('region', { name: 'Comprobantes' }).getByRole('button', { name: 'Abrir ticket.jpg' })).toBeVisible();
@@ -41,7 +41,7 @@ test('US1: AI failure offers manual registration keeping the photo', async ({ br
   await expect(ana.getByText('El escaneo no está disponible ahora')).toBeVisible();
   await ana.getByRole('link', { name: 'Registrar a mano con la foto adjunta' }).click();
   await expect(ana.getByRole('heading', { name: 'Nuevo gasto' })).toBeVisible();
-  await expect(ana.getByText('📎 borrosa.jpg')).toBeVisible();
+  await expect(ana.getByText('borrosa.jpg').first()).toBeVisible();
   await ana.getByLabel('Descripción').fill('Mercado');
   await ana.getByLabel('Importe total').fill('12');
   await ana.getByRole('button', { name: 'Guardar gasto' }).click();

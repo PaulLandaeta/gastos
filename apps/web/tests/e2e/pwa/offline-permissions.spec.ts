@@ -10,7 +10,7 @@ test('FR-009: al reconectar, la caché deja de mostrar un gasto que Juan ya no p
   await addSimpleExpense(ana, 'Cena', '30,00');
   await expect(ana.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
 
-  await juan.getByRole('link', { name: 'Ver gastos' }).click();
+  await juan.getByRole('tab', { name: 'Gastos' }).click();
   await expect(juan.getByText('Cena')).toBeVisible();
   await waitForServiceWorker(juan);
   await juan.context().setOffline(true);
@@ -18,7 +18,7 @@ test('FR-009: al reconectar, la caché deja de mostrar un gasto que Juan ya no p
   await expect(juan.getByText('Cena')).toBeVisible(); // cached while offline
 
   // Ana removes Juan from the expense while he is offline.
-  await ana.getByRole('link', { name: 'Ver gastos' }).click();
+  await ana.getByRole('tab', { name: 'Gastos' }).click();
   await ana.getByRole('link', { name: /Cena/ }).click();
   await ana.getByRole('link', { name: 'Editar gasto' }).click();
   await ana.getByRole('button', { name: 'Juan', pressed: true }).first().click();

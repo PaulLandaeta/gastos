@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { resetEmulators, signIn } from './helpers';
+import { resetEmulators, signIn, openTab } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -20,16 +20,22 @@ test('Pedro (admin) cierra el viaje; Ana lo archiva y lo restaura a cerrado', as
   await signIn(pedro, 'pedro@example.com', 'Pedro');
   await pedro.getByRole('region', { name: 'Invitaciones' }).getByRole('button', { name: 'Aceptar' }).click();
 
+  await openTab(ana, 'Resumen');
   await ana.getByRole('button', { name: 'Hacer admin a Pedro' }).click();
+  await openTab(ana, 'Resumen');
   await expect(ana.getByRole('button', { name: 'Quitar admin a Pedro' })).toBeVisible();
+  await openTab(ana, 'Saldos');
   await expect(ana.getByRole('region', { name: 'Saldos' })).toBeVisible();
 
   await pedro.getByRole('link', { name: /Cusco/ }).click();
+  await openTab(pedro, 'Resumen');
   await pedro.getByRole('button', { name: 'Cerrar viaje' }).click();
   await expect(pedro.getByText(/Este viaje está cerrado: solo lectura/)).toBeVisible();
+  await openTab(pedro, 'Resumen');
   await expect(pedro.getByRole('button', { name: 'Archivar viaje' })).toHaveCount(0);
 
   await expect(ana.getByText('Cerrado', { exact: true })).toBeVisible();
+  await openTab(ana, 'Resumen');
   await ana.getByRole('button', { name: 'Archivar viaje' }).click();
   await expect(ana.getByText(/Este viaje está archivado/)).toBeVisible();
 
@@ -37,6 +43,7 @@ test('Pedro (admin) cierra el viaje; Ana lo archiva y lo restaura a cerrado', as
   await expect(ana.getByRole('link', { name: /Cusco/ })).toHaveCount(0);
   await ana.getByRole('button', { name: /Ver archivados/ }).click();
   await ana.getByRole('region', { name: 'Archivados' }).getByRole('link', { name: /Cusco/ }).click();
+  await openTab(ana, 'Resumen');
   await ana.getByRole('button', { name: 'Restaurar viaje' }).click();
   await expect(ana.getByText('Cerrado', { exact: true })).toBeVisible();
   await anaCtx.close();

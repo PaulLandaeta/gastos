@@ -1,10 +1,45 @@
 @import 'tailwindcss';
 
+/* Inter (bundled: the CSP only allows fonts from 'self'). Latin subsets only: the UI is Spanish and
+   currency symbols live in latin-ext; other scripts fall back to the system font. */
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('@fontsource-variable/inter/files/inter-latin-ext-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('@fontsource-variable/inter/files/inter-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 @theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
   --color-brand-50: #f0fdfa;
+  --color-brand-100: #ccfbf1;
+  --color-brand-200: #99f6e4;
+  --color-brand-300: #5eead4;
+  --color-brand-500: #14b8a6;
   --color-brand-600: #0d9488;
   --color-brand-700: #0f766e;
   --color-brand-800: #115e59;
+  --color-brand-900: #134e4a;
+
+  /* Page background (Tricount-like light gray) and raised surfaces. */
+  --color-canvas: #f4f6f8;
+  --color-surface: #ffffff;
+  --color-positive: #047857;
+  --color-negative: #be123c;
+
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.06);
+  --shadow-fab: 0 6px 16px rgb(15 118 110 / 0.35);
 }
 
 html {
@@ -12,9 +47,15 @@ html {
 }
 
 body {
-  @apply bg-white text-slate-900 antialiased;
+  @apply bg-canvas text-slate-900 antialiased;
+  font-feature-settings: 'cv11', 'ss01';
 }
 
 :focus-visible {
   @apply outline-2 outline-offset-2 outline-brand-700;
+}
+
+/* Amounts line up in lists and totals. */
+.amount {
+  font-variant-numeric: tabular-nums;
 }

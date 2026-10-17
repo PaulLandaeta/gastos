@@ -1,3 +1,4 @@
+import { buttonClass } from '../../components/ui/Button';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { RefundableResponse } from 'contracts';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
@@ -57,7 +58,7 @@ export function RefundForm({
   }
 
   return (
-    <form onSubmit={submit} aria-label={`Devolución de ${itemName}`} role="region" className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+    <form onSubmit={submit} aria-label={`Devolución de ${itemName}`} role="region" className="space-y-3 rounded-2xl border border-slate-200/70 bg-surface shadow-card bg-slate-50 p-3">
       {r && (
         <p className="text-sm text-slate-700">
           Máximo disponible: {formatMoney(r.maxMinor - r.refundedMinor, currency)} ({r.quantity - r.refundedQuantity} de {r.quantity} unidades)
@@ -99,7 +100,7 @@ export function RefundForm({
         </select>
       </Field>
       <ErrorMessage error={save.error} />
-      <button type="submit" disabled={save.isPending || !amount} className="rounded-lg bg-brand-700 px-4 py-2 font-medium text-white disabled:opacity-60">
+      <button type="submit" disabled={save.isPending || !amount} className={buttonClass('primary', 'md')}>
         Registrar devolución
       </button>
     </form>

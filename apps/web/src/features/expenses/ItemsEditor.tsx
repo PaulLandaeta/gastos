@@ -1,3 +1,4 @@
+import { buttonClass } from '../../components/ui/Button';
 import { parseMoneyInput } from 'contracts';
 import { useState } from 'react';
 import { inputClass } from '../../components/Field';
@@ -87,7 +88,7 @@ function ItemRow({
           type="number"
           min={1}
           inputMode="numeric"
-          className="w-20 rounded-lg border border-slate-300 px-2 py-1"
+          className="w-20 rounded-lg border border-slate-300 bg-white px-2 py-1"
           value={item.quantity}
           onChange={(e) => onChange({ ...item, quantity: Math.max(1, Number.parseInt(e.target.value || '1', 10) || 1) })}
         />
@@ -132,7 +133,7 @@ function ItemRow({
           <label className="flex items-center gap-2 text-sm">
             Modo de reparto
             <select
-              className="rounded-lg border border-slate-300 px-2 py-1"
+              className={buttonClass('secondary', 'sm')}
               value={item.mode}
               onChange={(e) => onChange({ ...item, mode: e.target.value as AllocationMode })}
             >
@@ -239,7 +240,7 @@ export function ItemsEditor({
         <button
           type="button"
           onClick={() => setDraft((d) => ({ ...d, items: [...d.items, newItem(allUids)] }))}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className={buttonClass('secondary', 'sm')}
         >
           Añadir ítem
         </button>
@@ -247,7 +248,7 @@ export function ItemsEditor({
           type="button"
           disabled={selected.length === 0}
           onClick={() => setBulkOpen((o) => !o)}
-          className="rounded-lg border border-brand-700 px-3 py-2 text-sm text-brand-800 disabled:border-slate-200 disabled:text-slate-400"
+          className={buttonClass('secondary', 'sm', 'border-brand-600 text-brand-800')}
         >
           Asignar a… {selected.length > 0 && `(${selected.length})`}
         </button>
@@ -262,7 +263,7 @@ export function ItemsEditor({
               setBulkOpen(false);
               setSelected([]);
             }}
-            className="rounded-lg bg-brand-700 px-3 py-2 text-sm font-medium text-white"
+            className={buttonClass('primary', 'sm')}
           >
             Aplicar
           </button>

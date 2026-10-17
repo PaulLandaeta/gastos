@@ -1,3 +1,4 @@
+import { CameraIcon, PaperclipIcon } from '@phosphor-icons/react';
 import { ATTACHMENT_MIME_TYPES, MAX_ATTACHMENT_BYTES } from 'contracts';
 import { useId, useState, type ChangeEvent } from 'react';
 import { ErrorMessage } from '../../components/ErrorMessage';
@@ -59,16 +60,18 @@ export function AttachmentPicker({ tripId, target, onUploaded, onAttached, disab
   }
 
   const busy = disabled || progress !== null;
-  const button = 'cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium';
+  const button = 'inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50';
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
         <label htmlFor={`${id}-files`} className={`${button} ${busy ? 'pointer-events-none opacity-60' : ''}`}>
-          📎 Adjuntar archivos
+          <PaperclipIcon />
+          Adjuntar archivos
         </label>
         <input id={`${id}-files`} type="file" multiple accept={ACCEPT} className="sr-only" disabled={busy} onChange={handle} data-testid="attachment-input" />
         <label htmlFor={`${id}-camera`} className={`${button} ${busy ? 'pointer-events-none opacity-60' : ''}`}>
-          📷 Tomar foto
+          <CameraIcon />
+          Tomar foto
         </label>
         <input id={`${id}-camera`} type="file" accept="image/*" capture="environment" className="sr-only" disabled={busy} onChange={handle} />
       </div>

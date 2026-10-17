@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ANA, resetEmulators, setupActiveTrip } from './helpers';
+import { ANA, resetEmulators, setupActiveTrip, openTab } from './helpers';
 import { getDoc, seedExpenses } from './seed';
 
 test.beforeEach(resetEmulators);
@@ -12,6 +12,7 @@ test('SC-008: con 1.000 gastos, primera página de la lista y dashboard en menos
 
   let t0 = Date.now();
   await page.goto(tripUrl);
+  await openTab(page, 'Resumen');
   await expect(page.getByRole('region', { name: 'Resumen del viaje' })).toContainText('10.000,00');
   const dashboardMs = Date.now() - t0;
 

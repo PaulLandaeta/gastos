@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip } from './helpers';
+import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip, openTab } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -27,20 +27,20 @@ test('PRD: usuario sin acceso al comprobante privado', async ({ browser }) => {
   await register(ana, 'Champú', '12', ['Ana'], true);
 
   // Pedro opens the expense to get its URL.
-  await pedro.getByRole('link', { name: 'Ver gastos' }).click();
+  await pedro.getByRole('tab', { name: 'Gastos' }).click();
   await pedro.getByRole('link', { name: /Taxi/ }).click();
   await expect(pedro.getByRole('heading', { name: 'Taxi' })).toBeVisible();
   const taxiUrl = pedro.url();
 
   // Juan: not in his list, direct link → not found, balances visible.
-  await juan.getByRole('link', { name: 'Ver gastos' }).click();
+  await juan.getByRole('tab', { name: 'Gastos' }).click();
   await expect(juan.getByRole('heading', { name: 'Gastos' })).toBeVisible();
   await expect(juan.getByText('Taxi')).toHaveCount(0);
   await juan.goto(taxiUrl);
   await expect(juan.getByRole('heading', { name: 'No encontrado' })).toBeVisible();
   await expect(juan.getByText('Taxi')).toHaveCount(0);
   await juan.goBack();
-  await juan.goBack();
+  await openTab(juan, 'Saldos');
   await expect(juan.getByRole('region', { name: 'Saldos' })).toBeVisible();
 
   // Ana's personal expense is absent from Pedro's views.
@@ -49,9 +49,11 @@ test('PRD: usuario sin acceso al comprobante privado', async ({ browser }) => {
   await expect(pedro.getByText('Champú')).toHaveCount(0);
 
   // Juan promoted to admin sees every expense; demoted, loses access immediately.
+  await openTab(ana, 'Resumen');
   await ana.getByRole('button', { name: 'Hacer admin a Juan' }).click();
   await juan.goto(taxiUrl);
   await expect(juan.getByRole('heading', { name: 'Taxi' })).toBeVisible();
+  await openTab(ana, 'Resumen');
   await ana.getByRole('button', { name: 'Quitar admin a Juan' }).click();
   await juan.goto(taxiUrl);
   await expect(juan.getByRole('heading', { name: 'No encontrado' })).toBeVisible();

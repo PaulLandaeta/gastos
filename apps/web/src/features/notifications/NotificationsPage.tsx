@@ -1,3 +1,4 @@
+import { buttonClass } from '../../components/ui/Button';
 import { useNavigate } from 'react-router';
 import { ErrorMessage } from '../../components/ErrorMessage';
 import { Spinner } from '../../components/Spinner';
@@ -22,12 +23,12 @@ export function NotificationsPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Notificaciones</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Notificaciones</h1>
         <button
           type="button"
           disabled={unread === 0 || !online || mark.isPending}
           onClick={() => mark.mutate({ read: true, target: { all: true } })}
-          className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm disabled:opacity-50"
+          className={buttonClass('secondary', 'sm')}
         >
           Marcar todas como leídas
         </button>

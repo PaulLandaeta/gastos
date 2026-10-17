@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ANA, JUAN, resetEmulators, setupActiveTrip } from '../helpers';
+import { ANA, JUAN, resetEmulators, setupActiveTrip, openTab } from '../helpers';
 import { addSimpleExpense, statusBar, storedExpenses, tripIdOf, waitForServiceWorker } from './pwaHelpers';
 
 test.beforeEach(resetEmulators);
@@ -10,10 +10,12 @@ test('US1: sin conexión consulta lo ya visto, registra pendientes y se sincroni
   // Seen once with connection: trip, balances and the expense list.
   await addSimpleExpense(page, 'Hotel', '20,00');
   await expect(page.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
+  await openTab(page, 'Saldos');
   await expect(page.getByRole('region', { name: 'Saldos' })).toContainText('10,00');
-  await page.getByRole('link', { name: 'Ver gastos' }).click();
+  await page.getByRole('tab', { name: 'Gastos' }).click();
   await expect(page.getByText('Hotel')).toBeVisible();
   await page.goto(tripUrl);
+  await openTab(page, 'Saldos');
   await expect(page.getByRole('region', { name: 'Saldos' })).toContainText('10,00');
   await waitForServiceWorker(page);
   await page.waitForTimeout(1_000); // persisted-query throttle
@@ -27,6 +29,7 @@ test('US1: sin conexión consulta lo ya visto, registra pendientes y se sincroni
   console.log(`SC-002 offline open: ${elapsed} ms`);
   expect(elapsed).toBeLessThan(3_000);
   await expect(statusBar(page)).toContainText('Sin conexión');
+  await openTab(page, 'Saldos');
   await expect(page.getByRole('region', { name: 'Saldos' })).toContainText('10,00');
 
   // Two expenses while offline → pending, counted in the status bar.
@@ -38,7 +41,7 @@ test('US1: sin conexión consulta lo ya visto, registra pendientes y se sincroni
   // Still there after reloading offline (IndexedDB); listed with their label.
   await page.reload();
   await expect(statusBar(page)).toContainText('2 pendientes');
-  await page.getByRole('link', { name: 'Ver gastos' }).click();
+  await page.getByRole('tab', { name: 'Gastos' }).click();
   const pendingSection = page.getByRole('region', { name: 'Gastos pendientes de enviar' });
   await expect(pendingSection.getByRole('listitem')).toHaveCount(2);
   await expect(pendingSection).toContainText('Pendiente');
@@ -61,5 +64,6 @@ test('US1: sin conexión consulta lo ya visto, registra pendientes y se sincroni
 
   // Balances now include them: Ana paid 35,00 shared with Juan → Juan owes 17,50.
   await page.goto(tripUrl);
+  await openTab(page, 'Saldos');
   await expect(page.getByRole('region', { name: 'Saldos' })).toContainText('17,50');
 });
