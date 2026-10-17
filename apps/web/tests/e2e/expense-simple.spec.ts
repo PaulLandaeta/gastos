@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip, signIn } from './helpers';
+import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip, signIn, openTab } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -15,12 +15,13 @@ test('registro manual simple: 10.00 entre 3 desde el inicio del viaje', async ({
 
   await page.getByLabel('Descripción').fill('Cena');
   await page.getByLabel('Importe total').fill('10,00');
-  await page.getByLabel('Categoría').selectOption({ label: 'Comida' });
+  await page.getByRole('radio', { name: 'Comida' }).check();
   await expect(page.getByRole('status', { name: 'Resumen del gasto' })).toContainText('Cuadra');
   await page.getByRole('button', { name: 'Guardar gasto' }).click();
 
   await expect(page.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
   console.log(`SC-001 automated flow: ${Date.now() - started} ms`);
+  await openTab(page, 'Saldos');
   const balances = page.getByRole('region', { name: 'Saldos' });
   await expect(balances).toContainText('6,66');
   await expect(balances).toContainText('3,33');

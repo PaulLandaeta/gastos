@@ -1,3 +1,4 @@
+import { HourglassIcon, WarningIcon, WifiSlashIcon } from '@phosphor-icons/react';
 import { Link } from 'react-router';
 import { lastOnlineAt, useOnline } from '../../lib/useOnline';
 import { pendingCounts, usePending } from './usePending';
@@ -20,7 +21,7 @@ export function StatusBar() {
       <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-3 gap-y-1">
         {!online && (
           <span className="font-medium">
-            <span aria-hidden>📴 </span>Sin conexión
+            <WifiSlashIcon weight="bold" className="mr-1 inline align-[-4px]" />Sin conexión
             {since && (
               <span className="font-normal">
                 {' '}
@@ -32,13 +33,13 @@ export function StatusBar() {
         )}
         {waiting > 0 && (
           <Link to="/pending" className="underline">
-            <span aria-hidden>⏳ </span>
+            <HourglassIcon className="mr-1 inline align-[-4px]" />
             {plural(waiting, 'pendiente', 'pendientes')}
           </Link>
         )}
         {attention > 0 && (
           <Link to="/pending" className="font-semibold text-red-800 underline">
-            <span aria-hidden>⚠️ </span>
+            <WarningIcon weight="fill" className="mr-1 inline align-[-4px]" />
             {plural(attention, 'requiere atención', 'requieren atención')}
           </Link>
         )}

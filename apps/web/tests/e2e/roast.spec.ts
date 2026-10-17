@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip } from './helpers';
+import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip, openTab } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -27,16 +27,21 @@ test('RF-57: modo picante — apagado por defecto, ranking, vistas directa/trans
   await personalExpense(juan, 'Gorra de Pedro', '30', 'Pedro', ['Ana', 'Juan']);
 
   await pedro.reload();
+  await openTab(pedro, 'Saldos');
   await expect(pedro.getByRole('region', { name: 'Saldos' })).toBeVisible();
+  await openTab(pedro, 'Saldos');
   await expect(pedro.getByRole('region', { name: 'Ranking del grupo' })).toHaveCount(0);
+  await openTab(pedro, 'Resumen');
   await expect(pedro.getByRole('button', { name: /Modo picante/ })).toHaveCount(0);
 
+  await openTab(ana, 'Resumen');
   const toggle = ana.getByRole('button', { name: /Modo picante/ });
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
 
   await pedro.reload();
+  await openTab(pedro, 'Saldos');
   const ranking = pedro.getByRole('region', { name: 'Ranking del grupo' });
   await expect(ranking).toContainText('Ana es la más zorra del grupo: le debe 20,00');
   await expect(ranking).toContainText('Pedro es una señorita: solo le debe 10,00');
@@ -58,6 +63,8 @@ test('RF-57: modo picante — apagado por defecto, ranking, vistas directa/trans
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
   await pedro.reload();
+  await openTab(pedro, 'Saldos');
   await expect(pedro.getByRole('region', { name: 'Saldos' })).toBeVisible();
+  await openTab(pedro, 'Saldos');
   await expect(pedro.getByRole('region', { name: 'Ranking del grupo' })).toHaveCount(0);
 });

@@ -1,7 +1,9 @@
+import { WarningIcon } from '@phosphor-icons/react';
 import type { FormEvent, ReactNode } from 'react';
 import { Field, inputClass } from '../../components/Field';
 import { MoneyInput } from '../../components/MoneyInput';
 import { formatMoney } from '../../lib/format';
+import { CategoryIcon } from '../../lib/categoryIcon';
 import type { Category } from './useExpenses';
 import { newItem, type Evaluation, type ExpenseDraft } from './expenseFormModel';
 import { MemberChips, type MemberOption } from './MemberChips';
@@ -29,7 +31,7 @@ const REVIEW_HINT = 'Revisar: dato dudoso del escaneo';
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="space-y-3 rounded-2xl border border-slate-200 p-4" aria-label={title}>
+    <section className="space-y-3 rounded-2xl border border-slate-200/70 bg-surface shadow-card p-4" aria-label={title}>
       <h2 className="text-base font-semibold">{title}</h2>
       {children}
     </section>
@@ -50,7 +52,7 @@ export function ExpenseForm(props: ExpenseFormProps) {
   return (
     <form noValidate onSubmit={submit} className="space-y-4 pb-2">
       <Section title="Datos del gasto">
-        <Field id="exp-description" label="Descripción" {...(flagged('description') ? { hint: `⚠️ ${REVIEW_HINT}` } : {})}>
+        <Field id="exp-description" label="Descripción" {...(flagged('description') ? { hint: REVIEW_HINT, warn: true } : {})}>
           <input
             id="exp-description"
             aria-describedby={flagged('description') ? 'exp-description-hint' : undefined}
@@ -70,26 +72,35 @@ export function ExpenseForm(props: ExpenseFormProps) {
           {...(flagged('totalMinor') ? { describedBy: 'exp-total-review' } : {})}
         />
         {flagged('totalMinor') && (
-          <p id="exp-total-review" className="text-xs text-amber-900">
-            ⚠️ {REVIEW_HINT}
+          <p id="exp-total-review" className="flex items-center gap-1 text-xs text-amber-900">
+            <WarningIcon weight="fill" size={14} className="shrink-0 text-amber-600" />
+            {REVIEW_HINT}
           </p>
         )}
+        <fieldset className="space-y-2">
+          <legend className="mb-1 block text-sm font-medium text-slate-800">Categoría</legend>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((c) => (
+              <label
+                key={c.id}
+                className="relative flex cursor-pointer items-center gap-2 rounded-full border border-slate-300 bg-white py-1 pl-1 pr-3 text-sm font-medium text-slate-700 transition-colors has-checked:border-brand-600 has-checked:bg-brand-50 has-checked:text-brand-900 has-focus-visible:ring-2 has-focus-visible:ring-brand-600"
+              >
+                <input
+                  type="radio"
+                  name="exp-category"
+                  value={c.id}
+                  checked={draft.categoryId === c.id}
+                  onChange={() => setDraft((d) => ({ ...d, categoryId: c.id }))}
+                  className="absolute inset-0 cursor-pointer appearance-none rounded-full opacity-0"
+                />
+                <CategoryIcon category={c} size="sm" />
+                {c.name}
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <div className="grid grid-cols-2 gap-3">
-          <Field id="exp-category" label="Categoría">
-            <select
-              id="exp-category"
-              className={inputClass}
-              value={draft.categoryId}
-              onChange={(e) => setDraft((d) => ({ ...d, categoryId: e.target.value }))}
-            >
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field id="exp-date" label="Fecha de la transacción" {...(flagged('transactionDate') ? { hint: `⚠️ ${REVIEW_HINT}` } : {})}>
+          <Field id="exp-date" label="Fecha de la transacción" {...(flagged('transactionDate') ? { hint: REVIEW_HINT, warn: true } : {})}>
             <input
               id="exp-date"
               aria-describedby={flagged('transactionDate') ? 'exp-date-hint' : undefined}
@@ -138,7 +149,7 @@ export function ExpenseForm(props: ExpenseFormProps) {
       </Section>
 
       <Section title="Reparto">
-        <div role="radiogroup" aria-label="Modo de reparto" className="inline-flex rounded-lg border border-slate-300 p-0.5">
+        <div role="radiogroup" aria-label="Modo de reparto" className="inline-flex rounded-xl bg-slate-200/70 p-1">
           {(['total', 'items'] as const).map((mode) => (
             <button
               key={mode}
@@ -160,7 +171,7 @@ export function ExpenseForm(props: ExpenseFormProps) {
                   };
                 })
               }
-              className="rounded-md px-3 py-1.5 text-sm aria-checked:bg-brand-700 aria-checked:text-white"
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 aria-checked:bg-white aria-checked:text-slate-900 aria-checked:shadow-card"
             >
               {mode === 'total' ? 'Repartir el total' : 'Por ítems de la factura'}
             </button>

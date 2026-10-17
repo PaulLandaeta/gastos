@@ -30,6 +30,6 @@ test('aviso de posible duplicado: cancelar conserva el formulario, confirmar gua
   await page.getByRole('alert').filter({ hasText: 'Posible duplicado' }).getByRole('button', { name: 'Guardar de todos modos' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
 
-  await page.getByRole('link', { name: 'Ver gastos' }).click();
+  await page.getByRole('tab', { name: 'Gastos' }).click();
   await expect(page.getByRole('link', { name: /Cena/ })).toHaveCount(2);
 });

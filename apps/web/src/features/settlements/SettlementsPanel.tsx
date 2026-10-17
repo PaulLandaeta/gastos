@@ -1,3 +1,4 @@
+import { ArrowRightIcon, HandCoinsIcon, PaperclipIcon } from '@phosphor-icons/react';
 import { useMutation } from '@tanstack/react-query';
 import type { SettlementStatus } from 'contracts';
 import { useState } from 'react';
@@ -11,6 +12,17 @@ import { useCurrentUser } from '../auth/AuthProvider';
 import type { LiveMember, LiveTrip } from '../trips/useTrip';
 import { useSettlements, type SettlementView } from './useSettlements';
 import { RequiresOnline } from '../offline/RequiresOnline';
+import { Avatar } from '../../components/ui/Avatar';
+import { buttonClass } from '../../components/ui/Button';
+import { cardClass } from '../../components/ui/Card';
+import { EmptyState } from '../../components/ui/EmptyState';
+
+const STATUS_CLASS: Record<SettlementStatus, string> = {
+  pending: 'bg-amber-100 text-amber-900',
+  confirmed: 'bg-emerald-100 text-emerald-900',
+  rejected: 'bg-rose-100 text-rose-900',
+  cancelled: 'bg-slate-100 text-slate-700',
+};
 
 const STATUS_LABEL: Record<SettlementStatus, string> = {
   pending: 'Pendiente',
@@ -40,22 +52,29 @@ function Row({ s, trip, nameOf, uid, isManager, deleted }: { s: SettlementView; 
   const mutable = trip.status === 'active';
   const pending = s.status === 'pending';
   return (
-    <li className="space-y-2 rounded-xl border border-slate-200 p-3">
+    <li className={`${cardClass} space-y-3 p-3`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span>
-          <strong>{nameOf(s.fromUid)}</strong> → <strong>{nameOf(s.toUid)}</strong> · {formatMoney(s.amountMinor, trip.currency)}
-          {s.note && <span className="block text-xs text-slate-600">{s.note}</span>}
+        <span className="min-w-0">
+          <span className="flex flex-wrap items-center gap-2">
+            <Avatar name={nameOf(s.fromUid)} seed={s.fromUid} size="sm" />
+            <strong>{nameOf(s.fromUid)}</strong>
+            <ArrowRightIcon aria-hidden={false} role="img" aria-label="paga a" className="text-slate-400" />
+            <Avatar name={nameOf(s.toUid)} seed={s.toUid} size="sm" />
+            <strong>{nameOf(s.toUid)}</strong>
+            <span className="amount font-semibold">· {formatMoney(s.amountMinor, trip.currency)}</span>
+          </span>
+          {s.note && <span className="mt-1 block text-xs text-slate-600">{s.note}</span>}
         </span>
-        <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold">{STATUS_LABEL[s.status]}</span>
+        <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_CLASS[s.status]}`}>{STATUS_LABEL[s.status]}</span>
       </div>
       {s.status === 'rejected' && s.rejectionReason && <p className="text-sm text-slate-700">Motivo: {s.rejectionReason}</p>}
       {pending && mutable && canResolve && !rejecting && (
         <RequiresOnline label="Confirmar o rechazar">
         <div className="flex gap-2">
-          <button type="button" disabled={act.isPending} onClick={() => act.mutate({ action: 'confirm' })} className="rounded-lg bg-brand-700 px-3 py-1.5 text-sm font-medium text-white">
+          <button type="button" disabled={act.isPending} onClick={() => act.mutate({ action: 'confirm' })} className={buttonClass('primary', 'sm')}>
             Confirmar
           </button>
-          <button type="button" onClick={() => setRejecting(true)} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm">
+          <button type="button" onClick={() => setRejecting(true)} className={buttonClass('secondary', 'sm')}>
             Rechazar
           </button>
         </div>
@@ -72,11 +91,11 @@ function Row({ s, trip, nameOf, uid, isManager, deleted }: { s: SettlementView; 
               type="button"
               disabled={act.isPending}
               onClick={() => act.mutate({ action: 'reject', body: reason.trim() ? { reason } : {} })}
-              className="rounded-lg bg-red-700 px-3 py-1.5 text-sm font-medium text-white"
+              className={buttonClass('danger', 'sm')}
             >
               Confirmar rechazo
             </button>
-            <button type="button" onClick={() => setRejecting(false)} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm">
+            <button type="button" onClick={() => setRejecting(false)} className={buttonClass('secondary', 'sm')}>
               Volver
             </button>
           </div>
@@ -89,7 +108,8 @@ function Row({ s, trip, nameOf, uid, isManager, deleted }: { s: SettlementView; 
       )}
       {(s.fromUid === uid || s.toUid === uid || isManager) && ((s.attachmentCount ?? 0) > 0 || (s.fromUid === uid && mutable && ['pending', 'confirmed'].includes(s.status))) && (
         <div>
-          <button type="button" aria-expanded={showProof} onClick={() => setShowProof((v) => !v)} className="text-sm text-brand-800 underline">
+          <button type="button" aria-expanded={showProof} onClick={() => setShowProof((v) => !v)} className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-800 hover:underline">
+            <PaperclipIcon size={16} />
             {(s.attachmentCount ?? 0) > 0 ? `Comprobante de pago (${s.attachmentCount})` : 'Adjuntar comprobante'}
           </button>
           {showProof && (
@@ -121,19 +141,20 @@ export function SettlementsPanel({ trip, members }: { trip: LiveTrip; members: L
   return (
     <section aria-labelledby="payments-title" className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="payments-title" className="text-lg font-semibold">
+        <h2 id="payments-title" className="text-lg font-semibold tracking-tight">
           Pagos
         </h2>
         {trip.status === 'active' && (
           <RequiresOnline label="Registrar pago">
-            <Link to={`/trips/${trip.id}/settlements/new`} className="rounded-lg border border-brand-700 px-3 py-1.5 text-sm font-medium text-brand-800">
+            <Link to={`/trips/${trip.id}/settlements/new`} className={buttonClass('secondary', 'sm')}>
+              <HandCoinsIcon size={18} />
               Registrar pago
             </Link>
           </RequiresOnline>
         )}
       </div>
       {toConfirm > 0 && (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900">
+        <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900">
           {toConfirm === 1 ? '1 pago por confirmar' : `${toConfirm} pagos por confirmar`}
         </p>
       )}
@@ -145,14 +166,14 @@ export function SettlementsPanel({ trip, members }: { trip: LiveTrip; members: L
             role="tab"
             aria-selected={tab === t.key}
             onClick={() => setTab(t.key)}
-            className="rounded-md border border-slate-300 px-2.5 py-1 text-sm aria-selected:border-brand-700 aria-selected:bg-brand-700 aria-selected:text-white"
+            className="rounded-full border border-slate-300 bg-white px-3 py-1 text-sm font-medium text-slate-700 aria-selected:border-brand-700 aria-selected:bg-brand-700 aria-selected:text-white"
           >
             {t.label}
           </button>
         ))}
       </div>
       {rows.length === 0 ? (
-        <p className="text-sm text-slate-600">No hay pagos.</p>
+        <EmptyState icon={<HandCoinsIcon size={28} weight="duotone" />} title="No hay pagos." />
       ) : (
         <ul className="space-y-2">
           {rows.map((s) => (

@@ -1,3 +1,4 @@
+import { HourglassIcon, WarningIcon } from '@phosphor-icons/react';
 import { Link } from 'react-router';
 import { errorText } from '../../components/ErrorMessage';
 import { ApiError } from '../../lib/apiClient';
@@ -27,7 +28,7 @@ export function PendingRow({ p, currency }: { p: PendingExpense; currency: strin
           <span className="block truncate font-medium">
             {p.input.description}
             <span className={`ml-2 rounded px-1.5 text-xs ${attention ? 'bg-red-200 text-red-900' : 'bg-amber-200 text-amber-950'}`}>
-              {attention ? '⚠️ ' : '⏳ '}
+              {attention ? <WarningIcon weight="fill" size={12} className="mr-0.5 inline align-[-1px]" /> : <HourglassIcon size={12} className="mr-0.5 inline align-[-1px]" />}
               {STATUS_LABEL[p.status]}
             </span>
           </span>

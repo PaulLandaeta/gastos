@@ -73,3 +73,8 @@ export async function setupActiveTrip(
 export const ANA = { email: 'ana@example.com', name: 'Ana' };
 export const PEDRO = { email: 'pedro@example.com', name: 'Pedro' };
 export const JUAN = { email: 'juan@example.com', name: 'Juan' };
+
+/** The trip page shows one section at a time (Gastos / Saldos / Resumen tabs). */
+export async function openTab(page: Page, name: 'Gastos' | 'Saldos' | 'Resumen'): Promise<void> {
+  await page.getByRole('tab', { name, exact: true }).click();
+}

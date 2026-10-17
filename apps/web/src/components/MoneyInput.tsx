@@ -49,7 +49,7 @@ export function MoneyInput({ id, label, currency, valueMinor, onChange, required
       <label htmlFor={inputId} className={compact ? 'sr-only' : 'block text-sm font-medium text-slate-800'}>
         {label}
       </label>
-      <div className="flex items-center rounded-lg border border-slate-300 bg-white focus-within:ring-2 focus-within:ring-brand-700 aria-[invalid=true]:border-red-600" aria-invalid={invalid}>
+      <div className="flex items-center rounded-xl border border-slate-300 bg-white shadow-sm focus-within:border-brand-600 focus-within:ring-2 focus-within:ring-brand-600/20 aria-[invalid=true]:border-red-600" aria-invalid={invalid}>
         <span className="pl-3 text-sm text-slate-600" aria-hidden>
           {currency}
         </span>
@@ -68,7 +68,7 @@ export function MoneyInput({ id, label, currency, valueMinor, onChange, required
             setInvalid(next.trim() !== '' && parsed === null);
             onChange(parsed);
           }}
-          className={`${inputClass} border-0 focus:outline-none focus-visible:outline-none`}
+          className={`${inputClass} border-0 shadow-none focus:ring-0 focus:outline-none focus-visible:outline-none`}
         />
       </div>
       {invalid && (

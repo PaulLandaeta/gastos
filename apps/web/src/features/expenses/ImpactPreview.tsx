@@ -1,3 +1,4 @@
+import { buttonClass } from '../../components/ui/Button';
 import type { PreviewResponse } from 'contracts';
 import { formatMoney } from '../../lib/format';
 
@@ -52,10 +53,10 @@ export function ImpactPreview({
         </tbody>
       </table>
       <div className="flex gap-2">
-        <button type="button" disabled={busy} onClick={onConfirm} className="rounded-lg bg-amber-700 px-4 py-2 font-medium text-white">
+        <button type="button" disabled={busy} onClick={onConfirm} className={buttonClass('primary', 'md', 'bg-amber-700 hover:bg-amber-800')}>
           Confirmar cambios
         </button>
-        <button type="button" onClick={onCancel} className="rounded-lg border border-slate-300 bg-white px-4 py-2">
+        <button type="button" onClick={onCancel} className={buttonClass('secondary', 'md')}>
           Cancelar
         </button>
       </div>

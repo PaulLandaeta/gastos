@@ -1,3 +1,5 @@
+import { buttonClass } from '../../components/ui/Button';
+import { FilePdfIcon, ImageIcon, WarningIcon } from '@phosphor-icons/react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { isExpiringSoon, type Attachment } from 'contracts';
 import { ErrorMessage } from '../../components/ErrorMessage';
@@ -53,7 +55,7 @@ export function AttachmentList({ tripId, target, canAdd, canRemove, title = 'Com
   const now = new Date();
   return (
     <section aria-label={title} className="space-y-2">
-      <h2 className="text-lg font-semibold">{title}</h2>
+      <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
       {list.isLoading && <p className="text-sm text-slate-600">Cargando comprobantes…</p>}
       {list.data && items.length === 0 && <p className="text-sm text-slate-600">Sin comprobantes.</p>}
       <ul className="space-y-2">
@@ -66,7 +68,7 @@ export function AttachmentList({ tripId, target, canAdd, canRemove, title = 'Com
             <li key={a.id} className="space-y-1 rounded-lg border border-slate-200 p-2 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="min-w-0 break-all">
-                  <span aria-hidden>{a.mimeType === 'application/pdf' ? '📄' : '🖼️'} </span>
+                  {a.mimeType === 'application/pdf' ? <FilePdfIcon className="mr-1 inline align-[-4px] text-rose-600" /> : <ImageIcon className="mr-1 inline align-[-4px] text-sky-600" />}
                   {a.fileName}
                   <span className="text-slate-600">
                     {' '}
@@ -76,7 +78,7 @@ export function AttachmentList({ tripId, target, canAdd, canRemove, title = 'Com
                   </span>
                 </span>
                 <span className="flex gap-2">
-                  <button type="button" onClick={() => open.mutate(a.id)} className="rounded-lg border border-slate-300 px-2 py-1">
+                  <button type="button" onClick={() => open.mutate(a.id)} className={buttonClass('secondary', 'sm')}>
                     Abrir <span className="sr-only">{a.fileName}</span>
                   </button>
                   {canRemove && (
@@ -84,7 +86,7 @@ export function AttachmentList({ tripId, target, canAdd, canRemove, title = 'Com
                       type="button"
                       disabled={remove.isPending}
                       onClick={() => remove.mutate(a.id)}
-                      className="rounded-lg border border-red-300 px-2 py-1 text-red-800"
+                      className={buttonClass('secondary', 'sm', 'border-red-300 text-red-800 hover:bg-red-50')}
                     >
                       Quitar <span className="sr-only">{a.fileName}</span>
                     </button>
@@ -92,8 +94,9 @@ export function AttachmentList({ tripId, target, canAdd, canRemove, title = 'Com
                 </span>
               </div>
               {isExpiringSoon(new Date(a.expiresAt), now) && (
-                <p className="rounded bg-amber-50 px-2 py-1 text-amber-900">
-                  ⚠️ Se eliminará el {formatExpiry(a.expiresAt)} por política de retención. Descárgalo si lo necesitas.
+                <p className="flex items-start gap-1.5 rounded-lg bg-amber-50 px-2 py-1 text-amber-900">
+                  <WarningIcon weight="fill" className="mt-0.5 shrink-0 text-amber-600" />
+                  Se eliminará el {formatExpiry(a.expiresAt)} por política de retención. Descárgalo si lo necesitas.
                 </p>
               )}
             </li>

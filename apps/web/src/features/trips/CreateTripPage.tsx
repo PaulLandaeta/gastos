@@ -1,3 +1,4 @@
+import { buttonClass } from '../../components/ui/Button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { CURRENCY_CODES, Currency, Email, IsoDate, type Trip } from 'contracts';
@@ -51,7 +52,7 @@ export function CreateTripPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Nuevo viaje</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Nuevo viaje</h1>
       <form noValidate onSubmit={form.handleSubmit((v) => mutation.mutate(v))} className="space-y-4">
         <Field id="name" label="Nombre del viaje" error={errors.name?.message}>
           <input id="name" className={inputClass} aria-invalid={!!errors.name} {...form.register('name')} />
@@ -94,7 +95,7 @@ export function CreateTripPage() {
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="w-full rounded-xl bg-brand-700 px-4 py-3 font-semibold text-white disabled:opacity-60"
+          className={buttonClass('primary', 'lg', 'w-full')}
         >
           {mutation.isPending ? 'Creando…' : 'Crear viaje'}
         </button>

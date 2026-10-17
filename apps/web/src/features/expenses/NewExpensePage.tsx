@@ -1,3 +1,5 @@
+import { buttonClass } from '../../components/ui/Button';
+import { PaperclipIcon, WarningIcon } from '@phosphor-icons/react';
 import { DEFAULT_CATEGORY_ID, type CreateExpenseResponse } from 'contracts';
 import type { Member } from 'finance-engine';
 import { useMemo, useRef, useState } from 'react';
@@ -154,7 +156,7 @@ export function NewExpensePage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">{scan ? 'Revisar factura escaneada' : 'Nuevo gasto'}</h1>
+      <h1 className="text-2xl font-bold tracking-tight">{scan ? 'Revisar factura escaneada' : 'Nuevo gasto'}</h1>
       <p className="text-sm text-slate-600">
         {trip.name} · Moneda {trip.currency}
       </p>
@@ -178,13 +180,14 @@ export function NewExpensePage() {
         payersSection={<PayersEditor draft={draft} setDraft={setDraft} currency={trip.currency} members={options} />}
       >
         <section aria-label="Comprobantes" className="space-y-2">
-          <h2 className="text-lg font-semibold">Comprobantes (opcional)</h2>
+          <h2 className="text-lg font-semibold tracking-tight">Comprobantes (opcional)</h2>
           {uploaded.length > 0 && (
             <ul className="space-y-1 text-sm">
               {uploaded.map((u) => (
                 <li key={u.id} className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 px-2 py-1">
                   <span className="break-all">
-                    📎 {u.name}
+                    <PaperclipIcon className="mr-1 inline align-[-4px] text-slate-500" />
+                    {u.name}
                     {scan && fromScan?.uploads?.some((x) => x.id === u.id) ? ' (escaneado)' : ''}
                   </span>
                   <button type="button" onClick={() => setUploaded((xs) => xs.filter((x) => x.id !== u.id))} className="text-red-700 underline">
@@ -214,7 +217,7 @@ export function NewExpensePage() {
               <p>Hay un gasto con la misma fecha, importe y pagador.</p>
             )}
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => setDuplicate(null)} className="rounded-lg border border-slate-300 bg-white px-3 py-2">
+              <button type="button" onClick={() => setDuplicate(null)} className={buttonClass('secondary', 'md')}>
                 Cancelar
               </button>
               <button type="button" onClick={() => void save(true)} className="rounded-lg bg-amber-700 px-3 py-2 font-medium text-white">
@@ -249,13 +252,14 @@ function ScanNotices({
   return (
     <div className="space-y-2">
       {warnings.includes('CURRENCY_MISMATCH') && (
-        <p role="alert" className="rounded-lg border border-amber-400 bg-amber-50 p-3 text-sm text-amber-950">
-          ⚠️ La factura parece estar en <strong>{detected}</strong> y el viaje usa <strong>{currency}</strong>. No se convierte
-          automáticamente: introduce los importes en {currency}.
+        <p role="alert" className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+          <WarningIcon weight="fill" className="mt-0.5 shrink-0 text-amber-600" />
+          <span>La factura parece estar en <strong>{detected}</strong> y el viaje usa <strong>{currency}</strong>. No se convierte
+          automáticamente: introduce los importes en {currency}.</span>
         </p>
       )}
       {toReview.length > 0 && (
-        <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-950">⚠️ Revisa estos datos dudosos: {toReview.join(', ')}.</p>
+        <p className="flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-950"><WarningIcon weight="fill" className="mt-0.5 shrink-0 text-amber-600" /><span>Revisa estos datos dudosos: {toReview.join(', ')}.</span></p>
       )}
       {warnings.includes('DATE_SUSPICIOUS') && <p className="text-sm text-amber-900">La fecha leída no era válida; se propuso la de hoy.</p>}
       {warnings.includes('DUPLICATE_PAGE') && <p className="text-sm text-amber-900">Hay páginas repetidas en las fotos: se adjuntará una sola vez.</p>}

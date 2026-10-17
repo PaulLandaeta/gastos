@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import readExcelFile from 'read-excel-file/node';
-import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip } from './helpers';
+import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip, openTab } from './helpers';
 import { getDoc, seedExpenses } from './seed';
 
 test.beforeEach(resetEmulators);
@@ -16,6 +16,7 @@ async function addExpense(page: Page, description: string, amount: string, witho
 }
 
 async function downloadExcel(page: Page) {
+  await openTab(page, 'Resumen');
   const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Excel detallado' }).click()]);
   const sheets = await readExcelFile(await readFile((await download.path())!));
   return { name: download.suggestedFilename(), sheets, text: JSON.stringify(sheets) };
@@ -35,8 +36,10 @@ test('US4: cada uno exporta lo que ve; los saldos coinciden con la app (SC-008)'
   const saldos = excel.sheets.find((s) => s.sheet === 'Saldos')!.data;
   // Pedro consumed 10,00 of «Taxi» → his balance is −10,00, the same as the app shows.
   expect(saldos.find((r) => r[0] === 'Pedro')![3]).toBe(-10);
+  await openTab(pedro, 'Saldos');
   await expect(pedro.getByRole('region', { name: 'Saldos' })).toContainText('10,00');
 
+  await openTab(pedro, 'Resumen');
   const [pdf] = await Promise.all([pedro.waitForEvent('download'), pedro.getByRole('button', { name: 'PDF resumen' }).click()]);
   expect(pdf.suggestedFilename()).toMatch(/\.pdf$/);
   const bytes = await readFile((await pdf.path())!);

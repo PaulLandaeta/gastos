@@ -1,3 +1,4 @@
+import { buttonClass } from '../../components/ui/Button';
 import { useQuery } from '@tanstack/react-query';
 import { DELETE_ACCOUNT_CONFIRMATION, type DeletionPreview } from 'contracts';
 import { useState } from 'react';
@@ -57,7 +58,7 @@ export function DeleteAccountPage() {
           ) : (
             <ul aria-label="Viajes afectados" className="space-y-3">
               {data.trips.map((t) => (
-                <li key={t.tripId} className="rounded-xl border border-slate-200 bg-white p-4">
+                <li key={t.tripId} className="rounded-2xl border border-slate-200/70 bg-surface shadow-card bg-white p-4">
                   <p className="font-semibold">{t.name}</p>
                   <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-700">
                     {tripConsequences(t).map((line) => (
@@ -99,13 +100,13 @@ export function DeleteAccountPage() {
               onChange={(e) => setText(e.target.value)}
               autoComplete="off"
               disabled={data.blocked || busy}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              className="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-base shadow-sm focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
             />
           </div>
           {!online && <p className="text-sm text-slate-700">Necesitas conexión para borrar la cuenta.</p>}
           <ErrorMessage error={error} />
           <div className="flex flex-wrap gap-2">
-            <Link to="/" className="rounded-lg border border-slate-300 px-4 py-2">
+            <Link to="/" className={buttonClass('secondary', 'md')}>
               Cancelar
             </Link>
             <button

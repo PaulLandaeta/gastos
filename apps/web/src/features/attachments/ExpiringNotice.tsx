@@ -1,3 +1,4 @@
+import { WarningIcon } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import { api } from '../../lib/apiClient';
@@ -22,8 +23,11 @@ export function ExpiringNotice({ tripId }: { tripId: string }) {
   const items = q.data?.attachments ?? [];
   if (items.length === 0) return null;
   return (
-    <section aria-label="Comprobantes por vencer" className="space-y-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
-      <h2 className="font-semibold">⚠️ Comprobantes por vencer</h2>
+    <section aria-label="Comprobantes por vencer" className="space-y-2 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+      <h2 className="flex items-center gap-2 font-semibold">
+        <WarningIcon weight="fill" className="text-amber-600" />
+        Comprobantes por vencer
+      </h2>
       <p>Por la política de retención (6 meses) se eliminarán pronto. Descárgalos si los necesitas.</p>
       <ul className="space-y-1">
         {items.map((a) => (

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { resetEmulators, signIn } from './helpers';
+import { resetEmulators, signIn, openTab } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -22,9 +22,12 @@ test('Ana promueve a Pedro a admin; Pedro no ve controles de roles', async ({ br
   await pedro.getByRole('link', { name: /Lima/ }).click();
   await expect(pedro.getByRole('heading', { name: 'Lima' })).toBeVisible();
 
+  await openTab(ana, 'Resumen');
   await ana.getByRole('button', { name: 'Hacer admin a Pedro' }).click();
+  await openTab(ana, 'Resumen');
   await expect(ana.getByRole('button', { name: 'Quitar admin a Pedro' })).toBeVisible();
 
+  await openTab(pedro, 'Resumen');
   await expect(pedro.getByText('Admin', { exact: false }).first()).toBeVisible();
   await expect(pedro.getByRole('button', { name: /Hacer admin|Quitar admin/ })).toHaveCount(0);
   await anaCtx.close();

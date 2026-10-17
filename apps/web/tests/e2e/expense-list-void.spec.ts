@@ -10,11 +10,11 @@ test('lista, detalle con reparto, anulación con confirmación e historial', asy
   await ana.getByRole('link', { name: 'Registro manual' }).click();
   await ana.getByLabel('Descripción').fill('Cena');
   await ana.getByLabel('Importe total').fill('10');
-  await ana.getByLabel('Categoría').selectOption({ label: 'Comida' });
+  await ana.getByRole('radio', { name: 'Comida' }).check();
   await ana.getByRole('button', { name: 'Guardar gasto' }).click();
   await expect(ana.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
 
-  await ana.getByRole('link', { name: 'Ver gastos' }).click();
+  await ana.getByRole('tab', { name: 'Gastos' }).click();
   const row = ana.getByRole('link', { name: /Cena/ });
   await expect(row).toContainText('Comida');
   await expect(row).toContainText('pagó Ana');

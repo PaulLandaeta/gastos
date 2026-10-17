@@ -1,3 +1,5 @@
+import { buttonClass } from '../../components/ui/Button';
+import { CameraIcon, FolderOpenIcon } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AI_CONSENT_VERSION, MAX_SCAN_FILES, hasActiveConsent, type AiConsent, type ScanResponse } from 'contracts';
 import { useRef, useState, type ChangeEvent } from 'react';
@@ -25,7 +27,7 @@ type Step = 'idle' | 'uploading' | 'analysing';
 function ConsentDialog({ onAccept, busy, error, manualTo }: { onAccept: () => void; busy: boolean; error: unknown; manualTo: string }) {
   return (
     <div role="dialog" aria-modal="true" aria-labelledby="consent-title" className="space-y-3 rounded-2xl border border-slate-300 bg-white p-4 shadow-sm">
-      <h2 id="consent-title" className="text-lg font-semibold">
+      <h2 id="consent-title" className="text-lg font-semibold tracking-tight">
         Antes de escanear
       </h2>
       <p className="text-sm text-slate-800">
@@ -39,10 +41,10 @@ function ConsentDialog({ onAccept, busy, error, manualTo }: { onAccept: () => vo
       </p>
       <ErrorMessage error={error} />
       <div className="flex flex-wrap gap-2">
-        <button type="button" disabled={busy} onClick={onAccept} className="rounded-lg bg-brand-700 px-4 py-2 font-semibold text-white disabled:opacity-60">
+        <button type="button" disabled={busy} onClick={onAccept} className={buttonClass('primary', 'md')}>
           Acepto
         </button>
-        <Link to={manualTo} className="rounded-lg border border-slate-300 px-4 py-2">
+        <Link to={manualTo} className={buttonClass('secondary', 'md')}>
           No, registrar a mano
         </Link>
       </div>
@@ -117,7 +119,7 @@ export function ScanPage() {
   const button = 'flex cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl px-4 py-5 text-center font-semibold';
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Escanear factura</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Escanear factura</h1>
       <p className="text-sm text-slate-600">
         {trip.name} · Moneda {trip.currency}
       </p>
@@ -140,12 +142,12 @@ export function ScanPage() {
           ) : (
             <div className="grid grid-cols-2 gap-3">
               <label htmlFor="scan-camera" className={`${button} bg-brand-700 text-white ${busy ? 'pointer-events-none opacity-60' : ''}`}>
-                <span aria-hidden className="text-2xl">📷</span>
+                <CameraIcon size={28} weight="duotone" />
                 Tomar foto
               </label>
               <input id="scan-camera" type="file" accept="image/*" capture="environment" className="sr-only" disabled={busy} onChange={onFiles} />
               <label htmlFor="scan-files" className={`${button} border border-slate-300 ${busy ? 'pointer-events-none opacity-60' : ''}`}>
-                <span aria-hidden className="text-2xl">🗂️</span>
+                <FolderOpenIcon size={28} weight="duotone" />
                 Elegir fotos o PDF
               </label>
               <input id="scan-files" type="file" multiple accept={ACCEPT} className="sr-only" disabled={busy} onChange={onFiles} data-testid="scan-input" />
@@ -166,7 +168,7 @@ export function ScanPage() {
             <Link
               to={manualTo}
               state={{ uploads: uploaded } satisfies ScanNavigationState}
-              className="block rounded-xl bg-brand-700 px-4 py-3 text-center font-semibold text-white"
+              className={buttonClass('primary', 'lg', 'w-full')}
             >
               Registrar a mano{uploaded.length ? ' con la foto adjunta' : ''}
             </Link>

@@ -1,3 +1,4 @@
+import { CategoryIcon } from '../../lib/categoryIcon';
 import { formatMoney } from '../../lib/format';
 
 export interface CategoryDatum {
@@ -23,19 +24,22 @@ export function CategoryChart({ data, currency, caption }: { data: CategoryDatum
         <p className="text-sm text-slate-600">Sin gastos compartidos para mostrar.</p>
       ) : (
         <>
-          <ul aria-hidden className="space-y-2">
+          <ul aria-hidden className="space-y-3">
             {rows.map((r) => (
               <li key={r.id} className="group" title={`${r.name}: ${formatMoney(r.amountMinor, currency)} (${Math.round((r.amountMinor * 100) / total)} %)`}>
                 <div className="flex items-baseline justify-between gap-2 text-sm">
-                  <span className="flex items-center gap-1.5 text-slate-800">
-                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: r.color }} />
+                  <span className="flex items-center gap-2 font-medium text-slate-800">
+                    <CategoryIcon category={r} size="sm" />
                     {r.name}
                   </span>
-                  <span className="tabular-nums text-slate-700">{formatMoney(r.amountMinor, currency)}</span>
+                  <span className="amount text-slate-700">
+                    {formatMoney(r.amountMinor, currency)}
+                    <span className="ml-1.5 text-xs text-slate-500">{Math.round((r.amountMinor * 100) / total)} %</span>
+                  </span>
                 </div>
-                <div className="mt-1 h-2.5 w-full">
+                <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-100">
                   <div
-                    className="h-full rounded-r bg-[#0d9488] transition-[width] group-hover:bg-[#0f766e]"
+                    className="h-full rounded-full bg-[#0d9488] transition-[width] group-hover:bg-[#0f766e]"
                     style={{ width: `${Math.max(2, (r.amountMinor / max) * 100)}%` }}
                   />
                 </div>

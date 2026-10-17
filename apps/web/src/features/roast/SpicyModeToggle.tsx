@@ -1,3 +1,4 @@
+import { FireIcon } from '@phosphor-icons/react';
 import { useMutation } from '@tanstack/react-query';
 import { ErrorMessage } from '../../components/ErrorMessage';
 import { api } from '../../lib/apiClient';
@@ -19,8 +20,9 @@ export function SpicyModeToggle({ trip }: { trip: LiveTrip }) {
           aria-pressed={on}
           disabled={save.isPending}
           onClick={() => save.mutate()}
-          className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm aria-pressed:border-brand-700 aria-pressed:bg-brand-700 aria-pressed:text-white disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium aria-pressed:border-orange-300 aria-pressed:bg-orange-50 aria-pressed:text-orange-900 disabled:opacity-60"
         >
+          <FireIcon weight={on ? 'fill' : 'regular'} className={on ? 'text-orange-500' : 'text-slate-500'} />
           Modo picante: {on ? 'activado' : 'desactivado'}
         </button>
       </RequiresOnline>

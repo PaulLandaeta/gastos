@@ -1,3 +1,5 @@
+import { buttonClass } from '../../components/ui/Button';
+import { SparkleIcon } from '@phosphor-icons/react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 /**
@@ -14,13 +16,13 @@ export function UpdatePrompt() {
     <div role="status" className="border-b border-slate-200 bg-brand-50 px-4 py-2 text-sm text-brand-800">
       <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-2">
         <span>
-          <span aria-hidden>✨ </span>Hay una versión nueva de la app.
+          <SparkleIcon weight="fill" className="mr-1.5 inline align-[-4px] text-brand-600" />Hay una versión nueva de la app.
         </span>
         <span className="flex gap-2">
-          <button type="button" onClick={() => setNeedRefresh(false)} className="rounded-lg border border-slate-300 bg-white px-3 py-1">
+          <button type="button" onClick={() => setNeedRefresh(false)} className={buttonClass('secondary', 'sm')}>
             Más tarde
           </button>
-          <button type="button" onClick={() => void updateServiceWorker(true)} className="rounded-lg bg-brand-700 px-3 py-1 font-medium text-white">
+          <button type="button" onClick={() => void updateServiceWorker(true)} className={buttonClass('primary', 'sm')}>
             Actualizar
           </button>
         </span>

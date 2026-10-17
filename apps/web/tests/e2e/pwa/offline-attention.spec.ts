@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ANA, PEDRO, resetEmulators, setupActiveTrip } from '../helpers';
+import { ANA, PEDRO, resetEmulators, setupActiveTrip, openTab } from '../helpers';
 import { addSimpleExpense, statusBar, waitForServiceWorker } from './pwaHelpers';
 
 test.beforeEach(resetEmulators);
@@ -17,6 +17,7 @@ test('US1-4: un pendiente rechazado (viaje cerrado) queda en «requiere atenció
   await expect(statusBar(ana)).toContainText('1 pendiente');
 
   // Meanwhile Pedro closes the trip.
+  await openTab(pedro, 'Resumen');
   await pedro.getByRole('button', { name: 'Cerrar viaje' }).click();
   await expect(pedro.getByText('Cerrado', { exact: true })).toBeVisible();
 

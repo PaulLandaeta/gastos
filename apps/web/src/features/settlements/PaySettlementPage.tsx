@@ -1,3 +1,4 @@
+import { buttonClass } from '../../components/ui/Button';
 import type { SettlementDto } from 'contracts';
 import { useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
@@ -54,7 +55,7 @@ export function PaySettlementPage() {
           proofFailed = true;
         }
       }
-      navigate(`/trips/${tripId}`, {
+      navigate(`/trips/${tripId}?tab=saldos`, {
         state: {
           flash: {
             message:
@@ -75,7 +76,7 @@ export function PaySettlementPage() {
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <h1 className="text-2xl font-semibold">Registrar pago</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Registrar pago</h1>
       <p className="text-sm text-slate-600">El pago queda pendiente hasta que la otra persona lo confirme. Solo los pagos confirmados cambian los saldos.</p>
       {deletedPayers.length > 0 && (
         <Field id="pay-from" label="¿Quién pagó?">
@@ -118,7 +119,7 @@ export function PaySettlementPage() {
         </p>
       )}
       <ErrorMessage error={error} />
-      <button type="submit" disabled={saving || !amount || !receiver || !!localProblem(proof)} className="w-full rounded-xl bg-brand-700 px-4 py-3 font-semibold text-white disabled:opacity-60">
+      <button type="submit" disabled={saving || !amount || !receiver || !!localProblem(proof)} className={buttonClass('primary', 'lg', 'w-full')}>
         {saving ? 'Registrando…' : 'Registrar pago'}
       </button>
     </form>

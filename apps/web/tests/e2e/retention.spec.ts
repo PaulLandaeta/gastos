@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ANA, JUAN, PEDRO, PROJECT, resetEmulators, setupActiveTrip } from './helpers';
+import { ANA, JUAN, PEDRO, PROJECT, resetEmulators, setupActiveTrip, openTab } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -27,7 +27,7 @@ async function register(page: Page) {
   const chips = page.getByRole('group', { name: '¿Entre quiénes?' });
   await chips.getByRole('button', { name: 'Juan', exact: true }).click();
   await page.getByTestId('attachment-input').setInputFiles([{ name: 'reserva.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('reserva') }]);
-  await expect(page.getByText('📎 reserva.jpg')).toBeVisible();
+  await expect(page.getByText('reserva.jpg').first()).toBeVisible();
   await page.getByRole('button', { name: 'Guardar gasto' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
 }
@@ -38,7 +38,7 @@ test('US4: expiry notice for viewers only; after retention the expense shows the
   const juan = pages[JUAN.email]!;
   await register(pedro); // Ana and Pedro share it; Juan is not involved.
 
-  await pedro.getByRole('link', { name: 'Ver gastos' }).click();
+  await pedro.getByRole('tab', { name: 'Gastos' }).click();
   await pedro.getByRole('link', { name: /Hotel/ }).click();
   await pedro.waitForURL(/\/expenses\/[^/]+$/);
   const expenseUrl = pedro.url();
@@ -49,6 +49,7 @@ test('US4: expiry notice for viewers only; after retention the expense shows the
   const notice = ana.getByRole('region', { name: 'Comprobantes por vencer' });
   await expect(notice).toContainText('reserva.jpg');
   await juan.reload();
+  await openTab(juan, 'Saldos');
   await expect(juan.getByRole('heading', { name: 'Pagos' })).toBeVisible();
   await expect(juan.getByRole('region', { name: 'Comprobantes por vencer' })).toHaveCount(0);
 

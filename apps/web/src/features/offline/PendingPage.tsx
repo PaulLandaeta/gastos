@@ -1,3 +1,4 @@
+import { buttonClass } from '../../components/ui/Button';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { Spinner } from '../../components/Spinner';
@@ -48,14 +49,14 @@ function PendingCard({ p }: { p: PendingExpense }) {
             type="button"
             disabled={sending}
             onClick={() => setConfirming(true)}
-            className="rounded-lg border border-red-300 px-3 py-1.5 text-red-800 disabled:opacity-50"
+            className={buttonClass('secondary', 'sm', 'border-red-300 text-red-800 hover:bg-red-50')}
           >
             Descartar <span className="sr-only">{p.input.description}</span>
           </button>
         ) : (
           <span role="group" aria-label="Confirmar descarte" className="flex flex-wrap items-center gap-2">
             <span>¿Descartar «{p.input.description}»? No se podrá recuperar.</span>
-            <button type="button" onClick={() => setConfirming(false)} className="rounded-lg border border-slate-300 px-3 py-1.5">
+            <button type="button" onClick={() => setConfirming(false)} className={buttonClass('secondary', 'sm')}>
               Cancelar
             </button>
             <button
@@ -87,7 +88,7 @@ export function PendingPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Gastos pendientes</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Gastos pendientes</h1>
         <button
           type="button"
           disabled={!online || syncing || pending.every((p) => p.status === 'needs_attention')}
@@ -95,7 +96,7 @@ export function PendingPage() {
             setSyncing(true);
             void syncNow().finally(() => setSyncing(false));
           }}
-          className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className={buttonClass('primary', 'md')}
         >
           {syncing ? 'Enviando…' : 'Reintentar ahora'}
         </button>
