@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { formatReport, runSmoke } from '../../../../ops/src/smoke';
-import { ANA, openTab, resetEmulators, signIn } from '../helpers';
+import { ANA, openTab, resetEmulators, signIn, pickDate } from '../helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -21,8 +21,8 @@ test('FR-026: con la CSP del build se inicia sesión, se registra un gasto y se 
   await signIn(page, ANA.email, ANA.name);
   await page.getByRole('link', { name: 'Nuevo viaje' }).click();
   await page.getByLabel('Nombre del viaje').fill('Sucre');
-  await page.getByLabel('Fecha de inicio').fill('2026-11-01');
-  await page.getByLabel('Fecha de fin').fill('2026-11-03');
+  await pickDate(page, 'Fecha de inicio', '2026-11-01');
+  await pickDate(page, 'Fecha de fin', '2026-11-03');
   await page.getByRole('button', { name: 'Crear viaje' }).click();
   await expect(page.getByRole('heading', { name: 'Sucre' })).toBeVisible();
 

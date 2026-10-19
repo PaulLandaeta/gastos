@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { resetEmulators, signIn, openTab } from './helpers';
+import { resetEmulators, signIn, openTab, pickDate } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -9,8 +9,8 @@ test('Pedro (admin) cierra el viaje; Ana lo archiva y lo restaura a cerrado', as
   await signIn(ana, 'ana@example.com', 'Ana');
   await ana.getByRole('link', { name: 'Nuevo viaje' }).click();
   await ana.getByLabel('Nombre del viaje').fill('Cusco');
-  await ana.getByLabel('Fecha de inicio').fill('2027-01-10');
-  await ana.getByLabel('Fecha de fin').fill('2027-01-15');
+  await pickDate(ana, 'Fecha de inicio', '2027-01-10');
+  await pickDate(ana, 'Fecha de fin', '2027-01-15');
   await ana.getByLabel('Invitar por correo').fill('pedro@example.com');
   await ana.getByRole('button', { name: 'Crear viaje' }).click();
   await expect(ana.getByRole('heading', { name: 'Cusco' })).toBeVisible();

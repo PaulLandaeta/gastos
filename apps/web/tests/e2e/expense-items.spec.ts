@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip } from './helpers';
+import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip, pickDate } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -60,8 +60,8 @@ test('alquiler de coche de 3 días como un único gasto', async ({ browser }) =>
   await page.getByLabel('Descripción').fill('Alquiler de coche');
   await page.getByLabel('Importe total').fill('300');
   await page.getByLabel(/Servicio de varios días/).check();
-  await page.getByLabel('Inicio del servicio').fill('2026-11-01');
-  await page.getByLabel('Fin del servicio').fill('2026-11-03');
+  await pickDate(page, 'Inicio del servicio', '2026-11-01');
+  await pickDate(page, 'Fin del servicio', '2026-11-03');
   await page.getByRole('button', { name: 'Guardar gasto' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
 });

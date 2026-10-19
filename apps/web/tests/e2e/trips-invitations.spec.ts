@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { resetEmulators, signIn } from './helpers';
+import { resetEmulators, signIn, pickDate } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -10,8 +10,8 @@ test('Ana crea un viaje con invitados; queda pendiente hasta que Pedro y Juan ac
 
   await ana.getByRole('link', { name: 'Nuevo viaje' }).click();
   await ana.getByLabel('Nombre del viaje').fill('Uyuni');
-  await ana.getByLabel('Fecha de inicio').fill('2026-11-01');
-  await ana.getByLabel('Fecha de fin').fill('2026-11-05');
+  await pickDate(ana, 'Fecha de inicio', '2026-11-01');
+  await pickDate(ana, 'Fecha de fin', '2026-11-05');
   await ana.getByLabel('Moneda').selectOption('USD');
   await ana.getByLabel('Invitar por correo').fill('pedro@example.com, juan@example.com');
   await ana.getByRole('button', { name: 'Crear viaje' }).click();

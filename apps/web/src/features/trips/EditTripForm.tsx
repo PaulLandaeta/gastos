@@ -1,3 +1,4 @@
+import { DateRangeInputs } from '../../components/ui/DatePicker';
 import { buttonClass } from '../../components/ui/Button';
 import { useMutation } from '@tanstack/react-query';
 import type { Role } from 'contracts';
@@ -27,14 +28,15 @@ export function EditTripForm({ trip, myRole, onDone }: { trip: LiveTrip; myRole:
       <Field id="edit-name" label="Nombre del viaje">
         <input id="edit-name" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
       </Field>
-      <div className="grid grid-cols-2 gap-3">
-        <Field id="edit-start" label="Fecha de inicio">
-          <input id="edit-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={inputClass} />
-        </Field>
-        <Field id="edit-end" label="Fecha de fin">
-          <input id="edit-end" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className={inputClass} />
-        </Field>
-      </div>
+      <DateRangeInputs
+        start={{ id: 'edit-start', label: 'Fecha de inicio' }}
+        end={{ id: 'edit-end', label: 'Fecha de fin' }}
+        value={{ start: startDate, end: endDate }}
+        onChange={(v) => {
+          setStartDate(v.start);
+          setEndDate(v.end);
+        }}
+      />
       {myRole !== 'creator' && <p className="text-xs text-slate-600">Solo el creador puede cambiar la moneda.</p>}
       <ErrorMessage error={save.error} />
       <div className="flex gap-2">

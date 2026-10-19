@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { resetEmulators, signIn, openTab } from './helpers';
+import { resetEmulators, signIn, openTab, pickDate } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -9,8 +9,8 @@ test('Ana promueve a Pedro a admin; Pedro no ve controles de roles', async ({ br
   await signIn(ana, 'ana@example.com', 'Ana');
   await ana.getByRole('link', { name: 'Nuevo viaje' }).click();
   await ana.getByLabel('Nombre del viaje').fill('Lima');
-  await ana.getByLabel('Fecha de inicio').fill('2026-12-01');
-  await ana.getByLabel('Fecha de fin').fill('2026-12-03');
+  await pickDate(ana, 'Fecha de inicio', '2026-12-01');
+  await pickDate(ana, 'Fecha de fin', '2026-12-03');
   await ana.getByLabel('Invitar por correo').fill('pedro@example.com');
   await ana.getByRole('button', { name: 'Crear viaje' }).click();
   await expect(ana.getByRole('heading', { name: 'Lima' })).toBeVisible();

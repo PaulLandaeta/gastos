@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip, signIn, openTab } from './helpers';
+import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip, signIn, openTab, pickDate } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -32,7 +32,7 @@ test('fecha fuera del rango del viaje se acepta', async ({ browser }) => {
   await page.getByRole('link', { name: 'Registro manual' }).click();
   await page.getByLabel('Descripción').fill('Pasaje reservado antes');
   await page.getByLabel('Importe total').fill('120');
-  await page.getByLabel('Fecha de la transacción').fill('2026-06-15');
+  await pickDate(page, 'Fecha de la transacción', '2026-06-15');
   await page.getByRole('button', { name: 'Guardar gasto' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Gasto guardado' })).toBeVisible();
 });
@@ -41,8 +41,8 @@ test('un viaje pendiente no permite registrar gastos y lo explica', async ({ pag
   await signIn(page, ANA.email, ANA.name);
   await page.getByRole('link', { name: 'Nuevo viaje' }).click();
   await page.getByLabel('Nombre del viaje').fill('Pendiente');
-  await page.getByLabel('Fecha de inicio').fill('2026-11-01');
-  await page.getByLabel('Fecha de fin').fill('2026-11-02');
+  await pickDate(page, 'Fecha de inicio', '2026-11-01');
+  await pickDate(page, 'Fecha de fin', '2026-11-02');
   await page.getByLabel('Invitar por correo').fill(PEDRO.email);
   await page.getByRole('button', { name: 'Crear viaje' }).click();
   await expect(page.getByRole('heading', { name: 'Pendiente' })).toBeVisible();
