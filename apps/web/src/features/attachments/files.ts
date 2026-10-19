@@ -42,6 +42,15 @@ export async function compressImage(file: File): Promise<File> {
   }
 }
 
+/**
+ * Copies picked files into memory right away. iOS hands photos from the library over as temporary
+ * copies that can stop being readable seconds later (NotReadableError), so a form that uploads
+ * only on submit must snapshot them at pick time.
+ */
+export async function snapshotFiles(files: File[]): Promise<File[]> {
+  return Promise.all(files.map(async (f) => new File([await f.arrayBuffer()], f.name, { type: f.type, lastModified: f.lastModified })));
+}
+
 export interface PreparedFile {
   file: File;
   fileName: string;
