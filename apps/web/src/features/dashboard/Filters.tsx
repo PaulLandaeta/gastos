@@ -1,3 +1,4 @@
+import { DateInput } from '../../components/ui/DatePicker';
 import { inputClass } from '../../components/Field';
 import type { Category } from '../expenses/useExpenses';
 import type { DashboardFilters } from './dashboardModel';
@@ -20,11 +21,11 @@ export function Filters({
     <div role="group" aria-label="Filtros" className="grid grid-cols-2 gap-2 sm:grid-cols-5">
       <div className="text-xs text-slate-700">
         <label htmlFor="f-from">Desde</label>
-        <input id="f-from" type="date" className={inputClass} value={value.from ?? ''} onChange={(e) => set({ from: opt(e.target.value) })} />
+        <DateInput id="f-from" title="Desde" placeholder="Cualquiera" allowClear value={value.from ?? ''} onChange={(v) => set({ from: opt(v) })} />
       </div>
       <div className="text-xs text-slate-700">
         <label htmlFor="f-to">Hasta</label>
-        <input id="f-to" type="date" className={inputClass} value={value.to ?? ''} onChange={(e) => set({ to: opt(e.target.value) })} />
+        <DateInput id="f-to" title="Hasta" placeholder="Cualquiera" allowClear value={value.to ?? ''} onChange={(v) => set({ to: opt(v) })} />
       </div>
       <div className="text-xs text-slate-700">
         <label htmlFor="f-category">Categoría</label>

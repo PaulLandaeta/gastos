@@ -19,6 +19,8 @@ export default defineConfig(({ mode }) => {
         registerType: 'prompt',
         workbox: {
           // Any route opens the app shell offline instead of the browser error page.
+          // The bundled Inter font is precached too, so the app keeps its typeface offline.
+          globPatterns: ['**/*.{js,css,html,woff2}'],
           navigateFallback: '/index.html',
           // `/__/` is Firebase Hosting's reserved space (auth handler for popup/redirect sign-in): if the
           // shell answered it, the Google popup would open the app itself instead of the sign-in flow.

@@ -44,8 +44,8 @@ export async function setupActiveTrip(
   await signIn(page, creator.email, creator.name);
   await page.getByRole('link', { name: 'Nuevo viaje' }).click();
   await page.getByLabel('Nombre del viaje').fill(tripName);
-  await page.getByLabel('Fecha de inicio').fill('2026-11-01');
-  await page.getByLabel('Fecha de fin').fill('2026-11-05');
+  await pickDate(page, 'Fecha de inicio', '2026-11-01');
+  await pickDate(page, 'Fecha de fin', '2026-11-05');
   if (others.length) await page.getByLabel('Invitar por correo').fill(others.map((o) => o.email).join(', '));
   await page.getByRole('button', { name: 'Crear viaje' }).click();
   await expect(page.getByRole('heading', { name: tripName })).toBeVisible();
@@ -77,4 +77,21 @@ export const JUAN = { email: 'juan@example.com', name: 'Juan' };
 /** The trip page shows one section at a time (Gastos / Saldos / Resumen tabs). */
 export async function openTab(page: Page, name: 'Gastos' | 'Saldos' | 'Resumen'): Promise<void> {
   await page.getByRole('tab', { name, exact: true }).click();
+}
+
+/**
+ * Picks `iso` (YYYY-MM-DD) in the calendar sheet opened by the date field labelled `label`:
+ * moves month by month to it, taps the day and closes the sheet if it is still open (range start).
+ */
+export async function pickDate(page: Page, label: string, iso: string): Promise<void> {
+  await page.getByLabel(label, { exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  const target = dialog.locator(`[data-day="${iso}"]:not([data-outside])`);
+  for (let i = 0; i < 48 && (await target.count()) === 0; i++) {
+    const shown = (await dialog.locator('[data-day]:not([data-outside])').first().getAttribute('data-day')) ?? '';
+    await dialog.getByRole('button', { name: shown < iso ? 'Ir al mes siguiente' : 'Ir al mes anterior' }).click();
+  }
+  await target.getByRole('button').click();
+  if (await dialog.isVisible()) await dialog.getByRole('button', { name: 'Listo' }).click();
+  await expect(dialog).toHaveCount(0);
 }

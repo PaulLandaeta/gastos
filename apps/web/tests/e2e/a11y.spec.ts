@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { resetEmulators, signIn, openTab } from './helpers';
+import { resetEmulators, signIn, openTab, pickDate } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -24,8 +24,12 @@ test('pantallas principales sin violaciones WCAG 2.1 AA', async ({ page }) => {
   await expectNoViolations(page, 'crear viaje con errores');
 
   await page.getByLabel('Nombre del viaje').fill('Sucre');
-  await page.getByLabel('Fecha de inicio').fill('2027-02-01');
-  await page.getByLabel('Fecha de fin').fill('2027-02-03');
+  await page.getByLabel('Fecha de inicio', { exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Fecha de inicio' })).toBeVisible();
+  await expectNoViolations(page, 'calendario');
+  await page.keyboard.press('Escape');
+  await pickDate(page, 'Fecha de inicio', '2027-02-01');
+  await pickDate(page, 'Fecha de fin', '2027-02-03');
   await page.getByRole('button', { name: 'Crear viaje' }).click();
   await expect(page.getByRole('heading', { name: 'Sucre' })).toBeVisible();
   await openTab(page, 'Saldos');

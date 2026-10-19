@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ANA, PEDRO, resetEmulators, setupActiveTrip } from './helpers';
+import { ANA, PEDRO, resetEmulators, setupActiveTrip, pickDate } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -10,7 +10,7 @@ test('aviso de posible duplicado: cancelar conserva el formulario, confirmar gua
     await page.getByRole('link', { name: 'Registro manual' }).click();
     await page.getByLabel('Descripción').fill('Cena');
     await page.getByLabel('Importe total').fill('45');
-    await page.getByLabel('Fecha de la transacción').fill('2026-11-01');
+    await pickDate(page, 'Fecha de la transacción', '2026-11-01');
   };
 
   await fill();

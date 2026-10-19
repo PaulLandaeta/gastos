@@ -68,7 +68,7 @@ export function MoneyInput({ id, label, currency, valueMinor, onChange, required
             setInvalid(next.trim() !== '' && parsed === null);
             onChange(parsed);
           }}
-          className={`${inputClass} border-0 shadow-none focus:ring-0 focus:outline-none focus-visible:outline-none`}
+          className={`${inputClass} border-0 !shadow-none focus:!ring-0 focus:outline-none focus-visible:outline-none`}
         />
       </div>
       {invalid && (

@@ -1,3 +1,4 @@
+import { DateInput, DateRangeInputs } from '../../components/ui/DatePicker';
 import { WarningIcon } from '@phosphor-icons/react';
 import type { FormEvent, ReactNode } from 'react';
 import { Field, inputClass } from '../../components/Field';
@@ -99,18 +100,15 @@ export function ExpenseForm(props: ExpenseFormProps) {
             ))}
           </div>
         </fieldset>
-        <div className="grid grid-cols-2 gap-3">
-          <Field id="exp-date" label="Fecha de la transacción" {...(flagged('transactionDate') ? { hint: REVIEW_HINT, warn: true } : {})}>
-            <input
-              id="exp-date"
-              aria-describedby={flagged('transactionDate') ? 'exp-date-hint' : undefined}
-              type="date"
-              className={inputClass}
-              value={draft.transactionDate}
-              onChange={(e) => setDraft((d) => ({ ...d, transactionDate: e.target.value }))}
-            />
-          </Field>
-        </div>
+        <Field id="exp-date" label="Fecha de la transacción" {...(flagged('transactionDate') ? { hint: REVIEW_HINT, warn: true } : {})}>
+          <DateInput
+            id="exp-date"
+            title="Fecha de la transacción"
+            describedBy={flagged('transactionDate') ? 'exp-date-hint' : undefined}
+            value={draft.transactionDate}
+            onChange={(v) => setDraft((d) => ({ ...d, transactionDate: v }))}
+          />
+        </Field>
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
@@ -125,26 +123,12 @@ export function ExpenseForm(props: ExpenseFormProps) {
           Servicio de varios días (un solo gasto, sin reparto diario)
         </label>
         {draft.servicePeriod && (
-          <div className="grid grid-cols-2 gap-3">
-            <Field id="exp-svc-start" label="Inicio del servicio">
-              <input
-                id="exp-svc-start"
-                type="date"
-                className={inputClass}
-                value={draft.servicePeriod.startDate}
-                onChange={(e) => setDraft((d) => ({ ...d, servicePeriod: { ...d.servicePeriod!, startDate: e.target.value } }))}
-              />
-            </Field>
-            <Field id="exp-svc-end" label="Fin del servicio">
-              <input
-                id="exp-svc-end"
-                type="date"
-                className={inputClass}
-                value={draft.servicePeriod.endDate}
-                onChange={(e) => setDraft((d) => ({ ...d, servicePeriod: { ...d.servicePeriod!, endDate: e.target.value } }))}
-              />
-            </Field>
-          </div>
+          <DateRangeInputs
+            start={{ id: 'exp-svc-start', label: 'Inicio del servicio' }}
+            end={{ id: 'exp-svc-end', label: 'Fin del servicio' }}
+            value={{ start: draft.servicePeriod.startDate, end: draft.servicePeriod.endDate }}
+            onChange={(v) => setDraft((d) => ({ ...d, servicePeriod: { startDate: v.start, endDate: v.end } }))}
+          />
         )}
       </Section>
 

@@ -1,8 +1,9 @@
+import { DateRangeInputs } from '../../components/ui/DatePicker';
 import { buttonClass } from '../../components/ui/Button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { CURRENCY_CODES, Currency, Email, IsoDate, type Trip } from 'contracts';
-import { useForm } from 'react-hook-form';
+import { useController, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { z } from 'zod';
 import { ErrorMessage } from '../../components/ErrorMessage';
@@ -48,6 +49,8 @@ export function CreateTripPage() {
     onSuccess: ({ trip }) => navigate(`/trips/${trip.id}`),
   });
   const { errors } = form.formState;
+  const startField = useController({ control: form.control, name: 'startDate' }).field;
+  const endField = useController({ control: form.control, name: 'endDate' }).field;
   const others = CURRENCY_CODES.filter((c) => !COMMON.includes(c));
 
   return (
@@ -57,14 +60,15 @@ export function CreateTripPage() {
         <Field id="name" label="Nombre del viaje" error={errors.name?.message}>
           <input id="name" className={inputClass} aria-invalid={!!errors.name} {...form.register('name')} />
         </Field>
-        <div className="grid grid-cols-2 gap-3">
-          <Field id="startDate" label="Fecha de inicio" error={errors.startDate?.message && 'Fecha inválida'}>
-            <input id="startDate" type="date" className={inputClass} aria-invalid={!!errors.startDate} {...form.register('startDate')} />
-          </Field>
-          <Field id="endDate" label="Fecha de fin" error={errors.endDate?.message}>
-            <input id="endDate" type="date" className={inputClass} aria-invalid={!!errors.endDate} {...form.register('endDate')} />
-          </Field>
-        </div>
+        <DateRangeInputs
+          start={{ id: 'startDate', label: 'Fecha de inicio', error: errors.startDate?.message && 'Elige la fecha de inicio', ref: startField.ref }}
+          end={{ id: 'endDate', label: 'Fecha de fin', error: errors.endDate?.message, ref: endField.ref }}
+          value={{ start: startField.value, end: endField.value }}
+          onChange={(v) => {
+            startField.onChange(v.start);
+            endField.onChange(v.end);
+          }}
+        />
         <Field id="currency" label="Moneda" hint="Única para todo el viaje. Queda fija al registrar el primer gasto.">
           <select id="currency" className={inputClass} aria-describedby="currency-hint" {...form.register('currency')}>
             <optgroup label="Frecuentes">
