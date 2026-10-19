@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ANA, PEDRO, resetEmulators, setupActiveTrip } from './helpers';
+import { ANA, PEDRO, resetEmulators, setupActiveTrip, choose } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -25,7 +25,7 @@ test('devolución parcial de un ítem con importe sugerido y máximo', async ({ 
   await form.getByLabel('Unidades devueltas').fill('1');
   await expect(form.getByLabel('Importe devuelto')).toHaveValue('10,00');
   await expect(form).toContainText('Máximo disponible');
-  await form.getByLabel('¿Quién recibió el dinero?').selectOption({ label: 'Pedro' });
+  await choose(form, '¿Quién recibió el dinero?', 'Pedro');
   await form.getByRole('button', { name: 'Registrar devolución' }).click();
 
   const refunds = page.getByRole('list', { name: 'Devoluciones de Vino' });

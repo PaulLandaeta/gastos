@@ -1,5 +1,6 @@
 import { buttonClass } from '../../components/ui/Button';
 import { MoneyInput } from '../../components/MoneyInput';
+import { Select } from '../../components/ui/Select';
 import { newKey, type DraftAdjustment, type ExpenseDraft } from './expenseFormModel';
 import type { MemberOption } from './MemberChips';
 
@@ -60,20 +61,18 @@ export function AdjustmentsEditor({
               valueMinor={a.amountMinor}
               onChange={(v) => update(a.key, { amountMinor: v })}
             />
-            <label className="space-y-1 text-sm">
-              <span className="block font-medium text-slate-800">{KIND[a.kind].mode}</span>
-              <select
-                className="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-base shadow-sm focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+            <div className="space-y-1 text-sm">
+              <label htmlFor={`adj-mode-${a.key}`} className="block font-medium text-slate-800">
+                {KIND[a.kind].mode}
+              </label>
+              <Select
+                id={`adj-mode-${a.key}`}
+                title={KIND[a.kind].mode}
                 value={a.mode}
-                onChange={(e) => update(a.key, { mode: e.target.value as DraftAdjustment['mode'] })}
-              >
-                {(Object.keys(MODE) as DraftAdjustment['mode'][]).map((m) => (
-                  <option key={m} value={m}>
-                    {MODE[m]}
-                  </option>
-                ))}
-              </select>
-            </label>
+                onChange={(v) => update(a.key, { mode: v as DraftAdjustment['mode'] })}
+                options={(Object.keys(MODE) as DraftAdjustment['mode'][]).map((m) => ({ value: m, label: MODE[m] }))}
+              />
+            </div>
           </div>
           {a.mode === 'manual' && (
             <ul className="space-y-1">

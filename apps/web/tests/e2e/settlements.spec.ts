@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ANA, PEDRO, resetEmulators, setupActiveTrip, openTab } from './helpers';
+import { ANA, PEDRO, resetEmulators, setupActiveTrip, openTab, choose } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -43,7 +43,7 @@ test('PRD: pago pendiente no afecta saldos; confirmar, rechazar con motivo y pag
   // A second payment rejected with a reason.
   await openTab(ana, 'Saldos');
   await ana.getByRole('link', { name: 'Registrar pago' }).click();
-  await ana.getByLabel('¿A quién pagaste?').selectOption({ label: 'Pedro' });
+  await choose(ana, '¿A quién pagaste?', 'Pedro');
   await ana.getByLabel('Importe pagado').fill('5');
   await ana.getByRole('button', { name: 'Registrar pago' }).click();
   await pedroPayments.getByRole('button', { name: 'Rechazar' }).click();

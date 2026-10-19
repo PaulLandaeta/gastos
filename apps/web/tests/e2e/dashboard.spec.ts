@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip, openTab } from './helpers';
+import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip, openTab, choose } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -30,7 +30,7 @@ test('dashboard: total compartido, personales, total global y filtros', async ({
   await expect(chart).toContainText('Comida');
   await expect(chart).toContainText('Transporte');
 
-  await dash.getByLabel('Categoría', { exact: true }).selectOption({ label: 'Comida' });
+  await choose(dash, 'Categoría', 'Comida');
   await expect(dash.getByText(/filtrado/)).toBeVisible();
   await expect(chart).not.toContainText('Transporte');
 

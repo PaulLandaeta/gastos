@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 export const PROJECT = 'demo-gastos';
 
@@ -93,5 +93,14 @@ export async function pickDate(page: Page, label: string, iso: string): Promise<
   }
   await target.getByRole('button').click();
   if (await dialog.isVisible()) await dialog.getByRole('button', { name: 'Listo' }).click();
+  await expect(dialog).toHaveCount(0);
+}
+
+/** Picks an option of a `Select` (button + bottom sheet), the replacement for `selectOption`. */
+export async function choose(scope: Page | Locator, label: string, option: string): Promise<void> {
+  const page = 'page' in scope ? scope.page() : scope;
+  await scope.getByLabel(label, { exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('radio', { name: option, exact: true }).click();
   await expect(dialog).toHaveCount(0);
 }

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip, pickDate } from './helpers';
+import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip, pickDate, choose } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -42,7 +42,7 @@ test('factura mixta por ítems con asignación masiva, ítem personal, impuesto 
   await pedro.getByLabel('Varios pagadores').check();
   await pedro.getByLabel('Aporte de Pedro').fill('15');
   await pedro.getByRole('button', { name: 'Añadir pagador' }).click();
-  await pedro.getByLabel('Pagador 2').selectOption({ label: 'Ana' });
+  await choose(pedro, 'Pagador 2', 'Ana');
   await expect(pedro.getByRole('status', { name: 'Resumen del gasto' })).toContainText('Faltan');
   await pedro.getByLabel('Aporte de Ana').fill('8,10');
   await expect(pedro.getByRole('status', { name: 'Resumen del gasto' })).toContainText('Cuadra');
