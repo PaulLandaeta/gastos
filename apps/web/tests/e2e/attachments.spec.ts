@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip, openTab } from './helpers';
+import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip, openTab, choose } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -63,7 +63,7 @@ test('US2: receipts on an expense are private, deduplicated and downloadable; pa
   // Ana pays Pedro with a proof; Pedro (receiver) can open it, Juan cannot see it.
   await openTab(ana, 'Saldos');
   await ana.getByRole('link', { name: 'Registrar pago' }).click();
-  await ana.getByLabel('¿A quién pagaste?').selectOption({ label: 'Pedro' });
+  await choose(ana, '¿A quién pagaste?', 'Pedro');
   await ana.getByLabel('Importe pagado').fill('15');
   await ana.getByLabel('Comprobante (opcional)').setInputFiles([img('transferencia.jpg', 'captura banco')]);
   await ana.getByRole('button', { name: 'Registrar pago' }).click();

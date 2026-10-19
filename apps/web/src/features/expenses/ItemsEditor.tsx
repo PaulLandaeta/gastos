@@ -3,6 +3,7 @@ import { parseMoneyInput } from 'contracts';
 import { useState } from 'react';
 import { inputClass } from '../../components/Field';
 import { MoneyInput } from '../../components/MoneyInput';
+import { Select } from '../../components/ui/Select';
 import { assignInBulk, newItem, type AllocationMode, type DraftItem, type ExpenseDraft, type Issue } from './expenseFormModel';
 import { MemberChips, type MemberOption } from './MemberChips';
 
@@ -130,20 +131,17 @@ function ItemRow({
       {withoutBeneficiary && <p className="text-xs font-medium text-amber-900">Sin beneficiario: asígnalo para poder guardar.</p>}
       {item.classification === 'shared' && item.beneficiaries.length > 1 && (
         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-sm">
-            Modo de reparto
-            <select
-              className={buttonClass('secondary', 'sm')}
+          <div className="flex items-center gap-2 text-sm">
+            <label htmlFor={`item-mode-${item.key}`}>Modo de reparto</label>
+            <Select
+              id={`item-mode-${item.key}`}
+              title="Modo de reparto"
               value={item.mode}
-              onChange={(e) => onChange({ ...item, mode: e.target.value as AllocationMode })}
-            >
-              {(Object.keys(MODE_LABEL) as AllocationMode[]).map((m) => (
-                <option key={m} value={m}>
-                  {MODE_LABEL[m]}
-                </option>
-              ))}
-            </select>
-          </label>
+              onChange={(v) => onChange({ ...item, mode: v as AllocationMode })}
+              options={(Object.keys(MODE_LABEL) as AllocationMode[]).map((m) => ({ value: m, label: MODE_LABEL[m] }))}
+              className={buttonClass('secondary', 'sm', 'gap-2')}
+            />
+          </div>
           {item.mode !== 'equal' && (
             <ul className="space-y-1">
               {item.beneficiaries.map((uid) => {

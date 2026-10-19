@@ -28,6 +28,10 @@ test('pantallas principales sin violaciones WCAG 2.1 AA', async ({ page }) => {
   await expect(page.getByRole('dialog', { name: 'Fecha de inicio' })).toBeVisible();
   await expectNoViolations(page, 'calendario');
   await page.keyboard.press('Escape');
+  await page.getByLabel('Moneda', { exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Moneda' })).toBeVisible();
+  await expectNoViolations(page, 'lista de opciones');
+  await page.keyboard.press('Escape');
   await pickDate(page, 'Fecha de inicio', '2027-02-01');
   await pickDate(page, 'Fecha de fin', '2027-02-03');
   await page.getByRole('button', { name: 'Crear viaje' }).click();

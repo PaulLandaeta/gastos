@@ -4,6 +4,7 @@ import { useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { ErrorMessage } from '../../components/ErrorMessage';
 import { Field, inputClass } from '../../components/Field';
+import { Select } from '../../components/ui/Select';
 import { MoneyInput } from '../../components/MoneyInput';
 import { NotFound } from '../../components/NotFound';
 import { Spinner } from '../../components/Spinner';
@@ -80,24 +81,23 @@ export function PaySettlementPage() {
       <p className="text-sm text-slate-600">El pago queda pendiente hasta que la otra persona lo confirme. Solo los pagos confirmados cambian los saldos.</p>
       {deletedPayers.length > 0 && (
         <Field id="pay-from" label="¿Quién pagó?">
-          <select id="pay-from" className={inputClass} value={fromUid} onChange={(e) => setFromUid(e.target.value)}>
-            <option value={user.uid}>Yo</option>
-            {deletedPayers.map((m) => (
-              <option key={m.uid} value={m.uid!}>
-                {m.displayName}
-              </option>
-            ))}
-          </select>
+          <Select
+            id="pay-from"
+            title="¿Quién pagó?"
+            value={fromUid}
+            onChange={setFromUid}
+            options={[{ value: user.uid, label: 'Yo' }, ...deletedPayers.map((m) => ({ value: m.uid!, label: m.displayName ?? '' }))]}
+          />
         </Field>
       )}
       <Field id="pay-to" label={fromUid === user.uid ? '¿A quién pagaste?' : '¿A quién pagó?'}>
-        <select id="pay-to" className={inputClass} value={receiver} onChange={(e) => setToUid(e.target.value)}>
-          {others.map((m) => (
-            <option key={m.uid} value={m.uid!}>
-              {m.displayName ?? m.email}
-            </option>
-          ))}
-        </select>
+        <Select
+          id="pay-to"
+          title={fromUid === user.uid ? '¿A quién pagaste?' : '¿A quién pagó?'}
+          value={receiver}
+          onChange={setToUid}
+          options={others.map((m) => ({ value: m.uid!, label: m.displayName ?? m.email ?? '' }))}
+        />
       </Field>
       <MoneyInput id="pay-amount" label="Importe pagado" currency={trip.currency} valueMinor={amount} onChange={setAmount} required />
       <Field id="pay-note" label="Nota (opcional)">

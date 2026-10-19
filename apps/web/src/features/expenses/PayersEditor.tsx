@@ -1,5 +1,7 @@
 import { buttonClass } from '../../components/ui/Button';
+import { useId } from 'react';
 import { MoneyInput } from '../../components/MoneyInput';
+import { Select } from '../../components/ui/Select';
 import type { ExpenseDraft } from './expenseFormModel';
 import type { MemberOption } from './MemberChips';
 
@@ -15,6 +17,7 @@ export function PayersEditor({
   currency: string;
   members: MemberOption[];
 }) {
+  const baseId = useId();
   const nameOf = (uid: string) => members.find((m) => m.uid === uid)?.name ?? uid;
   const used = new Set(draft.payers.map((p) => p.uid));
   const setPayer = (index: number, patch: Partial<{ uid: string; amountMinor: number | null }>) =>
@@ -25,22 +28,18 @@ export function PayersEditor({
       <ul className="space-y-2">
         {draft.payers.map((p, index) => (
           <li key={index} className="grid grid-cols-[1fr_9rem_auto] items-end gap-2">
-            <label className="space-y-1 text-sm">
-              <span className="block font-medium text-slate-800">Pagador {index + 1}</span>
-              <select
-                className="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-base shadow-sm focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+            <div className="space-y-1 text-sm">
+              <label htmlFor={`${baseId}-payer-${index}`} className="block font-medium text-slate-800">
+                Pagador {index + 1}
+              </label>
+              <Select
+                id={`${baseId}-payer-${index}`}
+                title={`Pagador ${index + 1}`}
                 value={p.uid}
-                onChange={(e) => setPayer(index, { uid: e.target.value })}
-              >
-                {members
-                  .filter((m) => m.uid === p.uid || !used.has(m.uid))
-                  .map((m) => (
-                    <option key={m.uid} value={m.uid}>
-                      {m.name}
-                    </option>
-                  ))}
-              </select>
-            </label>
+                onChange={(uid) => setPayer(index, { uid })}
+                options={members.filter((m) => m.uid === p.uid || !used.has(m.uid)).map((m) => ({ value: m.uid, label: m.name }))}
+              />
+            </div>
             <MoneyInput
               label={`Aporte de ${nameOf(p.uid)}`}
               currency={currency}

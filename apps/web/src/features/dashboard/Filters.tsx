@@ -1,5 +1,5 @@
 import { DateInput } from '../../components/ui/DatePicker';
-import { inputClass } from '../../components/Field';
+import { Select } from '../../components/ui/Select';
 import type { Category } from '../expenses/useExpenses';
 import type { DashboardFilters } from './dashboardModel';
 
@@ -17,6 +17,7 @@ export function Filters({
 }) {
   const set = (patch: Partial<DashboardFilters>) => onChange({ ...value, ...patch });
   const opt = (v: string) => (v === '' ? undefined : v);
+  const peopleOptions = people.map((p) => ({ value: p.uid, label: p.name }));
   return (
     <div role="group" aria-label="Filtros" className="grid grid-cols-2 gap-2 sm:grid-cols-5">
       <div className="text-xs text-slate-700">
@@ -29,36 +30,33 @@ export function Filters({
       </div>
       <div className="text-xs text-slate-700">
         <label htmlFor="f-category">Categoría</label>
-        <select id="f-category" className={inputClass} value={value.categoryId ?? ''} onChange={(e) => set({ categoryId: opt(e.target.value) })}>
-          <option value="">Todas</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        <Select
+          id="f-category"
+          title="Categoría"
+          value={value.categoryId ?? ''}
+          onChange={(v) => set({ categoryId: opt(v) })}
+          options={[{ value: '', label: 'Todas' }, ...categories.map((c) => ({ value: c.id, label: c.name }))]}
+        />
       </div>
       <div className="text-xs text-slate-700">
         <label htmlFor="f-person">Persona</label>
-        <select id="f-person" className={inputClass} value={value.personUid ?? ''} onChange={(e) => set({ personUid: opt(e.target.value) })}>
-          <option value="">Todas</option>
-          {people.map((p) => (
-            <option key={p.uid} value={p.uid}>
-              {p.name}
-            </option>
-          ))}
-        </select>
+        <Select
+          id="f-person"
+          title="Persona"
+          value={value.personUid ?? ''}
+          onChange={(v) => set({ personUid: opt(v) })}
+          options={[{ value: '', label: 'Todas' }, ...peopleOptions]}
+        />
       </div>
       <div className="text-xs text-slate-700">
         <label htmlFor="f-payer">Pagador</label>
-        <select id="f-payer" className={inputClass} value={value.payerUid ?? ''} onChange={(e) => set({ payerUid: opt(e.target.value) })}>
-          <option value="">Todos</option>
-          {people.map((p) => (
-            <option key={p.uid} value={p.uid}>
-              {p.name}
-            </option>
-          ))}
-        </select>
+        <Select
+          id="f-payer"
+          title="Pagador"
+          value={value.payerUid ?? ''}
+          onChange={(v) => set({ payerUid: opt(v) })}
+          options={[{ value: '', label: 'Todos' }, ...peopleOptions]}
+        />
       </div>
     </div>
   );

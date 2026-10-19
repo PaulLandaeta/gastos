@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip, signIn, openTab } from './helpers';
+import { ANA, JUAN, PEDRO, resetEmulators, setupActiveTrip, signIn, openTab, choose } from './helpers';
 
 test.beforeEach(resetEmulators);
 
@@ -19,7 +19,7 @@ test('RF-56: Pedro borra su cuenta; los saldos del grupo no cambian y un gestor 
   await juan.goto(tripUrl);
   await openTab(juan, 'Saldos');
   await juan.getByRole('link', { name: 'Registrar pago' }).click();
-  await juan.getByLabel('¿A quién pagaste?').selectOption({ label: 'Pedro' });
+  await choose(juan, '¿A quién pagaste?', 'Pedro');
   await juan.getByLabel('Importe pagado').fill('10');
   await juan.getByRole('button', { name: 'Registrar pago' }).click();
   await expect(juan.getByRole('status').filter({ hasText: 'pendiente de confirmación' })).toBeVisible();
@@ -59,7 +59,7 @@ test('RF-56: Pedro borra su cuenta; los saldos del grupo no cambian y un gestor 
   // Ana (creator) pays the deleted participant and confirms it on their behalf.
   await openTab(ana, 'Saldos');
   await ana.getByRole('link', { name: 'Registrar pago' }).click();
-  await ana.getByLabel('¿A quién pagaste?').selectOption({ label: 'Participante eliminado 1' });
+  await choose(ana, '¿A quién pagaste?', 'Participante eliminado 1');
   await ana.getByLabel('Importe pagado').fill('10');
   await ana.getByRole('button', { name: 'Registrar pago' }).click();
   await openTab(ana, 'Saldos');

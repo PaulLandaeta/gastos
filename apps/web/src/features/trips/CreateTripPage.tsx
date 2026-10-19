@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router';
 import { z } from 'zod';
 import { ErrorMessage } from '../../components/ErrorMessage';
 import { Field, inputClass } from '../../components/Field';
+import { Select } from '../../components/ui/Select';
 import { api } from '../../lib/apiClient';
 
 const FormSchema = z
@@ -51,6 +52,7 @@ export function CreateTripPage() {
   const { errors } = form.formState;
   const startField = useController({ control: form.control, name: 'startDate' }).field;
   const endField = useController({ control: form.control, name: 'endDate' }).field;
+  const currencyField = useController({ control: form.control, name: 'currency' }).field;
   const others = CURRENCY_CODES.filter((c) => !COMMON.includes(c));
 
   return (
@@ -70,22 +72,18 @@ export function CreateTripPage() {
           }}
         />
         <Field id="currency" label="Moneda" hint="Única para todo el viaje. Queda fija al registrar el primer gasto.">
-          <select id="currency" className={inputClass} aria-describedby="currency-hint" {...form.register('currency')}>
-            <optgroup label="Frecuentes">
-              {COMMON.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </optgroup>
-            <optgroup label="Todas (ISO 4217)">
-              {others.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </optgroup>
-          </select>
+          <Select
+            id="currency"
+            title="Moneda"
+            describedBy="currency-hint"
+            value={currencyField.value}
+            onChange={currencyField.onChange}
+            buttonRef={currencyField.ref}
+            options={[
+              ...COMMON.map((c) => ({ value: c, label: c, group: 'Frecuentes' })),
+              ...others.map((c) => ({ value: c, label: c, group: 'Todas (ISO 4217)' })),
+            ]}
+          />
         </Field>
         <Field
           id="invites"

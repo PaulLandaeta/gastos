@@ -4,6 +4,7 @@ import type { RefundableResponse } from 'contracts';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ErrorMessage } from '../../components/ErrorMessage';
 import { Field, inputClass } from '../../components/Field';
+import { Select } from '../../components/ui/Select';
 import { MoneyInput } from '../../components/MoneyInput';
 import { ApiError, api } from '../../lib/apiClient';
 import { formatMoney } from '../../lib/format';
@@ -91,13 +92,13 @@ export function RefundForm({
         />
       </div>
       <Field id={`rr-${itemId}`} label="¿Quién recibió el dinero?">
-        <select id={`rr-${itemId}`} className={inputClass} value={recipient} onChange={(e) => setRecipient(e.target.value)}>
-          {members.map((m) => (
-            <option key={m.uid} value={m.uid}>
-              {m.name}
-            </option>
-          ))}
-        </select>
+        <Select
+          id={`rr-${itemId}`}
+          title="¿Quién recibió el dinero?"
+          value={recipient}
+          onChange={setRecipient}
+          options={members.map((m) => ({ value: m.uid, label: m.name }))}
+        />
       </Field>
       <ErrorMessage error={save.error} />
       <button type="submit" disabled={save.isPending || !amount} className={buttonClass('primary', 'md')}>
