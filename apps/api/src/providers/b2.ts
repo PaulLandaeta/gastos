@@ -50,16 +50,30 @@ export class B2StorageProvider implements ReceiptStorageProvider {
     return { url: await this.presign('GET', key, ttlSeconds, {}, query), expiresAt: new Date(Date.now() + ttlSeconds * 1000) };
   }
 
-  private async send(method: string, key: string) {
-    const signed = await this.client.sign(new Request(this.objectUrl(key), { method }));
+  private async send(method: string, key: string, headers: Record<string, string> = {}) {
+    const signed = await this.client.sign(new Request(this.objectUrl(key), { method, headers }));
     return this.fetchImpl(signed);
   }
 
   async head(key: string) {
     const res = await this.send('HEAD', key);
     if (res.status === 404) return null;
-    if (!res.ok) throw new Error(`B2 HEAD failed: ${res.status}`);
-    return { bytes: Number(res.headers.get('content-length') ?? 0), contentType: res.headers.get('content-type') ?? 'application/octet-stream' };
+    if (res.ok) {
+      return { bytes: Number(res.headers.get('content-length') ?? 0), contentType: res.headers.get('content-type') ?? 'application/octet-stream' };
+    }
+    if (res.status !== 403) throw new Error(`B2 HEAD failed: ${res.status}`);
+    // A 403 HEAD has no body to explain it (missing object without listFiles, or a key problem).
+    // A one-byte GET needs the same readFiles capability and returns B2's error code.
+    const probe = await this.send('GET', key, { range: 'bytes=0-0' });
+    if (probe.status === 200 || probe.status === 206) {
+      const total = probe.headers.get('content-range')?.split('/')[1];
+      const bytes = Number(total && total !== '*' ? total : (probe.headers.get('content-length') ?? 0));
+      await probe.body?.cancel();
+      return { bytes, contentType: probe.headers.get('content-type') ?? 'application/octet-stream' };
+    }
+    const code = /<Code>([^<]+)<\/Code>/.exec(await probe.text())?.[1] ?? '';
+    if (probe.status === 404 || code === 'NoSuchKey') return null;
+    throw new Error(`B2 HEAD failed: 403 (GET ${probe.status} ${code})`.trim());
   }
 
   async get(key: string) {

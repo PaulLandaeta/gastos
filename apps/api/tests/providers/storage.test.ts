@@ -60,6 +60,30 @@ describe('B2StorageProvider (SigV4, mocked network)', () => {
     expect(get.expiresAt.getTime() - Date.now()).toBeLessThanOrEqual(900_000);
   });
 
+  it('head falls back to a one-byte GET when HEAD is forbidden', async () => {
+    const calls: string[] = [];
+    const ok: typeof fetch = async (input) => {
+      const req = input as Request;
+      calls.push(`${req.method} ${req.headers.get('range') ?? ''}`.trim());
+      if (req.method === 'HEAD') return new Response(null, { status: 403 });
+      return new Response(new Uint8Array([1]), { status: 206, headers: { 'content-range': 'bytes 0-0/12345', 'content-type': 'image/png' } });
+    };
+    expect(await b2(ok).head('x.png')).toEqual({ bytes: 12345, contentType: 'image/png' });
+    expect(calls).toEqual(['HEAD', 'GET bytes=0-0']);
+
+    const missing: typeof fetch = async (input) =>
+      (input as Request).method === 'HEAD'
+        ? new Response(null, { status: 403 })
+        : new Response('<Error><Code>NoSuchKey</Code></Error>', { status: 403 });
+    expect(await b2(missing).head('x.png')).toBeNull();
+
+    const denied: typeof fetch = async (input) =>
+      (input as Request).method === 'HEAD'
+        ? new Response(null, { status: 403 })
+        : new Response('<Error><Code>AccessDenied</Code></Error>', { status: 403 });
+    await expect(b2(denied).head('x.png')).rejects.toThrow('B2 HEAD failed: 403 (GET 403 AccessDenied)');
+  });
+
   it('head/delete map 404 to null/success', async () => {
     const calls: string[] = [];
     const fake: typeof fetch = async (input, init) => {

@@ -11,6 +11,7 @@ import { Spinner } from '../../components/Spinner';
 import { ApiError, api } from '../../lib/apiClient';
 import { useCurrentUser } from '../auth/AuthProvider';
 import { localProblem } from '../attachments/AttachmentPicker';
+import { snapshotFiles } from '../attachments/files';
 import { ACCEPT, attachFiles } from '../attachments/upload';
 import { useTrip } from '../trips/useTrip';
 
@@ -32,6 +33,8 @@ export function PaySettlementPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [proof, setProof] = useState<File[]>([]);
+  const [reading, setReading] = useState(false);
+  const [readFailed, setReadFailed] = useState(false);
   const key = useRef(crypto.randomUUID());
 
   if (loading || trip === undefined) return <Spinner />;
@@ -52,7 +55,8 @@ export function PaySettlementPage() {
       if (proof.length > 0) {
         try {
           await attachFiles(tripId, proof, { settlementId: res.settlement.id });
-        } catch {
+        } catch (err) {
+          console.warn('[proof] upload failed', err);
           proofFailed = true;
         }
       }
@@ -110,16 +114,35 @@ export function PaySettlementPage() {
           multiple
           accept={ACCEPT}
           className="block w-full text-sm"
-          onChange={(e) => setProof([...(e.target.files ?? [])])}
+          onChange={async (e) => {
+            const picked = [...(e.target.files ?? [])];
+            setReadFailed(false);
+            setReading(true);
+            try {
+              setProof(await snapshotFiles(picked));
+            } catch (err) {
+              console.warn('[proof] could not read the picked file', err);
+              setProof([]);
+              setReadFailed(true);
+              e.target.value = '';
+            } finally {
+              setReading(false);
+            }
+          }}
         />
       </Field>
+      {readFailed && (
+        <p role="alert" className="rounded-lg bg-red-50 p-2 text-sm text-red-800">
+          No se pudo leer la foto. Vuelve a elegirla.
+        </p>
+      )}
       {localProblem(proof) && (
         <p role="alert" className="rounded-lg bg-red-50 p-2 text-sm text-red-800">
           {localProblem(proof)}
         </p>
       )}
       <ErrorMessage error={error} />
-      <button type="submit" disabled={saving || !amount || !receiver || !!localProblem(proof)} className={buttonClass('primary', 'lg', 'w-full')}>
+      <button type="submit" disabled={saving || reading || !amount || !receiver || !!localProblem(proof)} className={buttonClass('primary', 'lg', 'w-full')}>
         {saving ? 'Registrando…' : 'Registrar pago'}
       </button>
     </form>
